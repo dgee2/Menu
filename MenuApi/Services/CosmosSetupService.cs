@@ -37,7 +37,7 @@ namespace MenuApi.Services
             logger.LogInformation("Cosmos DB {0} created with cost : {1}",cosmosConfig.DatabaseId, dbResponse.RequestCharge);
             
             var containerResponse = await dbResponse.Database
-                                                    .CreateContainerIfNotExistsAsync(cosmosConfig.IngredientContainerId, @"/id")
+                                                    .CreateContainerIfNotExistsAsync(cosmosConfig.IngredientContainerId, @"/name")
                                                     .ConfigureAwait(false);
             
             logger.LogInformation("Cosmos container {0} created with cost : {1}",cosmosConfig.IngredientContainerId, containerResponse.RequestCharge);
