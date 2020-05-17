@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MenuApi.Repositories;
+using MenuApi.Search;
 using MenuApi.ViewModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Search;
 
 namespace MenuApi.Controllers
 {
@@ -26,5 +28,8 @@ namespace MenuApi.Controllers
 
         [HttpPut]
         public async Task PutIngredient(Ingredient ingredient) => await ingredientRepository.UpdateIngredientAsync(ingredient).ConfigureAwait(false);
+
+        [HttpGet("search")]
+        public async Task<IEnumerable<Ingredient>> SearchIngredients([FromQuery] string q) => await ingredientRepository.SearchIngredientsAsync(q).ConfigureAwait(false);
     }
 }

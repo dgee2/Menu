@@ -10,6 +10,7 @@ namespace MenuApi.Repositories
         Task CreateIngredientAsync(NewIngredient newIngredient);
         Task<Ingredient?> GetIngredientAsync(Guid id);
         IAsyncEnumerable<Ingredient> GetIngredientsAsync();
+        Task<IEnumerable<Ingredient>> SearchIngredientsAsync(string q);
         Task UpdateIngredientAsync(Ingredient ingredient);
     }
 }

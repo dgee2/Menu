@@ -1,10 +1,12 @@
 using AutoMapper;
 using MenuApi.Configuration;
 using MenuApi.Repositories;
+using MenuApi.Search;
 using MenuApi.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Search;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,10 +31,14 @@ namespace MenuApi
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
             services.AddHostedService<CosmosSetupService>();
-            
+
             services.Configure<CosmosConfig>(Configuration.GetSection("Cosmos"));
+            services.Configure<SearchConfig>(Configuration.GetSection("Search"));
+
             services.AddSingleton(sp => new CosmosClient(sp.GetRequiredService<IOptions<CosmosConfig>>().Value.ConnectionString));
             services.AddTransient<IIngredientRepository, IngredientRepository>();
+
+            services.AddTransient<ISearchFactory, SearchFactory>();
 
             services.AddControllers();
             services.AddSwaggerDocument();
