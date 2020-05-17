@@ -39,7 +39,7 @@ namespace MenuApi.Repositories
                     .ToAsyncEnumerable()
                     .Select(mapper.Map<ViewModel.Ingredient>);
 
-        public async Task CreateIngredientAsync(ViewModel.NewIngredient newIngredient)
+        public async Task<ViewModel.Ingredient> CreateIngredientAsync(ViewModel.NewIngredient newIngredient)
         {
             if (newIngredient is null)
             {
@@ -47,7 +47,8 @@ namespace MenuApi.Repositories
             }
 
             var ingredient = mapper.Map<DBModel.Ingredient>(newIngredient);
-            await ingredientContainer.CreateItemAsync(ingredient).ConfigureAwait(false);
+            var response = await ingredientContainer.CreateItemAsync(ingredient).ConfigureAwait(false);
+            return mapper.Map<ViewModel.Ingredient>(response.Resource);
         }
 
         public Task<ViewModel.Ingredient?> GetIngredientAsync(Guid id)
@@ -55,9 +56,16 @@ namespace MenuApi.Repositories
             throw new NotImplementedException();
         }
 
-        public Task UpdateIngredientAsync(ViewModel.Ingredient ingredient)
+        public async Task<ViewModel.Ingredient> UpdateIngredientAsync(ViewModel.Ingredient newIngredient)
         {
-            throw new NotImplementedException();
+            if (newIngredient is null)
+            {
+                throw new ArgumentNullException(nameof(newIngredient));
+            }
+
+            var ingredient = mapper.Map<DBModel.Ingredient>(newIngredient);
+            var response = await ingredientContainer.ReplaceItemAsync(ingredient, ingredient.Id.ToString()).ConfigureAwait(false);
+            return mapper.Map<ViewModel.Ingredient>(response.Resource);
         }
 
         public async Task<IEnumerable<ViewModel.Ingredient>> SearchIngredientsAsync(string q)

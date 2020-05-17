@@ -15,7 +15,8 @@ namespace MenuApi.DBModel
         public string Name { get; set; }
 
         [JsonProperty(PropertyName = "units")]
-        public HashSet<string> Units { get; } = new HashSet<string>();
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "<Pending>")]
+        public HashSet<string> Units { get; set; }
 #pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
     }
 }
