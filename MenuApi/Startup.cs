@@ -1,15 +1,16 @@
 using AutoMapper;
 using MenuApi.Configuration;
 using MenuApi.Repositories;
-using MenuApi.Search;
 using MenuApi.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Search;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -34,10 +35,10 @@ namespace MenuApi
             services.Configure<CosmosConfig>(Configuration.GetSection("Cosmos"));
             services.Configure<SearchConfig>(Configuration.GetSection("Search"));
 
+            services.AddTransient(CreateISearchIndexClient);
+
             services.AddSingleton(sp => new CosmosClient(sp.GetRequiredService<IOptions<CosmosConfig>>().Value.ConnectionString));
             services.AddTransient<IIngredientRepository, IngredientRepository>();
-
-            services.AddTransient<ISearchFactory, SearchFactory>();
 
             services.AddControllers();
             services.AddSwaggerDocument();
@@ -67,6 +68,12 @@ namespace MenuApi
             {
                 endpoints.MapControllers();
             });
+        }
+
+        private ISearchIndexClient CreateISearchIndexClient(IServiceProvider sp)
+        {
+            var config = sp.GetRequiredService<IOptions<SearchConfig>>().Value;
+            return new SearchIndexClient(config.ServiceName, config.IngredientIndex, new SearchCredentials(config.QueryApiKey));
         }
     }
 }
