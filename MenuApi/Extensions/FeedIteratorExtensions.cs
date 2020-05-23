@@ -1,5 +1,5 @@
-﻿using Microsoft.Azure.Cosmos;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Microsoft.Azure.Cosmos;
 
 namespace MenuApi.Extensions
 {

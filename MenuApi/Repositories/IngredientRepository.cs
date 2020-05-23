@@ -1,14 +1,14 @@
-﻿using AutoMapper;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using AutoMapper;
 using MenuApi.Configuration;
 using MenuApi.DBModel;
 using MenuApi.Extensions;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Search;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MenuApi.Repositories
 {

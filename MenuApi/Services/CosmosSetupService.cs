@@ -1,11 +1,11 @@
-﻿using MenuApi.Configuration;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using MenuApi.Configuration;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MenuApi.Services
 {
@@ -27,6 +27,7 @@ namespace MenuApi.Services
 
             this.cosmosConfig = cosmosConfig.Value;
         }
+
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             logger.LogInformation("Cosmos setup started");
@@ -34,13 +35,13 @@ namespace MenuApi.Services
             var dbResponse = await cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosConfig.DatabaseId)
                                                .ConfigureAwait(false);
 
-            logger.LogInformation("Cosmos DB {0} created with cost : {1}",cosmosConfig.DatabaseId, dbResponse.RequestCharge);
-            
+            logger.LogInformation("Cosmos DB {0} created with cost : {1}", cosmosConfig.DatabaseId, dbResponse.RequestCharge);
+
             var containerResponse = await dbResponse.Database
                                                     .CreateContainerIfNotExistsAsync(cosmosConfig.IngredientContainerId, @"/id")
                                                     .ConfigureAwait(false);
-            
-            logger.LogInformation("Cosmos container {0} created with cost : {1}",cosmosConfig.IngredientContainerId, containerResponse.RequestCharge);
+
+            logger.LogInformation("Cosmos container {0} created with cost : {1}", cosmosConfig.IngredientContainerId, containerResponse.RequestCharge);
         }
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

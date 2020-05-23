@@ -1,3 +1,6 @@
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using AutoMapper;
 using MenuApi.Configuration;
 using MenuApi.Repositories;
@@ -10,9 +13,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 
 namespace MenuApi
 {
@@ -42,9 +42,7 @@ namespace MenuApi
 
             services.AddControllers();
             services.AddSwaggerDocument();
-
         }
-
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Startup file")]
@@ -53,6 +51,7 @@ namespace MenuApi
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+
                 // Register the Swagger generator and the Swagger UI middlewares
                 app.UseOpenApi();
                 app.UseSwaggerUi3();
