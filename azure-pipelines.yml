@@ -23,7 +23,7 @@ steps:
     projectName: 'Menu'
     extraProperties: |
       sonar.exclusions=**/obj/**,**/*.dll
-  condition: ne(variables['Build.Reason'], 'PullRequest')
+  condition: eq(variables['Build.Reason'], 'PullRequest')
 - task: SonarCloudPrepare@1
   displayName: 'Prepare analysis on SonarCloud'
   inputs:
@@ -35,7 +35,7 @@ steps:
     extraProperties: |
       sonar.exclusions=**/obj/**,**/*.dll
       sonar.branch.name=$(Build.SourceBranchName)
-  condition: eq(variables['Build.Reason'], 'PullRequest')
+  condition: ne(variables['Build.Reason'], 'PullRequest')
 - script: dotnet build --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
 - task: SonarCloudAnalyze@1
