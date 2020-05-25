@@ -10,6 +10,8 @@
         public string IngredientIndex { get; set; }
 
         public string QueryApiKey { get; set; }
+
+        public string RecipeIndex { get; set; }
 #pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
     }
 }

@@ -16,9 +16,9 @@ namespace MenuApi.Repositories
     {
         private readonly Container ingredientContainer;
         private readonly IMapper mapper;
-        private readonly ISearchIndexClient searchClient;
+        private readonly ISearchFactory searchFactory;
 
-        public IngredientRepository(CosmosClient cosmosClient, IOptions<CosmosConfig> cosmosConfigOptions, IMapper mapper, ISearchIndexClient searchClient)
+        public IngredientRepository(CosmosClient cosmosClient, IOptions<CosmosConfig> cosmosConfigOptions, IMapper mapper, ISearchFactory searchFactory)
         {
             if (cosmosClient is null)
             {
@@ -29,7 +29,7 @@ namespace MenuApi.Repositories
 
             ingredientContainer = cosmosClient.GetContainer(cosmosConfig.DatabaseId, cosmosConfig.IngredientContainerId);
             this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            this.searchClient = searchClient ?? throw new ArgumentNullException(nameof(searchClient));
+            this.searchFactory = searchFactory ?? throw new ArgumentNullException(nameof(searchFactory));
         }
 
         public IAsyncEnumerable<ViewModel.Ingredient> GetIngredientsAsync()
@@ -50,11 +50,6 @@ namespace MenuApi.Repositories
             return mapper.Map<ViewModel.Ingredient>(response.Resource);
         }
 
-        public Task<ViewModel.Ingredient?> GetIngredientAsync(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<ViewModel.Ingredient> UpdateIngredientAsync(ViewModel.Ingredient newIngredient)
         {
             if (newIngredient is null)
@@ -69,6 +64,7 @@ namespace MenuApi.Repositories
 
         public async Task<IEnumerable<ViewModel.Ingredient>> SearchIngredientsAsync(string q)
         {
+            using var searchClient = searchFactory.CreateIngredientSearchClient();
             var results = await searchClient.Documents.SearchAsync<Ingredient>(q).ConfigureAwait(false);
             return results.Results.Select(x => x.Document).Select(mapper.Map<ViewModel.Ingredient>);
         }

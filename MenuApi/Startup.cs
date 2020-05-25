@@ -35,7 +35,9 @@ namespace MenuApi
             services.Configure<CosmosConfig>(Configuration.GetSection("Cosmos"));
             services.Configure<SearchConfig>(Configuration.GetSection("Search"));
 
-            services.AddTransient(CreateISearchIndexClient);
+            services.AddTransient<IIngredientRepository, IngredientRepository>();
+            services.AddTransient<IRecipeRepository, RecipeRepository>();
+            services.AddTransient<ISearchFactory, SearchFactory>();
 
             services.AddSingleton(sp => new CosmosClient(sp.GetRequiredService<IOptions<CosmosConfig>>().Value.ConnectionString));
             services.AddTransient<IIngredientRepository, IngredientRepository>();
@@ -67,12 +69,6 @@ namespace MenuApi
             {
                 endpoints.MapControllers();
             });
-        }
-
-        private ISearchIndexClient CreateISearchIndexClient(IServiceProvider sp)
-        {
-            var config = sp.GetRequiredService<IOptions<SearchConfig>>().Value;
-            return new SearchIndexClient(config.ServiceName, config.IngredientIndex, new SearchCredentials(config.QueryApiKey));
         }
     }
 }
