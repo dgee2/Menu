@@ -42,6 +42,10 @@ namespace MenuApi
             services.AddSingleton(sp => new CosmosClient(sp.GetRequiredService<IOptions<CosmosConfig>>().Value.ConnectionString));
             services.AddTransient<IIngredientRepository, IngredientRepository>();
 
+            services.AddSingleton<IValidatable>(resolver => resolver.GetRequiredService<IOptions<CosmosConfig>>().Value);
+            services.AddSingleton<IValidatable>(resolver => resolver.GetRequiredService<IOptions<SearchConfig>>().Value);
+            services.AddTransient<IStartupFilter, SettingValidationStartupFilter>();
+
             services.AddControllers();
             services.AddSwaggerDocument();
         }
