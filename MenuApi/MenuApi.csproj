@@ -10,6 +10,11 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>1591;SA0001</NoWarn>
     <DocumentationFile></DocumentationFile>
+    <CodeAnalysisRuleSet>MenuApi.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <CodeAnalysisRuleSet>MenuApi.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
