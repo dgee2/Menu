@@ -50,15 +50,15 @@ namespace MenuApi.Repositories
             return mapper.Map<ViewModel.Ingredient>(response.Resource);
         }
 
-        public async Task<ViewModel.Ingredient> UpdateIngredientAsync(ViewModel.Ingredient newIngredient)
+        public async Task<ViewModel.Ingredient> UpdateIngredientAsync(ViewModel.Ingredient ingredient)
         {
-            if (newIngredient is null)
+            if (ingredient is null)
             {
-                throw new ArgumentNullException(nameof(newIngredient));
+                throw new ArgumentNullException(nameof(ingredient));
             }
 
-            var ingredient = mapper.Map<DBModel.Ingredient>(newIngredient);
-            var response = await ingredientContainer.ReplaceItemAsync(ingredient, ingredient.Id.ToString()).ConfigureAwait(false);
+            var newIngredient = mapper.Map<DBModel.Ingredient>(ingredient);
+            var response = await ingredientContainer.ReplaceItemAsync(newIngredient, newIngredient.Id.ToString()).ConfigureAwait(false);
             return mapper.Map<ViewModel.Ingredient>(response.Resource);
         }
 

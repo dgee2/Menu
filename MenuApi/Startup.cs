@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using AutoMapper;
 using MenuApi.Configuration;
 using MenuApi.Repositories;
@@ -26,7 +25,7 @@ namespace MenuApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            services.AddAutoMapper(typeof(Startup).Assembly);
 
             services.AddHostedService<CosmosSetupService>();
 
