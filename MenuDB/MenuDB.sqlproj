@@ -71,6 +71,7 @@
     <Build Include="dbo\Tables\UnitType.sql" />
     <Build Include="dbo\Tables\IngredientUnit.sql" />
     <PostDeploy Include="Scripts\PostDeployment\Units.sql" />
+    <Build Include="dbo\Stored Procedures\GetIngredients.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="MenuDB.publish.xml" />
