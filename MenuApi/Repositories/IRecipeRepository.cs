@@ -8,7 +8,11 @@ namespace MenuApi.Repositories
     {
         Task<Recipe> CreateRecipeAsync(NewRecipe newRecipe);
 
-        IAsyncEnumerable<Recipe> GetRecipesAsync();
+        Task<Recipe> GetRecipeAsync(int recipeId);
+
+        Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId);
+
+        Task<IEnumerable<Recipe>> GetRecipesAsync();
 
         Task<IEnumerable<Recipe>> SearchRecipesAsync(string q);
 

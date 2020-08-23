@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using AutoMapper;
+using Dapper;
 using MenuApi.Configuration;
 using MenuApi.DBModel;
-using MenuApi.Extensions;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Search;
 using Microsoft.Extensions.Options;
@@ -17,8 +19,9 @@ namespace MenuApi.Repositories
         private readonly Container recipeContainer;
         private readonly IMapper mapper;
         private readonly ISearchFactory searchFactory;
+        private readonly IDbConnection dbConnection;
 
-        public RecipeRepository(CosmosClient cosmosClient, IOptions<CosmosConfig> cosmosConfigOptions, IMapper mapper, ISearchFactory searchFactory)
+        public RecipeRepository(CosmosClient cosmosClient, IOptions<CosmosConfig> cosmosConfigOptions, IMapper mapper, ISearchFactory searchFactory, IDbConnection dbConnection)
         {
             if (cosmosClient is null)
             {
@@ -30,13 +33,22 @@ namespace MenuApi.Repositories
             recipeContainer = cosmosClient.GetContainer(cosmosConfig.DatabaseId, cosmosConfig.RecipeContainerId);
             this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             this.searchFactory = searchFactory ?? throw new ArgumentNullException(nameof(searchFactory));
+            this.dbConnection = dbConnection ?? throw new ArgumentNullException(nameof(dbConnection));
         }
 
-        public IAsyncEnumerable<ViewModel.Recipe> GetRecipesAsync()
-            => recipeContainer
-                    .GetItemQueryIterator<DBModel.Recipe>(@"SELECT * FROM c")
-                    .ToAsyncEnumerable()
-                    .Select(mapper.Map<ViewModel.Recipe>);
+        public async Task<IEnumerable<ViewModel.Recipe>> GetRecipesAsync()
+            => (await dbConnection.QueryAsync<Recipe>("dbo.GetRecipes", commandType: CommandType.StoredProcedure).ConfigureAwait(false))
+                .Select(mapper.Map<ViewModel.Recipe>);
+
+        public async Task<ViewModel.Recipe> GetRecipeAsync(int recipeId)
+        {
+            var recipe = await dbConnection.QueryFirstOrDefaultAsync<Recipe>("dbo.GetRecipe", new { recipeId }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
+            return mapper.Map<ViewModel.Recipe>(recipe);
+        }
+
+        public async Task<IEnumerable<ViewModel.RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId)
+            => (await dbConnection.QueryAsync<RecipeIngredient>("dbo.GetRecipeIngredients", new { recipeId }, commandType: CommandType.StoredProcedure).ConfigureAwait(false))
+                .Select(mapper.Map<ViewModel.RecipeIngredient>);
 
         public async Task<ViewModel.Recipe> CreateRecipeAsync(ViewModel.NewRecipe newRecipe)
         {
