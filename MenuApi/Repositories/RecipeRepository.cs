@@ -2,35 +2,22 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using AutoMapper;
 using Dapper;
-using MenuApi.Configuration;
 using MenuApi.DBModel;
-using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Search;
-using Microsoft.Extensions.Options;
 
 namespace MenuApi.Repositories
 {
     public class RecipeRepository : IRecipeRepository
     {
-        private readonly Container recipeContainer;
         private readonly IMapper mapper;
         private readonly ISearchFactory searchFactory;
         private readonly IDbConnection dbConnection;
 
-        public RecipeRepository(CosmosClient cosmosClient, IOptions<CosmosConfig> cosmosConfigOptions, IMapper mapper, ISearchFactory searchFactory, IDbConnection dbConnection)
+        public RecipeRepository(IMapper mapper, ISearchFactory searchFactory, IDbConnection dbConnection)
         {
-            if (cosmosClient is null)
-            {
-                throw new ArgumentNullException(nameof(cosmosClient));
-            }
-
-            var cosmosConfig = cosmosConfigOptions?.Value ?? throw new ArgumentNullException(nameof(cosmosConfigOptions));
-
-            recipeContainer = cosmosClient.GetContainer(cosmosConfig.DatabaseId, cosmosConfig.RecipeContainerId);
             this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             this.searchFactory = searchFactory ?? throw new ArgumentNullException(nameof(searchFactory));
             this.dbConnection = dbConnection ?? throw new ArgumentNullException(nameof(dbConnection));
