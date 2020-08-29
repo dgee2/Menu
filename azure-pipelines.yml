@@ -44,7 +44,7 @@ steps:
 - task: VSBuild@1
   inputs:
     solution: '**\*.sqlproj'
-    configuration: '$(buildConfiguration'
+    configuration: '$(buildConfiguration)'
     clean: true
     maximumCpuCount: true
 - task: PublishBuildArtifacts@1
