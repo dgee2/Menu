@@ -41,6 +41,17 @@ steps:
     command: 'build'
     projects: '**/*.csproj'
     arguments: '--configuration $(buildConfiguration)'
+- task: VSBuild@1
+  inputs:
+    solution: '**\*.sqlproj'
+    configuration: '$(buildConfiguration'
+    clean: true
+    maximumCpuCount: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Pipeline.Workspace)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
 - task: SonarCloudAnalyze@1
   displayName: 'Run Code Analysis'
   continueOnError: false
