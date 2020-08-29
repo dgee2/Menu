@@ -19,13 +19,7 @@ namespace MenuApi.Controllers
         }
 
         [HttpGet]
-        public IAsyncEnumerable<Ingredient> GetIngredients() => ingredientRepository.GetIngredientsAsync();
-
-        [HttpPost]
-        public async Task<Ingredient> PostIngredient(NewIngredient ingredient) => await ingredientRepository.CreateIngredientAsync(ingredient).ConfigureAwait(false);
-
-        [HttpPut]
-        public async Task<Ingredient> PutIngredient(Ingredient ingredient) => await ingredientRepository.UpdateIngredientAsync(ingredient).ConfigureAwait(false);
+        public async Task<IEnumerable<Ingredient>> GetIngredients() => await ingredientRepository.GetIngredientsAsync().ConfigureAwait(false);
 
         [HttpGet("search")]
         public async Task<IEnumerable<Ingredient>> SearchIngredients([FromQuery] string q) => await ingredientRepository.SearchIngredientsAsync(q).ConfigureAwait(false);

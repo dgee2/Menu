@@ -7,7 +7,7 @@ trigger:
 - master
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'windows-latest'
 
 variables:
   buildConfiguration: 'Release'
@@ -36,8 +36,22 @@ steps:
       sonar.exclusions=**/obj/**,**/*.dll
       sonar.branch.name=$(Build.SourceBranchName)
   condition: ne(variables['Build.Reason'], 'PullRequest')
-- script: dotnet build --configuration $(buildConfiguration)
-  displayName: 'dotnet build $(buildConfiguration)'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'
+- task: VSBuild@1
+  inputs:
+    solution: '**\*.sqlproj'
+    configuration: '$(buildConfiguration'
+    clean: true
+    maximumCpuCount: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Pipeline.Workspace)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
 - task: SonarCloudAnalyze@1
   displayName: 'Run Code Analysis'
   continueOnError: false
