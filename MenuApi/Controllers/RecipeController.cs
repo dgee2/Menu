@@ -26,5 +26,16 @@ namespace MenuApi.Controllers
 
         [HttpGet("{recipeId}/Ingredient")]
         public async Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId) => await recipeRepository.GetRecipeIngredientsAsync(recipeId).ConfigureAwait(false);
+
+        [HttpPost]
+        public async Task<Recipe> CreateRecipeAsync([FromBody]NewRecipe newRecipe)
+        {
+            if (newRecipe is null)
+            {
+                throw new ArgumentNullException(nameof(newRecipe));
+            }
+
+            return await recipeRepository.CreateRecipeAsync(newRecipe.Name, newRecipe.Ingredients).ConfigureAwait(false);
+        }
     }
 }

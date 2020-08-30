@@ -37,28 +37,18 @@ namespace MenuApi.Repositories
             => (await dbConnection.QueryAsync<RecipeIngredient>("dbo.GetRecipeIngredients", new { recipeId }, commandType: CommandType.StoredProcedure).ConfigureAwait(false))
                 .Select(mapper.Map<ViewModel.RecipeIngredient>);
 
-        public async Task<ViewModel.Recipe> CreateRecipeAsync(ViewModel.NewRecipe newRecipe)
+        public async Task<ViewModel.Recipe> CreateRecipeAsync(string name, IEnumerable<ViewModel.RecipeIngredient> ingredients)
         {
-            if (newRecipe is null)
-            {
-                throw new ArgumentNullException(nameof(newRecipe));
-            }
+            var recipeId = await dbConnection.ExecuteScalarAsync<int>("dbo.CreateRecipe", new { name }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
 
-            var recipe = mapper.Map<DBModel.Recipe>(newRecipe);
-            var response = await recipeContainer.CreateItemAsync(recipe).ConfigureAwait(false);
-            return mapper.Map<ViewModel.Recipe>(response.Resource);
+            // TODO: Merge ingredients
+            return await GetRecipeAsync(recipeId).ConfigureAwait(false);
         }
 
         public async Task<ViewModel.Recipe> UpdateRecipeAsync(ViewModel.Recipe newRecipe)
         {
-            if (newRecipe is null)
-            {
-                throw new ArgumentNullException(nameof(newRecipe));
-            }
-
-            var recipe = mapper.Map<DBModel.Recipe>(newRecipe);
-            var response = await recipeContainer.ReplaceItemAsync(recipe, recipe.Id.ToString()).ConfigureAwait(false);
-            return mapper.Map<ViewModel.Recipe>(response.Resource);
+            await Task.CompletedTask.ConfigureAwait(false);
+            throw new NotImplementedException();
         }
 
         public async Task<IEnumerable<ViewModel.Recipe>> SearchRecipesAsync(string q)

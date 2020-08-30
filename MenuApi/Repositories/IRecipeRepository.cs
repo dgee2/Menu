@@ -6,7 +6,7 @@ namespace MenuApi.Repositories
 {
     public interface IRecipeRepository
     {
-        Task<Recipe> CreateRecipeAsync(NewRecipe newRecipe);
+        Task<Recipe> CreateRecipeAsync(string name, IEnumerable<RecipeIngredient> ingredients);
 
         Task<Recipe> GetRecipeAsync(int recipeId);
 

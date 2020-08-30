@@ -7,6 +7,7 @@ namespace MenuApi.MappingProfiles
         public ViewModelProfile()
         {
             CreateMap<ViewModel.Ingredient, DBModel.Ingredient>().ReverseMap();
+            CreateMap<ViewModel.Recipe, DBModel.Recipe>().ReverseMap();
         }
     }
 }
