@@ -38,9 +38,21 @@ steps:
   condition: ne(variables['Build.Reason'], 'PullRequest')
 - task: DotNetCoreCLI@2
   inputs:
+    command: 'restore'
+    projects: '**/*.csproj'
+    feedsToUse: 'select'
+- task: DotNetCoreCLI@2
+  inputs:
     command: 'build'
     projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration)'
+    arguments: '--configuration $(buildConfiguration) --no-restore --nologo'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: |
+      **/*.test.csproj
+      **/*.tests.csproj
+    arguments: '--no-restore --no-build --configuration $(buildConfiguration) --nologo'
 - task: VSBuild@1
   inputs:
     solution: '**\*.sqlproj'
