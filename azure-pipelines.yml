@@ -35,12 +35,6 @@ steps:
     extraProperties: |
       sonar.exclusions=**/obj/**,**/*.dll
       sonar.branch.name=$(Build.SourceBranchName)
-      sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/*.trx
-      sonar.cs.nunit.reportsPaths=$(Agent.TempDirectory)/*.trx
-      sonar.coverageReportPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
-      sonar.cs.vscoveragexml.reportsPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
-      sonar.cs.dotcover.reportsPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
-      sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
       sonar.coverage.exclusions=**/*Test*/**/*
   condition: ne(variables['Build.Reason'], 'PullRequest')
 - task: DotNetCoreCLI@2
@@ -66,6 +60,15 @@ steps:
       **/*.tests.csproj
     arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage"'
     modifyOutputPath: true
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(Agent.TempDirectory)'
+    Contents: '*.trx'
+    TargetFolder: '$(Build.SourcesDirectory)/TestResults'
+    CleanTargetFolder: true
+    OverWrite: true
+    flattenFolders: true
+    preserveTimestamp: true
 - task: DotNetCoreCLI@2
   displayName: 'Install ReportGenerator'
   inputs:
