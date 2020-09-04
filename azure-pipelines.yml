@@ -11,7 +11,6 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  testOutputDirectory: '$(Agent.TempDirectory)/testresults'
 
 steps:
 - task: SonarCloudPrepare@1
@@ -36,8 +35,8 @@ steps:
     extraProperties: |
       sonar.exclusions=**/obj/**,**/*.dll
       sonar.branch.name=$(Build.SourceBranchName)
-      sonar.cs.vstest.reportsPaths=$(TestOutputDirectory)/*.trx
-      sonar.coverageReportPaths=$(TestOutputDirectory)/mergedcoveragereport/SonarQube.xml
+      sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/*.trx
+      sonar.coverageReportPaths=$(Agent.TempDirectory)/CodeCoverage/SonarQube.xml
       sonar.coverage.exclusions=**/*Test*/**/*
   condition: ne(variables['Build.Reason'], 'PullRequest')
 - task: DotNetCoreCLI@2
@@ -61,7 +60,7 @@ steps:
     projects: |
       **/*.test.csproj
       **/*.tests.csproj
-    arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage" --results-directory $(TestOutputDirectory)'
+    arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage"'
     modifyOutputPath: true
 - task: DotNetCoreCLI@2
   displayName: 'Install ReportGenerator'
