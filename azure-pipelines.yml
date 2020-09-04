@@ -75,7 +75,7 @@ steps:
     PathtoPublish: '$(Pipeline.Workspace)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
-  continueOnError: true
+  condition: always()
 - task: SonarCloudAnalyze@1
   displayName: 'Run Code Analysis'
   continueOnError: false
