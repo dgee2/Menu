@@ -68,15 +68,18 @@ steps:
     command: custom
     custom: tool
     arguments: 'install --tool-path tools dotnet-reportgenerator-globaltool'
+  condition: succeededOrFailed()
 - script: |
     ./tools/reportgenerator -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:Cobertura;SonarQube
   displayName: 'Create code coverage report'
+  condition: succeededOrFailed()
 - task: PublishCodeCoverageResults@1
   displayName: 'Publish code coverage report'
   inputs:
     codeCoverageTool: 'cobertura'
     summaryFileLocation: '$(Build.SourcesDirectory)/CodeCoverage/Cobertura.xml'
     failIfCoverageEmpty: true
+  condition: succeededOrFailed()
 - task: VSBuild@1
   inputs:
     solution: '**\*.sqlproj'
@@ -88,12 +91,13 @@ steps:
     PathtoPublish: '$(Pipeline.Workspace)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
-  condition: always()
 - task: SonarCloudAnalyze@1
   displayName: 'Run Code Analysis'
   continueOnError: false
+  condition: succeededOrFailed()
 - task: SonarCloudPublish@1
   inputs:
     pollingTimeoutSec: '300'
   displayName: 'Publish Quality Gate Result'
   continueOnError: false
+  condition: succeededOrFailed()
