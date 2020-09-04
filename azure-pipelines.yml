@@ -56,7 +56,7 @@ steps:
     projects: |
       **/*.test.csproj
       **/*.tests.csproj
-    arguments: '--no-restore --no-build --configuration $(buildConfiguration) --nologo --collect "XPlat Code Coverage"
+    arguments: '--no-restore --no-build --configuration $(buildConfiguration) --nologo --collect "XPlat Code Coverage"'
     modifyOutputPath: true
 - script: 'dotnet tool install --global dotnet-reportgenerator-globaltool --version 4.6.6'
   displayName: 'Install ReportGenerator tool'
