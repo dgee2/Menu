@@ -24,9 +24,8 @@ steps:
     projectName: 'Menu'
     extraProperties: |
       sonar.exclusions=**/obj/**,**/*.dll
-      sonar.branch.name=$(Build.SourceBranchName)
       sonar.cs.vstest.reportsPaths=$(TestOutputDirectory)/*.trx
-      sonar.coverageReportPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
+      sonar.coverageReportPaths=$(TestOutputDirectory)/CodeCoverage/SonarQube.xml
       sonar.coverage.exclusions=**/*Test*/**/*
   condition: eq(variables['Build.Reason'], 'PullRequest')
 - task: SonarCloudPrepare@1
@@ -70,7 +69,7 @@ steps:
 - task: reportgenerator@4
   inputs:
     reports: '$(TestOutputDirectory)/*/coverage.cobertura.xml'
-    targetdir: '$(Build.SourcesDirectory)/CodeCoverage'
+    targetdir: '$(TestOutputDirectory)/CodeCoverage'
     reporttypes: 'Cobertura;SonarQube'
     assemblyfilters: '-*Tests*'
     filefilters: '-*/Migrations/*.cs'
@@ -78,15 +77,15 @@ steps:
   displayName: 'Publish code coverage report'
   inputs:
     codeCoverageTool: 'cobertura'
-    summaryFileLocation: '$(Build.SourcesDirectory)/CodeCoverage/Cobertura.xml'
+    summaryFileLocation: '$(TestOutputDirectory)/CodeCoverage/Cobertura.xml'
     failIfCoverageEmpty: true
   condition: succeededOrFailed()
-# - task: PublishTestResults@2
-#   inputs:
-#     testResultsFormat: 'VSTest'
-#     testResultsFiles: '**/TEST-*.xml'
-#     failTaskOnFailedTests: true
-#     buildConfiguration: '$(BuildConfiguration)'
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'VSTest'
+    testResultsFiles: '$(TestOutputDirectory)/*.trx'
+    failTaskOnFailedTests: true
+    buildConfiguration: '$(BuildConfiguration)'
 - task: VSBuild@1
   inputs:
     solution: '**\*.sqlproj'
