@@ -67,7 +67,7 @@ steps:
   displayName: 'Publish Code Coverage Results'
   inputs:
     codeCoverageTool: 'Cobertura'
-    summaryFileLocation: '$(Build.SourcesDirectory)/**/TestCoverage/coverage.cobertura.xml'
+    summaryFileLocation: '**/TestCoverage/coverage.cobertura.xml'
     failIfCoverageEmpty: true
 - task: VSBuild@1
   inputs:
