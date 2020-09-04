@@ -14,7 +14,7 @@ variables:
 
 steps:
 - task: SonarCloudPrepare@1
-  displayName: 'Prepare analysis on SonarCloud'
+  displayName: 'Prepare analysis on SonarCloud (PR)'
   inputs:
     SonarCloud: 'SonarCloud'
     organization: 'dgee2-github'
@@ -37,16 +37,19 @@ steps:
       sonar.branch.name=$(Build.SourceBranchName)
   condition: ne(variables['Build.Reason'], 'PullRequest')
 - task: DotNetCoreCLI@2
+  displayName: 'DotNet Restore'
   inputs:
     command: 'restore'
     projects: '**/*.csproj'
     feedsToUse: 'select'
 - task: DotNetCoreCLI@2
+  displayName: 'DotNet Build'
   inputs:
     command: 'build'
     projects: '**/*.csproj'
     arguments: '--configuration $(buildConfiguration) --no-restore --nologo'
 - task: DotNetCoreCLI@2
+  displayName: 'DotNet Test'
   inputs:
     command: 'test'
     projects: |
