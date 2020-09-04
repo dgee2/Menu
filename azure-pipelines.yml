@@ -13,13 +13,6 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- task: DotNetCoreInstaller@0
-  displayName: Install .NET Core SDK
-  name: install_dotnetcore_sdk
-  enabled: true
-  inputs:
-    packageType: 'sdk'
-    version: '3.1.x'
 - task: SonarCloudPrepare@1
   displayName: 'Prepare analysis on SonarCloud (PR)'
   inputs:
@@ -74,9 +67,9 @@ steps:
   inputs:
     command: custom
     custom: tool
-    arguments: 'install --global dotnet-reportgenerator-globaltool'
+    arguments: 'install --tool-path tools dotnet-reportgenerator-globaltool'
 - script: |
-    reportgenerator -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:Cobertura;SonarQube
+    ./tools/reportgenerator -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:Cobertura;SonarQube
   displayName: 'Create code coverage report'
 - task: PublishCodeCoverageResults@1
   displayName: 'Publish code coverage report'
