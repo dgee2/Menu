@@ -11,6 +11,7 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
+  testOutputDirectory: '$(Agent.TempDirectory)/testresults'
 
 steps:
 - task: SonarCloudPrepare@1
@@ -23,6 +24,10 @@ steps:
     projectName: 'Menu'
     extraProperties: |
       sonar.exclusions=**/obj/**,**/*.dll
+      sonar.branch.name=$(Build.SourceBranchName)
+      sonar.cs.vstest.reportsPaths=$(TestOutputDirectory)/*.trx
+      sonar.coverageReportPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
+      sonar.coverage.exclusions=**/*Test*/**/*
   condition: eq(variables['Build.Reason'], 'PullRequest')
 - task: SonarCloudPrepare@1
   displayName: 'Prepare analysis on SonarCloud'
@@ -60,19 +65,11 @@ steps:
     projects: |
       **/*.test.csproj
       **/*.tests.csproj
-    arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage"'
-- task: CopyFiles@2
-  inputs:
-    SourceFolder: '$(Agent.TempDirectory)'
-    Contents: '*.trx'
-    TargetFolder: '$(Build.SourcesDirectory)/TestResults'
-    CleanTargetFolder: true
-    OverWrite: true
-    flattenFolders: true
-    preserveTimestamp: true
+    publishTestResults: false
+    arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage" --logger trx --results-directory $(TestOutputDirectory)'
 - task: reportgenerator@4
   inputs:
-    reports: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+    reports: '$(TestOutputDirectory)/*/coverage.cobertura.xml'
     targetdir: '$(Build.SourcesDirectory)/CodeCoverage'
     reporttypes: 'Cobertura;SonarQube'
     assemblyfilters: '-*Tests*'
@@ -84,6 +81,12 @@ steps:
     summaryFileLocation: '$(Build.SourcesDirectory)/CodeCoverage/Cobertura.xml'
     failIfCoverageEmpty: true
   condition: succeededOrFailed()
+# - task: PublishTestResults@2
+#   inputs:
+#     testResultsFormat: 'VSTest'
+#     testResultsFiles: '**/TEST-*.xml'
+#     failTaskOnFailedTests: true
+#     buildConfiguration: '$(BuildConfiguration)'
 - task: VSBuild@1
   inputs:
     solution: '**\*.sqlproj'
