@@ -55,8 +55,13 @@ steps:
     projects: |
       **/*.test.csproj
       **/*.tests.csproj
-    publishTestResults: false
-    arguments: '--no-restore --no-build --configuration $(buildConfiguration) --nologo --collect:"XPlat Code Coverage"'
+    arguments: '--no-restore --no-build --configuration $(buildConfiguration) --nologo /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestCoverage/'
+- task: PublishCodeCoverageResults@1
+  displayName: 'Publish Code Coverage Results'
+  inputs:
+    codeCoverageTool: 'Cobertura'
+    summaryFileLocation: '$(Build.SourcesDirectory)/**/TestCoverage/coverage.cobertura.xml'
+    failIfCoverageEmpty: true
 - task: VSBuild@1
   inputs:
     solution: '**\*.sqlproj'
