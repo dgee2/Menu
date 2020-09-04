@@ -6,6 +6,7 @@ using MenuApi.Repositories;
 using MenuApi.Tests.Factory;
 using NUnit.Framework;
 using Shouldly;
+using System;
 using System.Threading.Tasks;
 
 namespace MenuApi.Tests
@@ -23,6 +24,22 @@ namespace MenuApi.Tests
             recipeRepository = A.Fake<IRecipeRepository>();
 
             sut = new RecipeController(recipeRepository, mapper);
+        }
+
+        [Test]
+        public void Constructor_Should_Throw_Exception_For_null_recipeRepository()
+        {
+            Func<RecipeController> fun = () => new RecipeController(null, mapper);
+            var ex = fun.ShouldThrow<ArgumentNullException>();
+            ex.ParamName.ShouldBe("recipeRepository");
+        }
+
+        [Test]
+        public void Constructor_Should_Throw_Exception_For_null_mapper()
+        {
+            Func<RecipeController> fun = () => new RecipeController(recipeRepository, null);
+            var ex = fun.ShouldThrow<ArgumentNullException>();
+            ex.ParamName.ShouldBe("mapper");
         }
 
         [Test, AutoData]
