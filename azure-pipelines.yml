@@ -55,7 +55,7 @@ steps:
     projects: |
       **/*.test.csproj
       **/*.tests.csproj
-    arguments: '--no-restore --no-build --configuration $(buildConfiguration) --nologo'
+    arguments: '--no-restore --no-build --configuration $(buildConfiguration) --nologo --collect:"XPlat Code Coverage"'
 - task: VSBuild@1
   inputs:
     solution: '**\*.sqlproj'
