@@ -69,7 +69,7 @@ steps:
     custom: tool
     arguments: 'install --global dotnet-reportgenerator-globaltool'
 - script: |
-    reportgenerator -reports:$(Build.SourcesDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:Cobertura;SonarQube
+    reportgenerator -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:Cobertura;SonarQube
   displayName: 'Create code coverage report'
 - task: PublishCodeCoverageResults@1
   displayName: 'Publish code coverage report'
