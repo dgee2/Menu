@@ -92,16 +92,16 @@ steps:
     configuration: '$(buildConfiguration)'
     clean: true
     maximumCpuCount: true
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Pipeline.Workspace)'
-    ArtifactName: 'drop'
-    publishLocation: 'Container'
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Agent.TempDirectory)'
-    ArtifactName: 'temp'
-    publishLocation: 'Container'
+# - task: PublishBuildArtifacts@1
+#   inputs:
+#     PathtoPublish: '$(Pipeline.Workspace)'
+#     ArtifactName: 'drop'
+#     publishLocation: 'Container'
+# - task: PublishBuildArtifacts@1
+#   inputs:
+#     PathtoPublish: '$(Agent.TempDirectory)'
+#     ArtifactName: 'temp'
+#     publishLocation: 'Container'
 - task: SonarCloudAnalyze@1
   displayName: 'Run Code Analysis'
   continueOnError: false
