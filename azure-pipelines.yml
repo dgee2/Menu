@@ -36,7 +36,11 @@ steps:
       sonar.exclusions=**/obj/**,**/*.dll
       sonar.branch.name=$(Build.SourceBranchName)
       sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/*.trx
+      sonar.cs.nunit.reportsPaths=$(Agent.TempDirectory)/*.trx
       sonar.coverageReportPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
+      sonar.cs.vscoveragexml.reportsPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
+      sonar.cs.dotcover.reportsPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
+      sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
       sonar.coverage.exclusions=**/*Test*/**/*
   condition: ne(variables['Build.Reason'], 'PullRequest')
 - task: DotNetCoreCLI@2
