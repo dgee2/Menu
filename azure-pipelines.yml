@@ -48,6 +48,7 @@ steps:
     command: 'build'
     projects: '**/*.csproj'
     arguments: '--configuration $(buildConfiguration) --no-restore --nologo'
+    modifyOutputPath: true
 - task: DotNetCoreCLI@2
   displayName: 'DotNet Test'
   inputs:
@@ -56,6 +57,7 @@ steps:
       **/*.test.csproj
       **/*.tests.csproj
     arguments: '--no-restore --no-build --configuration $(buildConfiguration) --nologo /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestCoverage/'
+    modifyOutputPath: true
 - task: PublishCodeCoverageResults@1
   displayName: 'Publish Code Coverage Results'
   inputs:
@@ -73,6 +75,7 @@ steps:
     PathtoPublish: '$(Pipeline.Workspace)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
+  continueOnError: true
 - task: SonarCloudAnalyze@1
   displayName: 'Run Code Analysis'
   continueOnError: false
