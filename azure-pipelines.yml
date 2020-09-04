@@ -55,6 +55,7 @@ steps:
     projects: |
       **/*.test.csproj
       **/*.tests.csproj
+    publishTestResults: false
     arguments: '--no-restore --no-build --configuration $(buildConfiguration) --nologo --collect:"XPlat Code Coverage"'
 - task: VSBuild@1
   inputs:
