@@ -67,10 +67,10 @@ steps:
   inputs:
     command: custom
     custom: tool
-    arguments: 'install --tool-path tools dotnet-reportgenerator-globaltool'
+    arguments: 'install --tool-path $(Agent.TempDirectory)/tools dotnet-reportgenerator-globaltool'
   condition: succeededOrFailed()
 - script: |
-    ./tools/reportgenerator -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:Cobertura;SonarQube
+    $(Agent.TempDirectory)/tools/reportgenerator.exe -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:Cobertura;SonarQube
   displayName: 'Create code coverage report'
   condition: succeededOrFailed()
 - task: PublishCodeCoverageResults@1
