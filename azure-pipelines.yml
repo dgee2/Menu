@@ -61,7 +61,7 @@ steps:
     projects: |
       **/*.test.csproj
       **/*.tests.csproj
-    arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --logger trx --collect:"XPlat Code Coverage" --results-directory $(TestOutputDirectory)'
+    arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage" --results-directory $(TestOutputDirectory)'
     modifyOutputPath: true
 - task: DotNetCoreCLI@2
   displayName: 'Install ReportGenerator'
