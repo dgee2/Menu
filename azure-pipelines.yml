@@ -35,6 +35,8 @@ steps:
     extraProperties: |
       sonar.exclusions=**/obj/**,**/*.dll
       sonar.branch.name=$(Build.SourceBranchName)
+      sonar.cs.vstest.reportsPaths=$(TestOutputDirectory)/*.trx
+      sonar.coverageReportPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
       sonar.coverage.exclusions=**/*Test*/**/*
   condition: ne(variables['Build.Reason'], 'PullRequest')
 - task: DotNetCoreCLI@2
@@ -59,7 +61,6 @@ steps:
       **/*.test.csproj
       **/*.tests.csproj
     arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage"'
-    modifyOutputPath: true
 - task: CopyFiles@2
   inputs:
     SourceFolder: '$(Agent.TempDirectory)'
@@ -69,17 +70,13 @@ steps:
     OverWrite: true
     flattenFolders: true
     preserveTimestamp: true
-- task: DotNetCoreCLI@2
-  displayName: 'Install ReportGenerator'
+- task: reportgenerator@4
   inputs:
-    command: custom
-    custom: tool
-    arguments: 'install --tool-path $(Agent.TempDirectory)/tools dotnet-reportgenerator-globaltool'
-  condition: succeededOrFailed()
-- script: |
-    $(Agent.TempDirectory)/tools/reportgenerator.exe -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:Cobertura;SonarQube
-  displayName: 'Create code coverage report'
-  condition: succeededOrFailed()
+    reports: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+    targetdir: '$(Build.SourcesDirectory)/CodeCoverage'
+    reporttypes: 'Cobertura;SonarQube'
+    assemblyfilters: '-*Tests*'
+    filefilters: '-*/Migrations/*.cs'
 - task: PublishCodeCoverageResults@1
   displayName: 'Publish code coverage report'
   inputs:
