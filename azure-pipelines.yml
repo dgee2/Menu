@@ -23,10 +23,10 @@ steps:
     projectKey: 'dgee2_Menu'
     projectName: 'Menu'
     extraProperties: |
-      sonar.exclusions=**/obj/**,**/*.dll
-      sonar.cs.vstest.reportsPaths=$(TestOutputDirectory)/*.trx
-      sonar.coverageReportPaths=$(TestOutputDirectory)/CodeCoverage/SonarQube.xml
-      sonar.coverage.exclusions=**/*Test*/**/*
+      sonar.exclusions=**\obj\**,**\*.dll
+      sonar.cs.vstest.reportsPaths=$(TestOutputDirectory)\*.trx
+      sonar.coverageReportPaths=$(TestOutputDirectory)\CodeCoverage\SonarQube.xml
+      sonar.coverage.exclusions=**\*Test*\**\*
   condition: eq(variables['Build.Reason'], 'PullRequest')
 - task: SonarCloudPrepare@1
   displayName: 'Prepare analysis on SonarCloud'
