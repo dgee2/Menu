@@ -24,6 +24,9 @@ steps:
     projectName: 'Menu'
     extraProperties: |
       sonar.exclusions=**/obj/**,**/*.dll
+      sonar.cs.vstest.reportsPaths=$(TestOutputDirectory)/*.trx
+      sonar.coverageReportPaths=$(TestOutputDirectory)/CodeCoverage/SonarQube.xml
+      sonar.coverage.exclusions=**/*Test*/**/*
   condition: eq(variables['Build.Reason'], 'PullRequest')
 - task: SonarCloudPrepare@1
   displayName: 'Prepare analysis on SonarCloud'
@@ -36,6 +39,9 @@ steps:
     extraProperties: |
       sonar.exclusions=**/obj/**,**/*.dll
       sonar.branch.name=$(Build.SourceBranchName)
+      sonar.cs.vstest.reportsPaths=$(TestOutputDirectory)/*.trx
+      sonar.coverageReportPaths=$(Build.SourcesDirectory)/CodeCoverage/SonarQube.xml
+      sonar.coverage.exclusions=**/*Test*/**/*
   condition: ne(variables['Build.Reason'], 'PullRequest')
 - task: DotNetCoreCLI@2
   displayName: 'DotNet Restore'
