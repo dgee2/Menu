@@ -2,8 +2,8 @@ using AutoFixture.NUnit3;
 using AutoMapper;
 using FakeItEasy;
 using FluentAssertions;
-using MenuApi.Controllers;
 using MenuApi.Repositories;
+using MenuApi.Services;
 using MenuApi.Tests.Factory;
 using MenuApi.ViewModel;
 using NUnit.Framework;
@@ -14,9 +14,9 @@ using System.Threading.Tasks;
 
 namespace MenuApi.Tests
 {
-    public class RecipeControllerTests
+    public class RecipeServiceTests
     {
-        RecipeController sut;
+        RecipeService sut;
         IMapper mapper;
         IRecipeRepository recipeRepository;
 
@@ -26,13 +26,13 @@ namespace MenuApi.Tests
             mapper = AutoMapperFactory.CreateMapper();
             recipeRepository = A.Fake<IRecipeRepository>();
 
-            sut = new RecipeController(recipeRepository, mapper);
+            sut = new RecipeService(recipeRepository, mapper);
         }
 
         [Test]
         public void Constructor_Should_Throw_Exception_For_null_recipeRepository()
         {
-            Func<RecipeController> fun = () => new RecipeController(null, mapper);
+            Func<RecipeService> fun = () => new RecipeService(null, mapper);
             fun.Should().Throw<ArgumentNullException>()
                 .And.ParamName.Should().Be("recipeRepository");
         }
@@ -40,7 +40,7 @@ namespace MenuApi.Tests
         [Test]
         public void Constructor_Should_Throw_Exception_For_null_mapper()
         {
-            Func<RecipeController> fun = () => new RecipeController(recipeRepository, null);
+            Func<RecipeService> fun = () => new RecipeService(recipeRepository, null);
             fun.Should().Throw<ArgumentNullException>()
                .And.ParamName.Should().Be("mapper");
         }
@@ -91,7 +91,7 @@ namespace MenuApi.Tests
         [Test]
         public void CreateRecipe_Should_Throw_Exception_For_null_newRecipe()
         {
-            Func<Task<FullRecipe>> fun = () => sut.CreateRecipeAsync(null);
+            Func<Task<int>> fun = () => sut.CreateRecipeAsync(null);
 
             fun.Should().Throw<ArgumentNullException>().And.ParamName.Should().Be("newRecipe");
         }
@@ -114,13 +114,10 @@ namespace MenuApi.Tests
                 }).ToList()
             };
 
-            var result = await sut.CreateRecipeAsync(newRecipe);
+            await sut.CreateRecipeAsync(newRecipe);
+
             A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).MustHaveHappenedOnceExactly();
             A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
-
-            result.Name.Should().Be(recipe.Name);
-            result.Id.Should().Be(recipe.Id);
-            result.Ingredients.Should().BeEquivalentTo(newRecipe.Ingredients);
         }
     }
 }
