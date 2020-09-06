@@ -30,10 +30,15 @@ namespace MenuApi.Controllers
         }
 
         [HttpGet("{recipeId}")]
-        public async Task<Recipe> GetRecipeAsync(int recipeId)
+        public async Task<FullRecipe> GetRecipeAsync(int recipeId)
         {
-            var recipe = await recipeRepository.GetRecipeAsync(recipeId).ConfigureAwait(false);
-            return mapper.Map<Recipe>(recipe);
+            var dbRecipe = await recipeRepository.GetRecipeAsync(recipeId).ConfigureAwait(false);
+            var dbIngredients = await recipeRepository.GetRecipeIngredientsAsync(recipeId).ConfigureAwait(false);
+
+            var recipe = mapper.Map<FullRecipe>(dbRecipe);
+            recipe.Ingredients = dbIngredients.Select(mapper.Map<RecipeIngredient>);
+
+            return recipe;
         }
 
         [HttpGet("{recipeId}/Ingredient")]
@@ -44,15 +49,25 @@ namespace MenuApi.Controllers
         }
 
         [HttpPost]
-        public async Task<Recipe> CreateRecipeAsync([FromBody] NewRecipe newRecipe)
+        public async Task<FullRecipe> CreateRecipeAsync([FromBody] NewRecipe newRecipe)
         {
             if (newRecipe is null)
             {
                 throw new ArgumentNullException(nameof(newRecipe));
             }
 
-            var recipe = await recipeRepository.CreateRecipeAsync(newRecipe.Name, newRecipe.Ingredients).ConfigureAwait(false);
-            return mapper.Map<Recipe>(recipe);
+            var ingredients = newRecipe.Ingredients.Select(mapper.Map<DBModel.RecipeIngredient>);
+
+            var recipeId = await recipeRepository.CreateRecipeAsync(newRecipe.Name).ConfigureAwait(false);
+
+            await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
+
+            var recipe = await recipeRepository.GetRecipeAsync(recipeId).ConfigureAwait(false);
+            var result = mapper.Map<FullRecipe>(recipe);
+            var recipeIngredients = await recipeRepository.GetRecipeIngredientsAsync(recipeId).ConfigureAwait(false);
+            result.Ingredients = recipeIngredients.Select(mapper.Map<RecipeIngredient>);
+
+            return result;
         }
     }
 }

@@ -31,12 +31,11 @@ namespace MenuApi.Repositories
         public async Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId)
             => await dbConnection.QueryAsync<RecipeIngredient>("dbo.GetRecipeIngredients", new { recipeId }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
 
-        public async Task<Recipe> CreateRecipeAsync(string name, IEnumerable<ViewModel.RecipeIngredient> ingredients)
-        {
-            var recipeId = await dbConnection.ExecuteScalarAsync<int>("dbo.CreateRecipe", new { name }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
+        public async Task<int> CreateRecipeAsync(string name)
+            => await dbConnection.ExecuteScalarAsync<int>("dbo.CreateRecipe", new { name }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
 
-            return await GetRecipeAsync(recipeId).ConfigureAwait(false);
-        }
+        public async Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<RecipeIngredient> recipeIngredients)
+            => await dbConnection.ExecuteAsync("dbo.UpsertRecipeIngredients", new { recipeId, recipeIngredients }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
 
         public async Task<Recipe> UpdateRecipeAsync(Recipe newRecipe)
         {

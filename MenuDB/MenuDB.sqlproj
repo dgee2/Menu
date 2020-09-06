@@ -64,6 +64,8 @@
     <Folder Include="dbo\Tables" />
     <Folder Include="Scripts" />
     <Folder Include="Scripts\PostDeployment" />
+    <Folder Include="dbo\Types" />
+    <Folder Include="dbo\Types\Table" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Ingredient.sql" />
@@ -78,6 +80,8 @@
     <Build Include="dbo\Stored Procedures\GetRecipes.sql" />
     <Build Include="dbo\Stored Procedures\GetRecipe.sql" />
     <Build Include="dbo\Stored Procedures\CreateRecipe.sql" />
+    <Build Include="dbo\Stored Procedures\UpsertRecipeIngredients.sql" />
+    <Build Include="dbo\Types\Table\RecipeIngredientType.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="MenuDB.publish.xml" />

@@ -5,9 +5,11 @@ namespace MenuApi.Repositories
 {
     public interface IRecipeRepository
     {
-        Task<DBModel.Recipe> CreateRecipeAsync(string name, IEnumerable<ViewModel.RecipeIngredient> ingredients);
+        Task<int> CreateRecipeAsync(string name);
 
         Task<DBModel.Recipe> GetRecipeAsync(int recipeId);
+
+        Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients);
 
         Task<IEnumerable<DBModel.RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId);
 
