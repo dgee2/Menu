@@ -1,21 +1,22 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using MenuApi.ViewModel;
 
 namespace MenuApi.Repositories
 {
     public interface IRecipeRepository
     {
-        Task<Recipe> CreateRecipeAsync(NewRecipe newRecipe);
+        Task<int> CreateRecipeAsync(string name);
 
-        Task<Recipe> GetRecipeAsync(int recipeId);
+        Task<DBModel.Recipe> GetRecipeAsync(int recipeId);
 
-        Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId);
+        Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients);
 
-        Task<IEnumerable<Recipe>> GetRecipesAsync();
+        Task<IEnumerable<DBModel.RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId);
 
-        Task<IEnumerable<Recipe>> SearchRecipesAsync(string q);
+        Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync();
 
-        Task<Recipe> UpdateRecipeAsync(Recipe newRecipe);
+        Task<IEnumerable<DBModel.Recipe>> SearchRecipesAsync(string q);
+
+        Task<DBModel.Recipe> UpdateRecipeAsync(DBModel.Recipe newRecipe);
     }
 }

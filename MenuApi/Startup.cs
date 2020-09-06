@@ -3,10 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using AutoMapper;
 using MenuApi.Configuration;
 using MenuApi.Repositories;
-using MenuApi.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Azure.Cosmos;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,8 +27,6 @@ namespace MenuApi
         {
             services.AddAutoMapper(typeof(Startup).Assembly);
 
-            services.AddHostedService<CosmosSetupService>();
-
             services.Configure<CosmosConfig>(Configuration.GetSection("Cosmos"));
             services.Configure<SearchConfig>(Configuration.GetSection("Search"));
 
@@ -38,7 +34,6 @@ namespace MenuApi
             services.AddTransient<IRecipeRepository, RecipeRepository>();
             services.AddTransient<ISearchFactory, SearchFactory>();
 
-            services.AddSingleton(sp => new CosmosClient(sp.GetRequiredService<IOptions<CosmosConfig>>().Value.ConnectionString));
             services.AddTransient<IIngredientRepository, IngredientRepository>();
 
             services.AddSingleton<IValidatable>(resolver => resolver.GetRequiredService<IOptions<CosmosConfig>>().Value);
