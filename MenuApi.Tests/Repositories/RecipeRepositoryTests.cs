@@ -48,8 +48,8 @@ namespace MenuApi.Tests
         [Test, AutoData]
         public async Task GetRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.RecipeIngredient> ingredients)
         {
-            A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(Task.FromResult(recipe));
-            A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id)).Returns(Task.FromResult(ingredients));
+            A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(recipe);
+            A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id)).Returns(ingredients);
 
             var result = await sut.GetRecipeAsync(recipe.Id);
 
@@ -66,7 +66,7 @@ namespace MenuApi.Tests
                 Id = x.Id,
                 Name = x.Name
             });
-            A.CallTo(() => recipeRepository.GetRecipesAsync()).Returns(Task.FromResult(recipes.AsEnumerable()));
+            A.CallTo(() => recipeRepository.GetRecipesAsync()).Returns(recipes.AsEnumerable());
 
             var result = await sut.GetRecipesAsync();
             result.Should().BeEquivalentTo(expected);
@@ -82,7 +82,7 @@ namespace MenuApi.Tests
                 Unit = x.Unit
             });
 
-            A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId)).Returns(Task.FromResult(ingredients));
+            A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
 
             var result = await sut.GetRecipeIngredientsAsync(recipeId);
             result.Should().BeEquivalentTo(expected);
@@ -99,9 +99,9 @@ namespace MenuApi.Tests
         [Test, AutoData]
         public async Task CreateRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.RecipeIngredient> ingredients)
         {
-            A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).Returns(Task.FromResult(recipe.Id));
-            A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(Task.FromResult(recipe));
-            A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id)).Returns(Task.FromResult(ingredients));
+            A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).Returns(recipe.Id);
+            A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(recipe);
+            A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id)).Returns(ingredients);
 
             var newRecipe = new NewRecipe
             {
