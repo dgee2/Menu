@@ -106,9 +106,9 @@ steps:
   displayName: 'Run Code Analysis'
   continueOnError: false
   condition: succeededOrFailed()
-- task: SonarCloudPublish@1
-  inputs:
-    pollingTimeoutSec: '300'
-  displayName: 'Publish Quality Gate Result'
-  continueOnError: false
-  condition: succeededOrFailed()
+# - task: SonarCloudPublish@1
+#   inputs:
+#     pollingTimeoutSec: '300'
+#   displayName: 'Publish Quality Gate Result'
+#   continueOnError: false
+#   condition: succeededOrFailed()
