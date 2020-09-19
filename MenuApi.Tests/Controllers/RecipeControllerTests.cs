@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MenuApi.Tests.Constructors
+namespace MenuApi.Tests.Controllers
 {
     class RecipeControllerTests
     {
