@@ -16,9 +16,9 @@ namespace MenuApi.Tests
 {
     public class RecipeServiceTests
     {
-        RecipeService sut;
-        IMapper mapper;
-        IRecipeRepository recipeRepository;
+        private RecipeService sut;
+        private IMapper mapper;
+        private IRecipeRepository recipeRepository;
 
         [SetUp]
         public void Setup()
@@ -51,7 +51,7 @@ namespace MenuApi.Tests
             A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(recipe);
             A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id)).Returns(ingredients);
 
-            var result = await sut.GetRecipeAsync(recipe.Id);
+            var result = await sut.GetRecipeAsync(recipe.Id).ConfigureAwait(false);
 
             result.Name.Should().Be(recipe.Name);
             result.Id.Should().Be(recipe.Id);
@@ -68,7 +68,7 @@ namespace MenuApi.Tests
             });
             A.CallTo(() => recipeRepository.GetRecipesAsync()).Returns(recipes.AsEnumerable());
 
-            var result = await sut.GetRecipesAsync();
+            var result = await sut.GetRecipesAsync().ConfigureAwait(false);
             result.Should().BeEquivalentTo(expected);
         }
 
@@ -84,7 +84,7 @@ namespace MenuApi.Tests
 
             A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
 
-            var result = await sut.GetRecipeIngredientsAsync(recipeId);
+            var result = await sut.GetRecipeIngredientsAsync(recipeId).ConfigureAwait(false);
             result.Should().BeEquivalentTo(expected);
         }
 
@@ -114,7 +114,7 @@ namespace MenuApi.Tests
                 }).ToList()
             };
 
-            await sut.CreateRecipeAsync(newRecipe);
+            await sut.CreateRecipeAsync(newRecipe).ConfigureAwait(false);
 
             A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).MustHaveHappenedOnceExactly();
             A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();

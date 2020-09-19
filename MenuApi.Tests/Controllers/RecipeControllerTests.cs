@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 
 namespace MenuApi.Tests.Controllers
 {
-    class RecipeControllerTests
+    public class RecipeControllerTests
     {
-        RecipeController sut;
-        IRecipeService recipeService;
+        private RecipeController sut;
+        private IRecipeService recipeService;
 
         [SetUp]
         public void Setup()
@@ -37,7 +37,7 @@ namespace MenuApi.Tests.Controllers
         {
             A.CallTo(() => recipeService.GetRecipesAsync()).Returns(recipes);
 
-            var result = await sut.GetRecipesAsync();
+            var result = await sut.GetRecipesAsync().ConfigureAwait(false);
 
             result.Should().BeEquivalentTo(recipes);
         }
@@ -47,7 +47,7 @@ namespace MenuApi.Tests.Controllers
         {
             A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
-            var result = await sut.GetRecipeAsync(recipeId);
+            var result = await sut.GetRecipeAsync(recipeId).ConfigureAwait(false);
 
             result.Should().Be(recipe);
         }
@@ -57,19 +57,18 @@ namespace MenuApi.Tests.Controllers
         {
             A.CallTo(() => recipeService.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
 
-            var result = await sut.GetRecipeIngredientsAsync(recipeId);
+            var result = await sut.GetRecipeIngredientsAsync(recipeId).ConfigureAwait(false);
 
             result.Should().BeEquivalentTo(ingredients);
         }
 
         [Test, AutoData]
-        public async Task t(NewRecipe newRecipe, FullRecipe recipe, int recipeId)
+        public async Task CreateRecipeAsync_Success(NewRecipe newRecipe, FullRecipe recipe, int recipeId)
         {
             A.CallTo(() => recipeService.CreateRecipeAsync(newRecipe)).Returns(recipeId);
             A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
-            var result = await sut.CreateRecipeAsync(newRecipe);
-
+            var result = await sut.CreateRecipeAsync(newRecipe).ConfigureAwait(false);
 
             A.CallTo(() => recipeService.CreateRecipeAsync(newRecipe)).MustHaveHappenedOnceExactly();
             result.Should().Be(recipe);
