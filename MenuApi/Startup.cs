@@ -66,15 +66,12 @@ namespace MenuApi
 
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(endpoints => endpoints.MapControllers());
         }
 
         public void ConfigureDatabase(IServiceCollection services)
         {
-            services.AddTransient<IDbConnection>(sp => new SqlConnection(Configuration.GetConnectionString("menudb")));
+            services.AddTransient<IDbConnection>(_ => new SqlConnection(Configuration.GetConnectionString("menudb")));
         }
     }
 }
