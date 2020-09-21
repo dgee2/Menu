@@ -82,6 +82,7 @@
     <Build Include="dbo\Stored Procedures\CreateRecipe.sql" />
     <Build Include="dbo\Stored Procedures\UpsertRecipeIngredients.sql" />
     <Build Include="dbo\Types\Table\RecipeIngredientType.sql" />
+    <Build Include="dbo\Stored Procedures\UpdateRecipe.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="MenuDB.publish.xml" />

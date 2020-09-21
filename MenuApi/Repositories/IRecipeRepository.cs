@@ -17,6 +17,6 @@ namespace MenuApi.Repositories
 
         Task<IEnumerable<DBModel.Recipe>> SearchRecipesAsync(string q);
 
-        Task<DBModel.Recipe> UpdateRecipeAsync(DBModel.Recipe newRecipe);
+        Task UpdateRecipeAsync(int recipeId, string name);
     }
 }
