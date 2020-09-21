@@ -100,8 +100,6 @@ namespace MenuApi.Tests
         public async Task CreateRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.RecipeIngredient> ingredients)
         {
             A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).Returns(recipe.Id);
-            A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(recipe);
-            A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id)).Returns(ingredients);
 
             var newRecipe = new NewRecipe
             {
@@ -118,6 +116,26 @@ namespace MenuApi.Tests
 
             A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).MustHaveHappenedOnceExactly();
             A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
+        }
+
+        [Test, AutoData]
+        public async Task UpdateRecipeSuccess(int recipeId, string recipeName, IEnumerable<DBModel.RecipeIngredient> ingredients)
+        {
+            var newRecipe = new NewRecipe
+            {
+                Name = recipeName,
+                Ingredients = ingredients.Select(x => new RecipeIngredient
+                {
+                    Amount = x.Amount,
+                    Name = x.Name,
+                    Unit = x.Unit
+                }).ToList()
+            };
+
+            await sut.UpdateRecipeAsync(recipeId, newRecipe).ConfigureAwait(false);
+
+            A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
         }
     }
 }

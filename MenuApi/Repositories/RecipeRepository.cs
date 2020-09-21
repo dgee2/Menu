@@ -37,10 +37,9 @@ namespace MenuApi.Repositories
         public async Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<RecipeIngredient> recipeIngredients)
             => await dbConnection.ExecuteAsync("dbo.UpsertRecipeIngredients", new { recipeId, recipeIngredients }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
 
-        public async Task<Recipe> UpdateRecipeAsync(Recipe newRecipe)
+        public async Task UpdateRecipeAsync(int recipeId, string name)
         {
-            await Task.CompletedTask.ConfigureAwait(false);
-            throw new NotImplementedException();
+            await dbConnection.ExecuteAsync("dbo.UpdateRecipe", new { recipeId, name }, commandType: CommandType.StoredProcedure).ConfigureAwait(false);
         }
 
         public async Task<IEnumerable<Recipe>> SearchRecipesAsync(string q)

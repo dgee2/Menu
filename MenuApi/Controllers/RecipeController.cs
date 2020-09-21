@@ -36,5 +36,12 @@ namespace MenuApi.Controllers
             var recipeId = await recipeService.CreateRecipeAsync(newRecipe).ConfigureAwait(false);
             return await recipeService.GetRecipeAsync(recipeId).ConfigureAwait(false);
         }
+
+        [HttpPut("{recipeId}")]
+        public async Task<FullRecipe> UpdateRecipeAsync(int recipeId, [FromBody] NewRecipe newRecipe)
+        {
+            await recipeService.UpdateRecipeAsync(recipeId, newRecipe).ConfigureAwait(false);
+            return await recipeService.GetRecipeAsync(recipeId).ConfigureAwait(false);
+        }
     }
 }

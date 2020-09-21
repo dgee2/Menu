@@ -57,5 +57,19 @@ namespace MenuApi.Services
 
             return recipeId;
         }
+
+        public async Task UpdateRecipeAsync(int recipeId, NewRecipe newRecipe)
+        {
+            if (newRecipe is null)
+            {
+                throw new ArgumentNullException(nameof(newRecipe));
+            }
+
+            var ingredients = newRecipe.Ingredients.Select(mapper.Map<DBModel.RecipeIngredient>);
+
+            await recipeRepository.UpdateRecipeAsync(recipeId, newRecipe.Name).ConfigureAwait(false);
+
+            await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
+        }
     }
 }

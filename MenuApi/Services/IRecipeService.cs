@@ -13,5 +13,7 @@ namespace MenuApi.Services
         Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId);
 
         Task<IEnumerable<Recipe>> GetRecipesAsync();
+
+        Task UpdateRecipeAsync(int recipeId, NewRecipe newRecipe);
     }
 }

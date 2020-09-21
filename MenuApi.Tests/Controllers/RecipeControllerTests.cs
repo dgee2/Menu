@@ -73,5 +73,16 @@ namespace MenuApi.Tests.Controllers
             A.CallTo(() => recipeService.CreateRecipeAsync(newRecipe)).MustHaveHappenedOnceExactly();
             result.Should().Be(recipe);
         }
+
+        [Test, AutoData]
+        public async Task UpdateRecipeAsync_Success(int recipeId, NewRecipe newRecipe, FullRecipe recipe)
+        {
+            A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
+
+            var result = await sut.UpdateRecipeAsync(recipeId, newRecipe).ConfigureAwait(false);
+
+            A.CallTo(() => recipeService.UpdateRecipeAsync(recipeId, newRecipe)).MustHaveHappenedOnceExactly();
+            result.Should().Be(recipe);
+        }
     }
 }
