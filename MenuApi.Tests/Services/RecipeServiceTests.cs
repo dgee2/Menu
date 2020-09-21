@@ -137,5 +137,13 @@ namespace MenuApi.Tests
             A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName)).MustHaveHappenedOnceExactly();
             A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
         }
+
+        [Test, AutoData]
+        public void UpdateRecipe_Should_Throw_Exception_For_null_newRecipe(int recipeId)
+        {
+            Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, null);
+
+            fun.Should().Throw<ArgumentNullException>().And.ParamName.Should().Be("newRecipe");
+        }
     }
 }
