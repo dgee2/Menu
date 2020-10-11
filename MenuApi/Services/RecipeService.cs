@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using MenuApi.Factory;
 using MenuApi.Repositories;
 using MenuApi.ViewModel;
 
@@ -12,11 +13,13 @@ namespace MenuApi.Services
     {
         private readonly IRecipeRepository recipeRepository;
         private readonly IMapper mapper;
+        private readonly ITransactionFactory transactionFactory;
 
-        public RecipeService(IRecipeRepository recipeRepository, IMapper mapper)
+        public RecipeService(IRecipeRepository recipeRepository, IMapper mapper, ITransactionFactory transactionFactory)
         {
             this.recipeRepository = recipeRepository ?? throw new ArgumentNullException(nameof(recipeRepository));
             this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            this.transactionFactory = transactionFactory ?? throw new ArgumentNullException(nameof(transactionFactory));
         }
 
         public async Task<IEnumerable<Recipe>> GetRecipesAsync()
@@ -51,10 +54,12 @@ namespace MenuApi.Services
 
             var ingredients = newRecipe.Ingredients.Select(mapper.Map<DBModel.RecipeIngredient>);
 
-            var recipeId = await recipeRepository.CreateRecipeAsync(newRecipe.Name).ConfigureAwait(false);
+            using var tran = transactionFactory.BeginTransaction();
+            var recipeId = await recipeRepository.CreateRecipeAsync(newRecipe.Name, tran).ConfigureAwait(false);
 
-            await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
+            await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients, tran).ConfigureAwait(false);
 
+            tran.Commit();
             return recipeId;
         }
 
@@ -67,9 +72,10 @@ namespace MenuApi.Services
 
             var ingredients = newRecipe.Ingredients.Select(mapper.Map<DBModel.RecipeIngredient>);
 
-            await recipeRepository.UpdateRecipeAsync(recipeId, newRecipe.Name).ConfigureAwait(false);
+            using var tran = transactionFactory.BeginTransaction();
+            await recipeRepository.UpdateRecipeAsync(recipeId, newRecipe.Name, tran).ConfigureAwait(false);
 
-            await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
+            await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients, tran).ConfigureAwait(false);
         }
     }
 }

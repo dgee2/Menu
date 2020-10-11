@@ -2,6 +2,7 @@ using AutoFixture.NUnit3;
 using AutoMapper;
 using FakeItEasy;
 using FluentAssertions;
+using MenuApi.Factory;
 using MenuApi.Repositories;
 using MenuApi.Services;
 using MenuApi.Tests.Factory;
@@ -9,6 +10,7 @@ using MenuApi.ViewModel;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,20 +21,25 @@ namespace MenuApi.Tests
         private RecipeService sut;
         private IMapper mapper;
         private IRecipeRepository recipeRepository;
+        private ITransactionFactory transactionFactory;
+        private IDbTransaction transaction;
 
         [SetUp]
         public void Setup()
         {
             mapper = AutoMapperFactory.CreateMapper();
             recipeRepository = A.Fake<IRecipeRepository>();
+            transactionFactory = A.Fake<ITransactionFactory>();
+            transaction = A.Fake<IDbTransaction>();
+            A.CallTo(() => transactionFactory.BeginTransaction()).Returns(transaction);
 
-            sut = new RecipeService(recipeRepository, mapper);
+            sut = new RecipeService(recipeRepository, mapper, transactionFactory);
         }
 
         [Test]
         public void Constructor_Should_Throw_Exception_For_null_recipeRepository()
         {
-            Func<RecipeService> fun = () => new RecipeService(null, mapper);
+            Func<RecipeService> fun = () => new RecipeService(null, mapper, transactionFactory);
             fun.Should().Throw<ArgumentNullException>()
                 .And.ParamName.Should().Be("recipeRepository");
         }
@@ -40,9 +47,17 @@ namespace MenuApi.Tests
         [Test]
         public void Constructor_Should_Throw_Exception_For_null_mapper()
         {
-            Func<RecipeService> fun = () => new RecipeService(recipeRepository, null);
+            Func<RecipeService> fun = () => new RecipeService(recipeRepository, null, transactionFactory);
             fun.Should().Throw<ArgumentNullException>()
                .And.ParamName.Should().Be("mapper");
+        }
+
+        [Test]
+        public void Constructor_Should_Throw_Exception_For_null_transactionFactory()
+        {
+            Func<RecipeService> fun = () => new RecipeService(recipeRepository, mapper, null);
+            fun.Should().Throw<ArgumentNullException>()
+               .And.ParamName.Should().Be("transactionFactory");
         }
 
         [Test, AutoData]
@@ -99,7 +114,7 @@ namespace MenuApi.Tests
         [Test, AutoData]
         public async Task CreateRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.RecipeIngredient> ingredients)
         {
-            A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).Returns(recipe.Id);
+            A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name, transaction)).Returns(recipe.Id);
 
             var newRecipe = new NewRecipe
             {
@@ -114,8 +129,8 @@ namespace MenuApi.Tests
 
             await sut.CreateRecipeAsync(newRecipe).ConfigureAwait(false);
 
-            A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).MustHaveHappenedOnceExactly();
-            A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name, transaction)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();
         }
 
         [Test, AutoData]
@@ -134,8 +149,8 @@ namespace MenuApi.Tests
 
             await sut.UpdateRecipeAsync(recipeId, newRecipe).ConfigureAwait(false);
 
-            A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName)).MustHaveHappenedOnceExactly();
-            A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName, transaction)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();
         }
 
         [Test, AutoData]
