@@ -73,6 +73,7 @@ steps:
     reporttypes: 'Cobertura;SonarQube'
     assemblyfilters: '-*Tests*'
     filefilters: '-*/Migrations/*.cs'
+  condition: succeededOrFailed()
 - task: PublishCodeCoverageResults@1
   displayName: 'Publish code coverage report'
   inputs:
@@ -86,6 +87,7 @@ steps:
     testResultsFiles: '$(TestOutputDirectory)/*.trx'
     failTaskOnFailedTests: true
     buildConfiguration: '$(BuildConfiguration)'
+  condition: succeededOrFailed()
 - task: VSBuild@1
   inputs:
     solution: '**\*.sqlproj'
