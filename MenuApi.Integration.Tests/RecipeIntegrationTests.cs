@@ -42,18 +42,74 @@ namespace MenuApi.Integration.Tests
         {
             using var client = Factory.CreateClient();
 
-            var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
-            using var postResponse = await client.PostAsync("/api/recipe", requestContent).ConfigureAwait(false);
-
-            postResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            using var postStreamResponse = await postResponse.Content.ReadAsStreamAsync().ConfigureAwait(false);
-            var postJsonDoc = await JsonDocument.ParseAsync(postStreamResponse).ConfigureAwait(false);
-
-            var (_, name) = GetRecipeFromJson(postJsonDoc);
+            var (_, name) = await PostRecipeAsync(client, recipe);
 
             name.Should().Be(recipe.Name);
         }
+
+        [Test, AutoData]
+        public async Task Create_and_Update_Recipe(NewRecipe recipe, NewRecipe newRecipe)
+        {
+            using var client = Factory.CreateClient();
+
+            var (id, _) = await PostRecipeAsync(client, recipe);
+
+            var (_, name) = await PutRecipeAsync(client, id, newRecipe);
+
+            name.Should().Be(newRecipe.Name);
+        }
+
+        [Test, AutoData]
+        public async Task Create_And_Get_Recipe(NewRecipe recipe)
+        {
+            using var client = Factory.CreateClient();
+
+            var (id, _) = await PostRecipeAsync(client, recipe);
+            var (getId, name) = await GetRecipeAsync(client, id);
+
+            getId.Should().Be(id);
+            name.Should().Be(recipe.Name);
+        }
+
+        private async Task<(int Id, string Name)> PostRecipeAsync(HttpClient client, NewRecipe recipe)
+        {
+            var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
+            using var response = await client.PostAsync("/api/recipe", requestContent).ConfigureAwait(false);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            using var streamResponse = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            using var jsonDoc = await JsonDocument.ParseAsync(streamResponse).ConfigureAwait(false);
+
+            return GetRecipeFromJson(jsonDoc);
+        }
+
+        private async Task<(int Id, string Name)> PutRecipeAsync(HttpClient client, int id, NewRecipe recipe)
+        {
+            var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
+            using var response = await client.PutAsync($"/api/recipe/{id}", requestContent).ConfigureAwait(false);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            using var streamResponse = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            using var jsonDoc = await JsonDocument.ParseAsync(streamResponse).ConfigureAwait(false);
+
+            return GetRecipeFromJson(jsonDoc);
+        }
+
+        private async Task<(int Id, string Name)> GetRecipeAsync(HttpClient client, int id)
+        {
+            using var response = await client.GetAsync($"/api/recipe/{id}").ConfigureAwait(false);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            using var streamResponse = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            using var jsonDoc = await JsonDocument.ParseAsync(streamResponse).ConfigureAwait(false);
+
+            return GetRecipeFromJson(jsonDoc);
+        }
+
+
 
         private (int Id, string Name) GetRecipeFromJson(JsonDocument doc)
         {

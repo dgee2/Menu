@@ -76,6 +76,7 @@ namespace MenuApi.Services
             await recipeRepository.UpdateRecipeAsync(recipeId, newRecipe.Name, tran).ConfigureAwait(false);
 
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients, tran).ConfigureAwait(false);
+            tran.Commit();
         }
     }
 }

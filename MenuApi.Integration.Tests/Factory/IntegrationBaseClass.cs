@@ -7,13 +7,13 @@ namespace MenuApi.Integration.Tests.Factory
     {
         protected WebApplicationFactory<Startup> Factory { get; private set; }
 
-        [SetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             Factory = new WebApplicationFactory<Startup>();
         }
 
-        [TearDown]
+        [OneTimeTearDown]
         public void Teardown()
         {
             Factory?.Dispose();
