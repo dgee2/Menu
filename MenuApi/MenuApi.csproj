@@ -37,7 +37,7 @@
 	<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.15.0" />
 	<PackageReference Include="Microsoft.Azure.Search.Data" Version="10.1.0" />
 	<PackageReference Include="Microsoft.Azure.Search.Service" Version="10.1.0" />
-	<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
+	<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.1">
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
