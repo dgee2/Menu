@@ -62,10 +62,12 @@ steps:
   inputs:
     command: 'test'
     projects: |
+      !**/*.integration.test.csproj
+      !**/*.integration.tests.csproj
       **/*.test.csproj
       **/*.tests.csproj
-    publishTestResults: false
     arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage" --logger trx --results-directory $(TestOutputDirectory)'
+    publishTestResults: false
 - task: reportgenerator@4
   inputs:
     reports: '$(TestOutputDirectory)/*/coverage.cobertura.xml'
