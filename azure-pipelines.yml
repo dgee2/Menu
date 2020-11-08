@@ -62,10 +62,10 @@ steps:
   inputs:
     command: 'test'
     projects: |
-      !**/*.integration.test.csproj
-      !**/*.integration.tests.csproj
       **/*.test.csproj
       **/*.tests.csproj
+      !**/*.integration.test.csproj
+      !**/*.integration.tests.csproj
     arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage" --logger trx --results-directory $(TestOutputDirectory)'
     publishTestResults: false
 - task: reportgenerator@4
