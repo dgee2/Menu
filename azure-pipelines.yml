@@ -64,8 +64,10 @@ steps:
     projects: |
       **/*.test.csproj
       **/*.tests.csproj
-    publishTestResults: false
+      !**/*.integration.test.csproj
+      !**/*.integration.tests.csproj
     arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage" --logger trx --results-directory $(TestOutputDirectory)'
+    publishTestResults: false
 - task: reportgenerator@4
   inputs:
     reports: '$(TestOutputDirectory)/*/coverage.cobertura.xml'
@@ -73,6 +75,7 @@ steps:
     reporttypes: 'Cobertura;SonarQube'
     assemblyfilters: '-*Tests*'
     filefilters: '-*/Migrations/*.cs'
+  condition: succeededOrFailed()
 - task: PublishCodeCoverageResults@1
   displayName: 'Publish code coverage report'
   inputs:
@@ -86,6 +89,7 @@ steps:
     testResultsFiles: '$(TestOutputDirectory)/*.trx'
     failTaskOnFailedTests: true
     buildConfiguration: '$(BuildConfiguration)'
+  condition: succeededOrFailed()
 - task: VSBuild@1
   inputs:
     solution: '**\*.sqlproj'

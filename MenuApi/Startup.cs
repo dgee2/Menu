@@ -2,6 +2,7 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using AutoMapper;
 using MenuApi.Configuration;
+using MenuApi.Factory;
 using MenuApi.Repositories;
 using MenuApi.Services;
 using Microsoft.AspNetCore.Builder;
@@ -71,7 +72,8 @@ namespace MenuApi
 
         public void ConfigureDatabase(IServiceCollection services)
         {
-            services.AddTransient<IDbConnection>(_ => new SqlConnection(Configuration.GetConnectionString("menudb")));
+            services.AddScoped<IDbConnection>(_ => new SqlConnection(Configuration.GetConnectionString("menudb")));
+            services.AddScoped<ITransactionFactory, TransactionFactory>();
         }
     }
 }

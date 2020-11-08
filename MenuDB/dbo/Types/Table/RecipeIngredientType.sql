@@ -1,6 +1,6 @@
 ﻿CREATE TYPE [dbo].[RecipeIngredientType] AS TABLE
 (
-	[IngredientId] INT NOT NULL,
-	[UnitId] INT NOT NULL,
+	[Name] VARCHAR(50) NOT NULL,
+	[Unit] VARCHAR(50) NOT NULL,
 	[Amount] DECIMAL(10, 4) NOT NULL
 )
