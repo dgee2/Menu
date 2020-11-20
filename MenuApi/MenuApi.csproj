@@ -41,7 +41,7 @@
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
-	<PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.1" />
+	<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.0" />
 	<PackageReference Include="NSwag.AspNetCore" Version="13.8.2" />
 	<PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.164">
 	  <PrivateAssets>all</PrivateAssets>
