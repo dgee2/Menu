@@ -9,7 +9,7 @@
 
   <ItemGroup>
 	<PackageReference Include="AutoFixture.NUnit3" Version="4.15.0" />
-	<PackageReference Include="coverlet.collector" Version="3.0.0">
+	<PackageReference Include="coverlet.collector" Version="3.0.2">
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
