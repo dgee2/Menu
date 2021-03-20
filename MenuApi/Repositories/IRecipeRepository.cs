@@ -18,9 +18,9 @@ namespace MenuApi.Repositories
 
         Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients, IDbTransaction? transaction);
 
-        Task<IEnumerable<DBModel.RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId);
+        Task<IEnumerable<DBModel.GetRecipeIngredient>> GetRecipeIngredientsAsync(int recipeId);
 
-        Task<IEnumerable<DBModel.RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId, IDbTransaction? transaction);
+        Task<IEnumerable<DBModel.GetRecipeIngredient>> GetRecipeIngredientsAsync(int recipeId, IDbTransaction? transaction);
 
         Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync();
 

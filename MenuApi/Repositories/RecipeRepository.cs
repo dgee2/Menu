@@ -28,10 +28,10 @@ namespace MenuApi.Repositories
         public async Task<Recipe> GetRecipeAsync(int recipeId, IDbTransaction? transaction)
             => await dbConnection.QueryFirstOrDefaultAsync<Recipe>("dbo.GetRecipe", new { recipeId }, commandType: CommandType.StoredProcedure, transaction: transaction).ConfigureAwait(false);
 
-        public Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId) => GetRecipeIngredientsAsync(recipeId, null);
+        public Task<IEnumerable<GetRecipeIngredient>> GetRecipeIngredientsAsync(int recipeId) => GetRecipeIngredientsAsync(recipeId, null);
 
-        public async Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId, IDbTransaction? transaction)
-            => await dbConnection.QueryAsync<RecipeIngredient>("dbo.GetRecipeIngredients", new { recipeId }, commandType: CommandType.StoredProcedure, transaction: transaction).ConfigureAwait(false);
+        public async Task<IEnumerable<GetRecipeIngredient>> GetRecipeIngredientsAsync(int recipeId, IDbTransaction? transaction)
+            => await dbConnection.QueryAsync<GetRecipeIngredient>("dbo.GetRecipeIngredients", new { recipeId }, commandType: CommandType.StoredProcedure, transaction: transaction).ConfigureAwait(false);
 
         public Task<int> CreateRecipeAsync(string name) => CreateRecipeAsync(name, null);
 
@@ -54,7 +54,7 @@ namespace MenuApi.Repositories
 
             foreach (var ingredient in recipeIngredients)
             {
-                dt.Rows.Add(ingredient.Name, ingredient.Unit, ingredient.Amount);
+                dt.Rows.Add(ingredient.IngredientName, ingredient.UnitName, ingredient.Amount);
             }
 
             await dbConnection.ExecuteAsync("dbo.UpsertRecipeIngredients", new { recipeId, tvpIngredients = dt.AsTableValuedParameter() }, commandType: CommandType.StoredProcedure, transaction: transaction).ConfigureAwait(false);

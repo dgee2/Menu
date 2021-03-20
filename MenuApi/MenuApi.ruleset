@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<RuleSet Name="SonarQube - Menu My Sonar way" ToolsVersion="16.0">
-  <Include Path="..\.sonarlint\dgee2_menucsharp.ruleset" Action="Default" />
-  <Include Path="menuapi.ruleset" Action="Default" />
-</RuleSet>

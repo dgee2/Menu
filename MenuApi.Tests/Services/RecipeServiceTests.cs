@@ -61,16 +61,23 @@ namespace MenuApi.Tests
         }
 
         [Test, AutoData]
-        public async Task GetRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.RecipeIngredient> ingredients)
+        public async Task GetRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.GetRecipeIngredient> ingredients)
         {
             A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(recipe);
             A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id)).Returns(ingredients);
+
+            var expected = ingredients.Select(x => new RecipeIngredient
+            {
+                Amount = x.Amount,
+                Name = x.IngredientName,
+                Unit = x.UnitName
+            });
 
             var result = await sut.GetRecipeAsync(recipe.Id).ConfigureAwait(false);
 
             result.Name.Should().Be(recipe.Name);
             result.Id.Should().Be(recipe.Id);
-            result.Ingredients.Should().BeEquivalentTo(ingredients);
+            result.Ingredients.Should().BeEquivalentTo(expected);
         }
 
         [Test, AutoData]
@@ -88,13 +95,13 @@ namespace MenuApi.Tests
         }
 
         [Test, AutoData]
-        public async Task GetRecipeIngredientsSuccess(int recipeId, IEnumerable<DBModel.RecipeIngredient> ingredients)
+        public async Task GetRecipeIngredientsSuccess(int recipeId, IEnumerable<DBModel.GetRecipeIngredient> ingredients)
         {
             var expected = ingredients.Select(x => new RecipeIngredient
             {
                 Amount = x.Amount,
-                Name = x.Name,
-                Unit = x.Unit
+                Name = x.IngredientName,
+                Unit = x.UnitName
             });
 
             A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
@@ -122,8 +129,8 @@ namespace MenuApi.Tests
                 Ingredients = ingredients.Select(x => new RecipeIngredient
                 {
                     Amount = x.Amount,
-                    Name = x.Name,
-                    Unit = x.Unit
+                    Name = x.IngredientName,
+                    Unit = x.UnitName
                 }).ToList()
             };
 
@@ -142,8 +149,8 @@ namespace MenuApi.Tests
                 Ingredients = ingredients.Select(x => new RecipeIngredient
                 {
                     Amount = x.Amount,
-                    Name = x.Name,
-                    Unit = x.Unit
+                    Name = x.IngredientName,
+                    Unit = x.UnitName
                 }).ToList()
             };
 

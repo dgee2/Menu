@@ -6,8 +6,6 @@
     <IsPackable>false</IsPackable>
 
     <UserSecretsId>ea3aa4c7-9b32-4485-a5b2-fb1cb0def863</UserSecretsId>
-
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
   </PropertyGroup>
 
   <ItemGroup>

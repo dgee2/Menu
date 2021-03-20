@@ -12,11 +12,11 @@
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	<NoWarn>1591;SA0001</NoWarn>
 	<DocumentationFile></DocumentationFile>
-	<CodeAnalysisRuleSet>MenuApi.ruleset</CodeAnalysisRuleSet>
+	<CodeAnalysisRuleSet></CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	<CodeAnalysisRuleSet>MenuApi.ruleset</CodeAnalysisRuleSet>
+	<CodeAnalysisRuleSet></CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,10 +25,6 @@
 
   <ItemGroup>
 	<AdditionalFiles Include="stylecop.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-	<AdditionalFiles Include="..\.sonarlint\dgee2_menu\CSharp\SonarLint.xml" Link="SonarLint.xml" />
   </ItemGroup>
 
   <ItemGroup>
