@@ -34,7 +34,6 @@ namespace MenuApi
 
             services.AddTransient<IIngredientRepository, IngredientRepository>();
             services.AddTransient<IRecipeRepository, RecipeRepository>();
-            services.AddTransient<ISearchFactory, SearchFactory>();
             services.AddTransient<IRecipeService, RecipeService>();
 
             services.AddSingleton<IValidatable>(resolver => resolver.GetRequiredService<IOptions<CosmosConfig>>().Value);

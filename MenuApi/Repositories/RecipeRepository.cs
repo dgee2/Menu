@@ -2,23 +2,19 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using MenuApi.DBModel;
-using Microsoft.Azure.Search;
 
 namespace MenuApi.Repositories
 {
     [ExcludeFromCodeCoverage]
     public class RecipeRepository : IRecipeRepository
     {
-        private readonly ISearchFactory searchFactory;
         private readonly IDbConnection dbConnection;
 
-        public RecipeRepository(ISearchFactory searchFactory, IDbConnection dbConnection)
+        public RecipeRepository(IDbConnection dbConnection)
         {
-            this.searchFactory = searchFactory ?? throw new ArgumentNullException(nameof(searchFactory));
             this.dbConnection = dbConnection ?? throw new ArgumentNullException(nameof(dbConnection));
         }
 
@@ -69,13 +65,6 @@ namespace MenuApi.Repositories
         public async Task UpdateRecipeAsync(int recipeId, string name, IDbTransaction? transaction)
         {
             await dbConnection.ExecuteAsync("dbo.UpdateRecipe", new { recipeId, name }, commandType: CommandType.StoredProcedure, transaction: transaction).ConfigureAwait(false);
-        }
-
-        public async Task<IEnumerable<Recipe>> SearchRecipesAsync(string q)
-        {
-            using var searchClient = searchFactory.CreateRecipeSearchClient();
-            var results = await searchClient.Documents.SearchAsync<Recipe>(q).ConfigureAwait(false);
-            return results.Results.Select(x => x.Document);
         }
     }
 }

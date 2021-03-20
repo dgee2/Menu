@@ -7,7 +7,5 @@ namespace MenuApi.Repositories
     public interface IIngredientRepository
     {
         Task<IEnumerable<Ingredient>> GetIngredientsAsync();
-
-        Task<IEnumerable<Ingredient>> SearchIngredientsAsync(string q);
     }
 }
