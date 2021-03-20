@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<TargetFramework>netcoreapp3.1</TargetFramework>
+	<TargetFramework>net5.0</TargetFramework>
 	<ProjectGuid>{1851B6C7-889F-4C05-9605-1E33BF98121D}</ProjectGuid>
 
 	<IsPackable>false</IsPackable>
@@ -9,17 +9,15 @@
 
   <ItemGroup>
 	<PackageReference Include="AutoFixture.NUnit3" Version="4.15.0" />
-	<PackageReference Include="coverlet.collector" Version="3.0.0">
+	<PackageReference Include="coverlet.collector" Version="3.0.3">
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
-	<PackageReference Include="FakeItEasy" Version="6.2.1" />
-	<PackageReference Include="FakeItEasy.Analyzer.CSharp" Version="6.0.0" />
+	<PackageReference Include="FakeItEasy" Version="7.0.0" />
 	<PackageReference Include="FluentAssertions" Version="5.10.3" />
-	<PackageReference Include="FluentAssertions.Analyzers" Version="0.11.4" />
-	<PackageReference Include="nunit" Version="3.13.0" />
+	<PackageReference Include="nunit" Version="3.13.1" />
 	<PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
-	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
+	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.1" />
   </ItemGroup>
 
   <ItemGroup>
