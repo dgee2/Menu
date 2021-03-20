@@ -20,8 +20,5 @@ namespace MenuApi.Controllers
 
         [HttpGet]
         public async Task<IEnumerable<Ingredient>> GetIngredients() => await ingredientRepository.GetIngredientsAsync().ConfigureAwait(false);
-
-        [HttpGet("search")]
-        public async Task<IEnumerable<Ingredient>> SearchIngredients([FromQuery] string q) => await ingredientRepository.SearchIngredientsAsync(q).ConfigureAwait(false);
     }
 }

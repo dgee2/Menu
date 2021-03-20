@@ -26,8 +26,6 @@ namespace MenuApi.Repositories
 
         Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync(IDbTransaction? transaction);
 
-        Task<IEnumerable<DBModel.Recipe>> SearchRecipesAsync(string q);
-
         Task UpdateRecipeAsync(int recipeId, string name);
 
         Task UpdateRecipeAsync(int recipeId, string name, IDbTransaction? transaction);

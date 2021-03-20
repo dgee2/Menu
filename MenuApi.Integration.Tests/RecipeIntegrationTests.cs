@@ -71,7 +71,7 @@ namespace MenuApi.Integration.Tests
             name.Should().Be(recipe.Name);
         }
 
-        private async Task<(int Id, string Name)> PostRecipeAsync(HttpClient client, NewRecipe recipe)
+        private static async Task<(int Id, string Name)> PostRecipeAsync(HttpClient client, NewRecipe recipe)
         {
             var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
             using var response = await client.PostAsync("/api/recipe", requestContent).ConfigureAwait(false);
@@ -84,7 +84,7 @@ namespace MenuApi.Integration.Tests
             return GetRecipeFromJson(jsonDoc);
         }
 
-        private async Task<(int Id, string Name)> PutRecipeAsync(HttpClient client, int id, NewRecipe recipe)
+        private static async Task<(int Id, string Name)> PutRecipeAsync(HttpClient client, int id, NewRecipe recipe)
         {
             var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
             using var response = await client.PutAsync($"/api/recipe/{id}", requestContent).ConfigureAwait(false);
@@ -97,7 +97,7 @@ namespace MenuApi.Integration.Tests
             return GetRecipeFromJson(jsonDoc);
         }
 
-        private async Task<(int Id, string Name)> GetRecipeAsync(HttpClient client, int id)
+        private static async Task<(int Id, string Name)> GetRecipeAsync(HttpClient client, int id)
         {
             using var response = await client.GetAsync($"/api/recipe/{id}").ConfigureAwait(false);
 
@@ -111,7 +111,7 @@ namespace MenuApi.Integration.Tests
 
 
 
-        private (int Id, string Name) GetRecipeFromJson(JsonDocument doc)
+        private static (int Id, string Name) GetRecipeFromJson(JsonDocument doc)
         {
             var rootElement = doc.RootElement;
             return (
@@ -120,6 +120,7 @@ namespace MenuApi.Integration.Tests
             );
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S1144:Unused private types or members should be removed")]
         private class Recipe
         {
             public int Id { get; set; }

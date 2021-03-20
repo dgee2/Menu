@@ -1,6 +1,4 @@
 using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using AutoMapper;
 using MenuApi.Configuration;
 using MenuApi.Factory;
 using MenuApi.Repositories;
@@ -11,7 +9,6 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 
 namespace MenuApi
 {
@@ -29,27 +26,20 @@ namespace MenuApi
         {
             services.AddAutoMapper(typeof(Startup).Assembly);
 
-            services.Configure<CosmosConfig>(Configuration.GetSection("Cosmos"));
-            services.Configure<SearchConfig>(Configuration.GetSection("Search"));
-
             services.AddTransient<IIngredientRepository, IngredientRepository>();
             services.AddTransient<IRecipeRepository, RecipeRepository>();
-            services.AddTransient<ISearchFactory, SearchFactory>();
             services.AddTransient<IRecipeService, RecipeService>();
 
-            services.AddSingleton<IValidatable>(resolver => resolver.GetRequiredService<IOptions<CosmosConfig>>().Value);
-            services.AddSingleton<IValidatable>(resolver => resolver.GetRequiredService<IOptions<SearchConfig>>().Value);
             services.AddTransient<IStartupFilter, SettingValidationStartupFilter>();
 
             services.AddControllers();
-            services.AddSwaggerDocument();
+            services.AddSwaggerGen();
 
             ConfigureDatabase(services);
             services.AddApplicationInsightsTelemetry(Configuration["APPINSIGHTS_INSTRUMENTATIONKEY"]);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Startup file")]
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -57,8 +47,11 @@ namespace MenuApi
                 app.UseDeveloperExceptionPage();
 
                 // Register the Swagger generator and the Swagger UI middlewares
-                app.UseOpenApi();
-                app.UseSwaggerUi3();
+                app.UseSwagger();
+                app.UseSwaggerUI(c=>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Menu API");
+                });
             }
 
             app.UseHttpsRedirection();
