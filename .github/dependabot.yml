@@ -1,0 +1,54 @@
+version: 2
+updates:
+- package-ecosystem: nuget
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: Swashbuckle.AspNetCore
+    versions:
+    - 6.1.2
+  - dependency-name: AutoFixture.NUnit3
+    versions:
+    - 4.16.0
+  - dependency-name: FakeItEasy
+    versions:
+    - 7.0.0
+  - dependency-name: Microsoft.AspNetCore.Mvc.Testing
+    versions:
+    - 5.0.2
+    - 5.0.3
+    - 5.0.4
+  - dependency-name: NSwag.AspNetCore
+    versions:
+    - 13.10.2
+    - 13.10.5
+    - 13.10.6
+    - 13.10.7
+    - 13.10.8
+  - dependency-name: Microsoft.Data.SqlClient
+    versions:
+    - 2.1.1
+    - 2.1.2
+  - dependency-name: Microsoft.NET.Test.Sdk
+    versions:
+    - 16.8.3
+    - 16.9.1
+  - dependency-name: coverlet.collector
+    versions:
+    - 3.0.2
+    - 3.0.3
+  - dependency-name: Microsoft.ApplicationInsights.AspNetCore
+    versions:
+    - 2.16.0
+    - 2.17.0
+  - dependency-name: Dapper
+    versions:
+    - 2.0.78
+  - dependency-name: nunit
+    versions:
+    - 3.13.1
+  - dependency-name: AutoMapper.Extensions.Microsoft.DependencyInjection
+    versions:
+    - 8.1.1
