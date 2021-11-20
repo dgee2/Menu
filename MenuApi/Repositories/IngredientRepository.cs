@@ -19,7 +19,7 @@ namespace MenuApi.Repositories
 
         public async Task<IEnumerable<ViewModel.Ingredient>> GetIngredientsAsync()
             => (await dbConnection.QueryAsync<Ingredient>("dbo.GetIngredients", commandType: CommandType.StoredProcedure).ConfigureAwait(false))
-                    .GroupBy(x => (x.Id, x.Name), x => (x.Unit, x.Abbreviation))
+                    .GroupBy(x => (x.Id, x.Name), x => (x.Unit, x.UnitAbbreviation))
                     .Select(x => new ViewModel.Ingredient(x.Key.Id, x.Key.Name, x));
     }
 }

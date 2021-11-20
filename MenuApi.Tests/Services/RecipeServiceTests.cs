@@ -111,11 +111,12 @@ namespace MenuApi.Tests
         }
 
         [Test]
-        public void CreateRecipe_Should_Throw_Exception_For_null_newRecipe()
+        public async Task CreateRecipe_Should_Throw_Exception_For_null_newRecipe()
         {
             Func<Task<int>> fun = () => sut.CreateRecipeAsync(null);
 
-            fun.Should().Throw<ArgumentNullException>().And.ParamName.Should().Be("newRecipe");
+            var result = await fun.Should().ThrowAsync<ArgumentNullException>();
+            result.And.ParamName.Should().Be("newRecipe");
         }
 
         [Test, AutoData]
@@ -161,11 +162,12 @@ namespace MenuApi.Tests
         }
 
         [Test, AutoData]
-        public void UpdateRecipe_Should_Throw_Exception_For_null_newRecipe(int recipeId)
+        public async Task UpdateRecipe_Should_Throw_Exception_For_null_newRecipeAsync(int recipeId)
         {
             Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, null);
 
-            fun.Should().Throw<ArgumentNullException>().And.ParamName.Should().Be("newRecipe");
+            var result = await fun.Should().ThrowAsync<ArgumentNullException>();
+            result.And.ParamName.Should().Be("newRecipe");
         }
     }
 }
