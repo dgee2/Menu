@@ -14,6 +14,7 @@ namespace MenuApi;
 
 public class Startup
 {
+    const string CorsPolicyName = "Cors";
     public Startup(IConfiguration configuration)
     {
         Configuration = configuration;
@@ -37,6 +38,15 @@ public class Startup
 
         ConfigureDatabase(services);
         services.AddApplicationInsightsTelemetry(Configuration["APPINSIGHTS_INSTRUMENTATIONKEY"]);
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy(name: CorsPolicyName,
+                builder =>
+                {
+                    builder.AllowAnyOrigin();
+                });
+        });
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,6 +54,8 @@ public class Startup
     {
         if (env.IsDevelopment())
         {
+            app.UseCors(CorsPolicyName);
+
             app.UseDeveloperExceptionPage();
 
             // Register the Swagger generator and the Swagger UI middlewares
