@@ -6,3 +6,10 @@ services:
     build:
       context: .
       dockerfile: MenuApi/Dockerfile
+    depends_on:
+      - menudb
+  menudb:
+    image: ${DOCKER_REGISTRY-}menudb
+    build:
+      context: ./MenuDB
+      dockerfile: Dockerfile

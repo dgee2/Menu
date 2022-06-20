@@ -22,9 +22,6 @@ RUN wget -progress=bar:force -q -O sqlpackage.zip https://aka.ms/sqlpackage-linu
     && mkdir /tmp/db \
     && chown -R mssql /tmp/db
 
-# Add the DACPAC to the image
-COPY --from=build /src/bin/Debug/MenuDB.dacpac /tmp/db/db.dacpac
-
 # Configure external build arguments to allow configurability.
 ARG DBNAME=MenuDB
 ARG PASSWORD
@@ -33,6 +30,9 @@ ARG PASSWORD
 ENV ACCEPT_EULA=Y
 ENV SA_PASSWORD=$PASSWORD
 ENV DBNAME=$DBNAME
+
+# Add the DACPAC to the image
+COPY --from=build /src/bin/Debug/MenuDB.dacpac /tmp/db/db.dacpac
 
 # Launch SQL Server, confirm startup is complete, deploy the DACPAC, then terminate SQL Server.
 # See https://stackoverflow.com/a/51589787/488695
