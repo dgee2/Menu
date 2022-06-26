@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-
-namespace MenuApi.Configuration
+﻿namespace MenuApi.Configuration
 {
     public class SettingValidationStartupFilter : IStartupFilter
     {

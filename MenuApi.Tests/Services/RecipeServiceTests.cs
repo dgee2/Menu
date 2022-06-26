@@ -8,11 +8,7 @@ using MenuApi.Services;
 using MenuApi.Tests.Factory;
 using MenuApi.ViewModel;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MenuApi.Tests
 {

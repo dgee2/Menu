@@ -2,12 +2,9 @@ using AutoFixture.NUnit3;
 using FluentAssertions;
 using MenuApi.Integration.Tests.Factory;
 using NUnit.Framework;
-using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace MenuApi.Integration.Tests
 {

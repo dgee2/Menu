@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using MenuApi.ViewModel;
+﻿using MenuApi.ViewModel;
 
 namespace MenuApi.Services
 {

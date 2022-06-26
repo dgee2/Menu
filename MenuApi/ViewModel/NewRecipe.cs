@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace MenuApi.ViewModel
+﻿namespace MenuApi.ViewModel
 {
     public class NewRecipe
     {

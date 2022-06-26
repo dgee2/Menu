@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using MenuApi.Services;
+﻿using MenuApi.Services;
 using MenuApi.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 

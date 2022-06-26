@@ -8,6 +8,7 @@
 	<ApplicationInsightsResourceId>/subscriptions/9fa32f74-f642-431d-a865-19f9109f8b4f/resourceGroups/menu/providers/microsoft.insights/components/MenuApiDev</ApplicationInsightsResourceId>
 	<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 	<DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+	<ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
