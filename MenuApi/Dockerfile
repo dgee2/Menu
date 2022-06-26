@@ -7,10 +7,9 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["MenuApi/MenuApi.csproj", "MenuApi/"]
-RUN dotnet restore "MenuApi/MenuApi.csproj"
+COPY "MenuApi.csproj" .
+RUN dotnet restore "MenuApi.csproj"
 COPY . .
-WORKDIR "/src/MenuApi"
 RUN dotnet build "MenuApi.csproj" -c Release -o /app/build
 
 FROM build AS publish
@@ -19,4 +18,8 @@ RUN dotnet publish "MenuApi.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "MenuApi.dll"]
+#
+#ARG SQL_PASSWORD
+#ENV DOTNET_SQL_PASSWORD=$SQL_PASSWORD
+
+ENTRYPOINT dotnet MenuApi.dll

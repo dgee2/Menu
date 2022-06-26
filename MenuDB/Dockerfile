@@ -1,8 +1,10 @@
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
+COPY MenuDB.sqlproj .
+RUN dotnet restore "MenuDB.sqlproj"
 COPY . .
-RUN dotnet build "/src/MenuDB.sqlproj" -c Release -o /app/build /p:NetCoreBuild=true
+RUN dotnet build "MenuDB.sqlproj" -c Release -o /app/build /p:NetCoreBuild=true
 
 FROM mcr.microsoft.com/mssql/server:2019-latest AS server
 
@@ -24,11 +26,11 @@ RUN wget -progress=bar:force -q -O sqlpackage.zip https://aka.ms/sqlpackage-linu
 
 # Configure external build arguments to allow configurability.
 ARG DBNAME=MenuDB
-ARG PASSWORD
+ARG SQL_PASSWORD
 
 # Configure the required environmental variables
 ENV ACCEPT_EULA=Y
-ENV SA_PASSWORD=$PASSWORD
+ENV SA_PASSWORD=$SQL_PASSWORD
 ENV DBNAME=$DBNAME
 
 # Add the DACPAC to the image
