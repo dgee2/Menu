@@ -2,25 +2,31 @@
   "name": "menuui",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
-    "build": "run-p type-check build-only",
-    "preview": "vite preview --port 4173",
+    "serve": "vite preview",
+    "build": "vite build",
     "test:unit": "vitest --environment jsdom",
     "test:e2e": "start-server-and-test preview http://127.0.0.1:4173/ 'cypress open --e2e'",
-    "test:e2e:ci": "start-server-and-test preview http://127.0.0.1:4173/ 'cypress run --e2e'",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "build-only": "vite build",
-    "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
+    "dev": "vite",
+    "preview": "vite preview --port 4173",
+    "test:e2e:ci": "start-server-and-test preview http://127.0.0.1:4173/ 'cypress run --e2e'",
+    "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false"
   },
   "dependencies": {
+    "@mdi/font": "5.9.55",
     "pinia": "^2.0.14",
+    "roboto-fontface": "*",
     "vue": "^3.2.37",
-    "vue-router": "^4.1.2"
+    "vue-router": "^4.1.2",
+    "vuetify": "^3.0.0-beta.0",
+    "webfontloader": "^1.0.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.0",
     "@types/jsdom": "^16.2.14",
     "@types/node": "^16.11.43",
+    "@types/webfontloader": "^1.0.0",
     "@vitejs/plugin-vue": "^2.3.3",
     "@vue/eslint-config-prettier": "^7.0.0",
     "@vue/eslint-config-typescript": "^11.0.0",
@@ -36,7 +42,9 @@
     "start-server-and-test": "^1.14.0",
     "typescript": "~4.7.4",
     "vite": "^2.9.14",
+    "vite-plugin-vuetify": "^1.0.0-alpha.0",
     "vitest": "^0.18.0",
+    "vue-cli-plugin-vuetify": "~2.5.1",
     "vue-tsc": "^0.38.4"
   }
 }
