@@ -98,9 +98,9 @@ stages:
             script: 'yarn'
             workingDirectory: '$(componentDirectory)'
         - task: CmdLine@2
-          displayName: 'yarn build-release'
+          displayName: 'yarn build'
           inputs:
-            script: 'yarn build-release'
+            script: 'yarn run build'
             workingDirectory: '$(componentDirectory)'
         - task: PublishBuildArtifacts@1
           inputs:
