@@ -21,3 +21,7 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Generated sources
+/src/generated/open-api/*
+!/src/generated/open-api/.git-keep

@@ -2,13 +2,15 @@
   "name": "MenuUI",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "dev": "yarn run generate-openapi && vite",
+    "build": "yarn run generate-openapi && vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "lint": "eslint . --fix --ignore-path .gitignore"
+    "lint": "eslint . --fix --ignore-path .gitignore",
+    "generate-openapi": "openapi-typescript ./open-api/*.yaml --output ./src/generated/open-api"
   },
   "dependencies": {
     "@mdi/font": "7.0.96",
+    "openapi-typescript-fetch": "^1.1.3",
     "pinia": "^2.0.23",
     "roboto-fontface": "*",
     "vue": "^3.2.0",
@@ -24,6 +26,7 @@
     "@vue/eslint-config-typescript": "^11.0.0",
     "eslint": "^8.0.0",
     "eslint-plugin-vue": "^9.0.0",
+    "openapi-typescript": "^6.2.4",
     "typescript": "^5.0.0",
     "vite": "^4.2.0",
     "vite-plugin-vuetify": "^1.0.0",
