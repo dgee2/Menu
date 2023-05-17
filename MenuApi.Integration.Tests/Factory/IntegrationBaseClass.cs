@@ -1,22 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using NUnit.Framework;
 
-namespace MenuApi.Integration.Tests.Factory
+namespace MenuApi.Integration.Tests.Factory;
+
+public class IntegrationBaseClass
 {
-    public class IntegrationBaseClass
+    protected WebApplicationFactory<Startup> Factory { get; private set; }
+
+    [OneTimeSetUp]
+    public void Setup()
     {
-        protected WebApplicationFactory<Startup> Factory { get; private set; }
+        Factory = new WebApplicationFactory<Startup>();
+    }
 
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            Factory = new WebApplicationFactory<Startup>();
-        }
-
-        [OneTimeTearDown]
-        public void Teardown()
-        {
-            Factory?.Dispose();
-        }
+    [OneTimeTearDown]
+    public void Teardown()
+    {
+        Factory?.Dispose();
     }
 }

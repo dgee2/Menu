@@ -1,23 +1,22 @@
-﻿namespace MenuApi.Configuration
+﻿namespace MenuApi.Configuration;
+
+public class SettingValidationStartupFilter : IStartupFilter
 {
-    public class SettingValidationStartupFilter : IStartupFilter
+    private readonly IEnumerable<IValidatable> validatableObjects;
+
+    public SettingValidationStartupFilter(IEnumerable<IValidatable> validatableObjects)
     {
-        private readonly IEnumerable<IValidatable> validatableObjects;
+        this.validatableObjects = validatableObjects;
+    }
 
-        public SettingValidationStartupFilter(IEnumerable<IValidatable> validatableObjects)
+    public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+    {
+        foreach (var validatableObject in validatableObjects)
         {
-            this.validatableObjects = validatableObjects;
+            validatableObject.Validate();
         }
 
-        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
-        {
-            foreach (var validatableObject in validatableObjects)
-            {
-                validatableObject.Validate();
-            }
-
-            // don't alter the configuration
-            return next;
-        }
+        // don't alter the configuration
+        return next;
     }
 }

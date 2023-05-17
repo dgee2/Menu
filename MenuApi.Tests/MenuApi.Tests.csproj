@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<TargetFramework>net6.0</TargetFramework>
+	<TargetFramework>net7.0</TargetFramework>
 	<ProjectGuid>{1851B6C7-889F-4C05-9605-1E33BF98121D}</ProjectGuid>
 
 	<IsPackable>false</IsPackable>
@@ -10,16 +10,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-	<PackageReference Include="AutoFixture.NUnit3" Version="4.17.0" />
-	<PackageReference Include="coverlet.collector" Version="3.1.2">
+	<PackageReference Include="AutoFixture.NUnit3" Version="4.18.0" />
+	<PackageReference Include="coverlet.collector" Version="3.2.0">
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
-	<PackageReference Include="FakeItEasy" Version="7.3.1" />
-	<PackageReference Include="FluentAssertions" Version="6.7.0" />
+	<PackageReference Include="FakeItEasy" Version="7.4.0" />
+	<PackageReference Include="FluentAssertions" Version="6.11.0" />
 	<PackageReference Include="nunit" Version="3.13.3" />
-	<PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
-	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+	<PackageReference Include="NUnit3TestAdapter" Version="4.4.2" />
+	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
   </ItemGroup>
 
   <ItemGroup>

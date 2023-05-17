@@ -1,31 +1,30 @@
 ﻿using System.Data;
 
-namespace MenuApi.Repositories
+namespace MenuApi.Repositories;
+
+public interface IRecipeRepository
 {
-    public interface IRecipeRepository
-    {
-        Task<int> CreateRecipeAsync(string name);
+    Task<int> CreateRecipeAsync(string name);
 
-        Task<int> CreateRecipeAsync(string name, IDbTransaction? transaction);
+    Task<int> CreateRecipeAsync(string name, IDbTransaction? transaction);
 
-        Task<DBModel.Recipe> GetRecipeAsync(int recipeId);
+    Task<DBModel.Recipe> GetRecipeAsync(int recipeId);
 
-        Task<DBModel.Recipe> GetRecipeAsync(int recipeId, IDbTransaction? transaction);
+    Task<DBModel.Recipe> GetRecipeAsync(int recipeId, IDbTransaction? transaction);
 
-        Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients);
+    Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients);
 
-        Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients, IDbTransaction? transaction);
+    Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients, IDbTransaction? transaction);
 
-        Task<IEnumerable<DBModel.GetRecipeIngredient>> GetRecipeIngredientsAsync(int recipeId);
+    Task<IEnumerable<DBModel.GetRecipeIngredient>> GetRecipeIngredientsAsync(int recipeId);
 
-        Task<IEnumerable<DBModel.GetRecipeIngredient>> GetRecipeIngredientsAsync(int recipeId, IDbTransaction? transaction);
+    Task<IEnumerable<DBModel.GetRecipeIngredient>> GetRecipeIngredientsAsync(int recipeId, IDbTransaction? transaction);
 
-        Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync();
+    Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync();
 
-        Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync(IDbTransaction? transaction);
+    Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync(IDbTransaction? transaction);
 
-        Task UpdateRecipeAsync(int recipeId, string name);
+    Task UpdateRecipeAsync(int recipeId, string name);
 
-        Task UpdateRecipeAsync(int recipeId, string name, IDbTransaction? transaction);
-    }
+    Task UpdateRecipeAsync(int recipeId, string name, IDbTransaction? transaction);
 }

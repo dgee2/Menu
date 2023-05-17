@@ -32,7 +32,10 @@ public class Startup
         services.AddSwaggerGen();
 
         ConfigureDatabase(services);
-        services.AddApplicationInsightsTelemetry(Configuration["APPINSIGHTS_INSTRUMENTATIONKEY"]);
+        services.AddApplicationInsightsTelemetry(o =>
+        {
+            o.ConnectionString = Configuration["APPINSIGHTS_INSTRUMENTATIONKEY"];
+        });
 
         services.AddCors(options =>
         {
