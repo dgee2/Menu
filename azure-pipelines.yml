@@ -6,13 +6,14 @@
 trigger:
 - master
 
+pool:
+  vmImage: 'windows-2022'
+
 stages:
   - stage: Build
     jobs:
       - job:
         displayName: API Build
-        pool:
-          vmImage: 'windows-2022'
         variables:
           buildConfiguration: 'Release'
           testOutputDirectory: '$(Agent.TempDirectory)/testresults'
@@ -64,6 +65,11 @@ stages:
             failTaskOnFailedTests: true
             buildConfiguration: '$(BuildConfiguration)'
           condition: succeededOrFailed()
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(Build.SourceDirectory)/MenuApi/bin/Release/net7.0'
+            ArtifactName: 'MenuAPI'
+            publishLocation: 'Container'
         # - task: VSBuild@1
         #   inputs:
         #     solution: '**\*.sqlproj'
@@ -79,4 +85,25 @@ stages:
           inputs:
             PathtoPublish: '$(Agent.TempDirectory)'
             ArtifactName: 'temp'
+            publishLocation: 'Container'
+
+      - job:
+        displayName: Build Vue Component
+        variables:
+          componentDirectory: '$(Build.SourcesDirectory)/MenuUI'
+        steps:
+        - task: CmdLine@2
+          displayName: 'yarn install'
+          inputs:
+            script: 'yarn'
+            workingDirectory: '$(componentDirectory)'
+        - task: CmdLine@2
+          displayName: 'yarn build-release'
+          inputs:
+            script: 'yarn build-release'
+            workingDirectory: '$(componentDirectory)'
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(componentDirectory)/dist'
+            ArtifactName: 'UIBuild'
             publishLocation: 'Container'
