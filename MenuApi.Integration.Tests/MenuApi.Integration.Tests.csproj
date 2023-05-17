@@ -8,8 +8,6 @@
 		<UserSecretsId>ea3aa4c7-9b32-4485-a5b2-fb1cb0def863</UserSecretsId>
 
 		<ImplicitUsings>enable</ImplicitUsings>
-
-		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 	</PropertyGroup>
 
 	<ItemGroup>
