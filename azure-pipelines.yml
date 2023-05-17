@@ -15,65 +15,94 @@ stages:
       - job:
         displayName: API Build
         variables:
+          solution: '**/*.sln'
           buildConfiguration: 'Release'
           testOutputDirectory: '$(Agent.TempDirectory)/testresults'
           NUGET_PACKAGES: $(Pipeline.Workspace)/.nuget/packages
         steps:
         - task: Cache@2
           inputs:
-            key: 'nuget | "$(Agent.OS)" | **/*.csproj'
+            key: 'nuget | "$(Agent.OS)" | **/packages.lock.json,!**/bin/**,!**/obj/**'
             restoreKeys: |
                 nuget | "$(Agent.OS)"
                 nuget
             path: $(NUGET_PACKAGES)
+            cacheHitVar: 'CACHE_RESTORED'
           displayName: Cache NuGet packages
-        - task: DotNetCoreCLI@2
-          displayName: 'DotNet Restore'
+
+        - task: NuGetCommand@2
+          displayName: 'NuGet restore'
+          condition: ne(variables.CACHE_RESTORED, true)
           inputs:
             command: 'restore'
-            projects: '**/*.csproj'
-            feedsToUse: 'select'
-            verbosityRestore: 'Normal'
-        - task: DotNetCoreCLI@2
-          displayName: 'DotNet Build'
+            restoreSolution: '$(solution)'
+
+        - task: VSBuild@1
+          displayName: 'Visual Studio Build'
           inputs:
-            command: 'build'
-            projects: '**/*.csproj'
-            arguments: '--configuration $(buildConfiguration) --no-restore --nologo'
-            modifyOutputPath: true
-        - task: DotNetCoreCLI@2
-          displayName: 'DotNet Test'
+            solution: '$(solution)'
+            configuration: '$(buildConfiguration)'
+
+        - task: VSTest@2
           inputs:
-            command: 'test'
-            projects: |
-              **/*.test.csproj
-              **/*.tests.csproj
-              !**/*.integration.test.csproj
-              !**/*.integration.tests.csproj
-            arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage" --logger trx --results-directory $(TestOutputDirectory)'
-            publishTestResults: false
-        - task: reportgenerator@4
-          inputs:
-            reports: '$(TestOutputDirectory)/*/coverage.cobertura.xml'
-            targetdir: '$(TestOutputDirectory)/CodeCoverage'
-            reporttypes: 'Cobertura;SonarQube'
-            assemblyfilters: '-*Tests*'
-            filefilters: '-*/Migrations/*.cs'
-          condition: succeededOrFailed()
-        - task: PublishCodeCoverageResults@1
-          displayName: 'Publish code coverage report'
-          inputs:
-            codeCoverageTool: 'cobertura'
-            summaryFileLocation: '$(TestOutputDirectory)/CodeCoverage/Cobertura.xml'
-            failIfCoverageEmpty: true
-          condition: succeededOrFailed()
-        - task: PublishTestResults@2
-          inputs:
-            testResultsFormat: 'VSTest'
-            testResultsFiles: '$(TestOutputDirectory)/*.trx'
-            failTaskOnFailedTests: true
-            buildConfiguration: '$(BuildConfiguration)'
-          condition: succeededOrFailed()
+            testSelector: 'testAssemblies'
+            testAssemblyVer2: |
+              **\*test*.dll
+              !**\*TestAdapter.dll
+              !**\obj\**
+            searchFolder: '$(System.DefaultWorkingDirectory)'
+            runOnlyImpactedTests: false
+            runInParallel: true
+            codeCoverageEnabled: true
+
+        # - task: DotNetCoreCLI@2
+        #   displayName: 'DotNet Restore'
+        #   condition: ne(variables.CACHE_RESTORED, true)
+        #   inputs:
+        #     command: 'restore'
+        #     projects: '**/*.csproj'
+        #     feedsToUse: 'select'
+        #     verbosityRestore: 'Normal'
+        # - task: DotNetCoreCLI@2
+        #   displayName: 'DotNet Build'
+        #   inputs:
+        #     command: 'build'
+        #     projects: '**/*.csproj'
+        #     arguments: '--configuration $(buildConfiguration) --no-restore --nologo'
+        #     modifyOutputPath: true
+        # - task: DotNetCoreCLI@2
+        #   displayName: 'DotNet Test'
+        #   inputs:
+        #     command: 'test'
+        #     projects: |
+        #       **/*.test.csproj
+        #       **/*.tests.csproj
+        #       !**/*.integration.test.csproj
+        #       !**/*.integration.tests.csproj
+        #     arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage" --logger trx --results-directory $(TestOutputDirectory)'
+        #     publishTestResults: false
+        # - task: reportgenerator@4
+        #   inputs:
+        #     reports: '$(TestOutputDirectory)/*/coverage.cobertura.xml'
+        #     targetdir: '$(TestOutputDirectory)/CodeCoverage'
+        #     reporttypes: 'Cobertura;SonarQube'
+        #     assemblyfilters: '-*Tests*'
+        #     filefilters: '-*/Migrations/*.cs'
+        #   condition: succeededOrFailed()
+        # - task: PublishCodeCoverageResults@1
+        #   displayName: 'Publish code coverage report'
+        #   inputs:
+        #     codeCoverageTool: 'cobertura'
+        #     summaryFileLocation: '$(TestOutputDirectory)/CodeCoverage/Cobertura.xml'
+        #     failIfCoverageEmpty: true
+        #   condition: succeededOrFailed()
+        # - task: PublishTestResults@2
+        #   inputs:
+        #     testResultsFormat: 'VSTest'
+        #     testResultsFiles: '$(TestOutputDirectory)/*.trx'
+        #     failTaskOnFailedTests: true
+        #     buildConfiguration: '$(BuildConfiguration)'
+        #   condition: succeededOrFailed()
         - task: PublishBuildArtifacts@1
           inputs:
             PathtoPublish: '$(Build.SourcesDirectory)/MenuApi/bin/Release/net7.0'
