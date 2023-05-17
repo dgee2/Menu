@@ -26,11 +26,9 @@ stages:
                 nuget | "$(Agent.OS)"
                 nuget
             path: $(NUGET_PACKAGES)
-            cacheHitVar: 'CACHE_RESTORED'
           displayName: Cache NuGet packages
         - task: DotNetCoreCLI@2
           displayName: 'DotNet Restore'
-          condition: ne(variables.CACHE_RESTORED, true)
           inputs:
             command: 'restore'
             projects: '**/*.csproj'
@@ -96,7 +94,7 @@ stages:
         steps:
         - task: Cache@2
           inputs:
-            key: 'yarn | "$(Agent.OS)" | yarn.lock'
+            key: 'yarn | "$(Agent.OS)" | **/yarn.lock'
             restoreKeys: |
                 yarn | "$(Agent.OS)"
                 yarn
