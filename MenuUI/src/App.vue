@@ -1,21 +1,11 @@
 <template>
   <v-app>
     <v-main>
-      <router-view />
+      <HelloWorld />
     </v-main>
   </v-app>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
-
-export default defineComponent({
-  name: "App",
-
-  data() {
-    return {
-      //
-    };
-  },
-});
+<script setup lang="ts">
+  import HelloWorld from '@/components/HelloWorld.vue'
 </script>
