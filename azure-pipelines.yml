@@ -17,6 +17,7 @@ stages:
         variables:
           solution: '**/*.sln'
           testOutputDirectory: '$(Agent.TempDirectory)/testresults'
+          buildConfiguration: 'Release'
           NUGET_PACKAGES: $(Pipeline.Workspace)/.nuget/packages
         steps:
         - task: Cache@2
