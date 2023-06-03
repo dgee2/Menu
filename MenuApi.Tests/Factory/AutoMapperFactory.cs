@@ -1,13 +1,12 @@
 ﻿using AutoMapper;
 
-namespace MenuApi.Tests.Factory
+namespace MenuApi.Tests.Factory;
+
+static class AutoMapperFactory
 {
-    static class AutoMapperFactory
+    public static IMapper CreateMapper()
     {
-        public static IMapper CreateMapper()
-        {
-            var configuration = new MapperConfiguration(cfg => cfg.AddMaps(typeof(Startup).Assembly));
-            return new Mapper(configuration);
-        }
+        var configuration = new MapperConfiguration(cfg => cfg.AddMaps(typeof(Startup).Assembly));
+        return new Mapper(configuration);
     }
 }

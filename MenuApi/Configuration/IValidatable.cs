@@ -1,12 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MenuApi.Configuration
+namespace MenuApi.Configuration;
+
+public interface IValidatable
 {
-    public interface IValidatable
+    void Validate()
     {
-        void Validate()
-        {
-            Validator.ValidateObject(this, new ValidationContext(this), validateAllProperties: true);
-        }
+        Validator.ValidateObject(this, new ValidationContext(this), validateAllProperties: true);
     }
 }

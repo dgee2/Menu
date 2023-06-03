@@ -1,11 +1,10 @@
 ﻿using System.Data;
 
-namespace MenuApi.Factory
-{
-    public interface ITransactionFactory
-    {
-        IDbTransaction BeginTransaction();
+namespace MenuApi.Factory;
 
-        IDbTransaction BeginTransaction(IsolationLevel isolationLevel);
-    }
+public interface ITransactionFactory
+{
+    IDbTransaction BeginTransaction();
+
+    IDbTransaction BeginTransaction(IsolationLevel isolationLevel);
 }

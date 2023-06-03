@@ -1,27 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
 
-    <IsPackable>false</IsPackable>
+		<IsPackable>false</IsPackable>
 
-    <UserSecretsId>ea3aa4c7-9b32-4485-a5b2-fb1cb0def863</UserSecretsId>
+		<UserSecretsId>ea3aa4c7-9b32-4485-a5b2-fb1cb0def863</UserSecretsId>
 
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="AutoFixture.NUnit3" Version="4.17.0" />
-    <PackageReference Include="FluentAssertions" Version="6.7.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.6" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NUnit" Version="3.13.3" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="AutoFixture.NUnit3" Version="4.18.0" />
+		<PackageReference Include="FluentAssertions" Version="6.11.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.5" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="NUnit" Version="3.13.3" />
+		<PackageReference Include="NUnit3TestAdapter" Version="4.4.2" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MenuApi\MenuApi.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\MenuApi\MenuApi.csproj" />
+	</ItemGroup>
 
 </Project>

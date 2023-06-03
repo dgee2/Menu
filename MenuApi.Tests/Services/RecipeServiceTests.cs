@@ -10,160 +10,159 @@ using MenuApi.ViewModel;
 using NUnit.Framework;
 using System.Data;
 
-namespace MenuApi.Tests
+namespace MenuApi.Tests;
+
+public class RecipeServiceTests
 {
-    public class RecipeServiceTests
+    private RecipeService sut;
+    private IMapper mapper;
+    private IRecipeRepository recipeRepository;
+    private ITransactionFactory transactionFactory;
+    private IDbTransaction transaction;
+
+    [SetUp]
+    public void Setup()
     {
-        private RecipeService sut;
-        private IMapper mapper;
-        private IRecipeRepository recipeRepository;
-        private ITransactionFactory transactionFactory;
-        private IDbTransaction transaction;
+        mapper = AutoMapperFactory.CreateMapper();
+        recipeRepository = A.Fake<IRecipeRepository>();
+        transactionFactory = A.Fake<ITransactionFactory>();
+        transaction = A.Fake<IDbTransaction>();
+        A.CallTo(() => transactionFactory.BeginTransaction()).Returns(transaction);
 
-        [SetUp]
-        public void Setup()
+        sut = new RecipeService(recipeRepository, mapper, transactionFactory);
+    }
+
+    [Test]
+    public void Constructor_Should_Throw_Exception_For_null_recipeRepository()
+    {
+        Func<RecipeService> fun = () => new RecipeService(null, mapper, transactionFactory);
+        fun.Should().Throw<ArgumentNullException>()
+            .And.ParamName.Should().Be("recipeRepository");
+    }
+
+    [Test]
+    public void Constructor_Should_Throw_Exception_For_null_mapper()
+    {
+        Func<RecipeService> fun = () => new RecipeService(recipeRepository, null, transactionFactory);
+        fun.Should().Throw<ArgumentNullException>()
+           .And.ParamName.Should().Be("mapper");
+    }
+
+    [Test]
+    public void Constructor_Should_Throw_Exception_For_null_transactionFactory()
+    {
+        Func<RecipeService> fun = () => new RecipeService(recipeRepository, mapper, null);
+        fun.Should().Throw<ArgumentNullException>()
+           .And.ParamName.Should().Be("transactionFactory");
+    }
+
+    [Test, AutoData]
+    public async Task GetRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.GetRecipeIngredient> ingredients)
+    {
+        A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(recipe);
+        A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id)).Returns(ingredients);
+
+        var expected = ingredients.Select(x => new RecipeIngredient
         {
-            mapper = AutoMapperFactory.CreateMapper();
-            recipeRepository = A.Fake<IRecipeRepository>();
-            transactionFactory = A.Fake<ITransactionFactory>();
-            transaction = A.Fake<IDbTransaction>();
-            A.CallTo(() => transactionFactory.BeginTransaction()).Returns(transaction);
+            Amount = x.Amount,
+            Name = x.IngredientName,
+            Unit = x.UnitName
+        });
 
-            sut = new RecipeService(recipeRepository, mapper, transactionFactory);
-        }
+        var result = await sut.GetRecipeAsync(recipe.Id).ConfigureAwait(false);
 
-        [Test]
-        public void Constructor_Should_Throw_Exception_For_null_recipeRepository()
+        result.Name.Should().Be(recipe.Name);
+        result.Id.Should().Be(recipe.Id);
+        result.Ingredients.Should().BeEquivalentTo(expected);
+    }
+
+    [Test, AutoData]
+    public async Task GetRecipesSuccess(IEnumerable<DBModel.Recipe> recipes)
+    {
+        var expected = recipes.Select(x => new Recipe
         {
-            Func<RecipeService> fun = () => new RecipeService(null, mapper, transactionFactory);
-            fun.Should().Throw<ArgumentNullException>()
-                .And.ParamName.Should().Be("recipeRepository");
-        }
+            Id = x.Id,
+            Name = x.Name
+        });
+        A.CallTo(() => recipeRepository.GetRecipesAsync()).Returns(recipes.AsEnumerable());
 
-        [Test]
-        public void Constructor_Should_Throw_Exception_For_null_mapper()
+        var result = await sut.GetRecipesAsync().ConfigureAwait(false);
+        result.Should().BeEquivalentTo(expected);
+    }
+
+    [Test, AutoData]
+    public async Task GetRecipeIngredientsSuccess(int recipeId, IEnumerable<DBModel.GetRecipeIngredient> ingredients)
+    {
+        var expected = ingredients.Select(x => new RecipeIngredient
         {
-            Func<RecipeService> fun = () => new RecipeService(recipeRepository, null, transactionFactory);
-            fun.Should().Throw<ArgumentNullException>()
-               .And.ParamName.Should().Be("mapper");
-        }
+            Amount = x.Amount,
+            Name = x.IngredientName,
+            Unit = x.UnitName
+        });
 
-        [Test]
-        public void Constructor_Should_Throw_Exception_For_null_transactionFactory()
+        A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
+
+        var result = await sut.GetRecipeIngredientsAsync(recipeId).ConfigureAwait(false);
+        result.Should().BeEquivalentTo(expected);
+    }
+
+    [Test]
+    public async Task CreateRecipe_Should_Throw_Exception_For_null_newRecipe()
+    {
+        Func<Task<int>> fun = () => sut.CreateRecipeAsync(null);
+
+        var result = await fun.Should().ThrowAsync<ArgumentNullException>();
+        result.And.ParamName.Should().Be("newRecipe");
+    }
+
+    [Test, AutoData]
+    public async Task CreateRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.RecipeIngredient> ingredients)
+    {
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name, transaction)).Returns(recipe.Id);
+
+        var newRecipe = new NewRecipe
         {
-            Func<RecipeService> fun = () => new RecipeService(recipeRepository, mapper, null);
-            fun.Should().Throw<ArgumentNullException>()
-               .And.ParamName.Should().Be("transactionFactory");
-        }
-
-        [Test, AutoData]
-        public async Task GetRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.GetRecipeIngredient> ingredients)
-        {
-            A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(recipe);
-            A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id)).Returns(ingredients);
-
-            var expected = ingredients.Select(x => new RecipeIngredient
+            Name = recipe.Name,
+            Ingredients = ingredients.Select(x => new RecipeIngredient
             {
                 Amount = x.Amount,
                 Name = x.IngredientName,
                 Unit = x.UnitName
-            });
+            }).ToList()
+        };
 
-            var result = await sut.GetRecipeAsync(recipe.Id).ConfigureAwait(false);
+        await sut.CreateRecipeAsync(newRecipe).ConfigureAwait(false);
 
-            result.Name.Should().Be(recipe.Name);
-            result.Id.Should().Be(recipe.Id);
-            result.Ingredients.Should().BeEquivalentTo(expected);
-        }
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name, transaction)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();
+    }
 
-        [Test, AutoData]
-        public async Task GetRecipesSuccess(IEnumerable<DBModel.Recipe> recipes)
+    [Test, AutoData]
+    public async Task UpdateRecipeSuccess(int recipeId, string recipeName, IEnumerable<DBModel.RecipeIngredient> ingredients)
+    {
+        var newRecipe = new NewRecipe
         {
-            var expected = recipes.Select(x => new Recipe
-            {
-                Id = x.Id,
-                Name = x.Name
-            });
-            A.CallTo(() => recipeRepository.GetRecipesAsync()).Returns(recipes.AsEnumerable());
-
-            var result = await sut.GetRecipesAsync().ConfigureAwait(false);
-            result.Should().BeEquivalentTo(expected);
-        }
-
-        [Test, AutoData]
-        public async Task GetRecipeIngredientsSuccess(int recipeId, IEnumerable<DBModel.GetRecipeIngredient> ingredients)
-        {
-            var expected = ingredients.Select(x => new RecipeIngredient
+            Name = recipeName,
+            Ingredients = ingredients.Select(x => new RecipeIngredient
             {
                 Amount = x.Amount,
                 Name = x.IngredientName,
                 Unit = x.UnitName
-            });
+            }).ToList()
+        };
 
-            A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
+        await sut.UpdateRecipeAsync(recipeId, newRecipe).ConfigureAwait(false);
 
-            var result = await sut.GetRecipeIngredientsAsync(recipeId).ConfigureAwait(false);
-            result.Should().BeEquivalentTo(expected);
-        }
+        A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName, transaction)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();
+    }
 
-        [Test]
-        public async Task CreateRecipe_Should_Throw_Exception_For_null_newRecipe()
-        {
-            Func<Task<int>> fun = () => sut.CreateRecipeAsync(null);
+    [Test, AutoData]
+    public async Task UpdateRecipe_Should_Throw_Exception_For_null_newRecipeAsync(int recipeId)
+    {
+        Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, null);
 
-            var result = await fun.Should().ThrowAsync<ArgumentNullException>();
-            result.And.ParamName.Should().Be("newRecipe");
-        }
-
-        [Test, AutoData]
-        public async Task CreateRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.RecipeIngredient> ingredients)
-        {
-            A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name, transaction)).Returns(recipe.Id);
-
-            var newRecipe = new NewRecipe
-            {
-                Name = recipe.Name,
-                Ingredients = ingredients.Select(x => new RecipeIngredient
-                {
-                    Amount = x.Amount,
-                    Name = x.IngredientName,
-                    Unit = x.UnitName
-                }).ToList()
-            };
-
-            await sut.CreateRecipeAsync(newRecipe).ConfigureAwait(false);
-
-            A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name, transaction)).MustHaveHappenedOnceExactly();
-            A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();
-        }
-
-        [Test, AutoData]
-        public async Task UpdateRecipeSuccess(int recipeId, string recipeName, IEnumerable<DBModel.RecipeIngredient> ingredients)
-        {
-            var newRecipe = new NewRecipe
-            {
-                Name = recipeName,
-                Ingredients = ingredients.Select(x => new RecipeIngredient
-                {
-                    Amount = x.Amount,
-                    Name = x.IngredientName,
-                    Unit = x.UnitName
-                }).ToList()
-            };
-
-            await sut.UpdateRecipeAsync(recipeId, newRecipe).ConfigureAwait(false);
-
-            A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName, transaction)).MustHaveHappenedOnceExactly();
-            A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();
-        }
-
-        [Test, AutoData]
-        public async Task UpdateRecipe_Should_Throw_Exception_For_null_newRecipeAsync(int recipeId)
-        {
-            Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, null);
-
-            var result = await fun.Should().ThrowAsync<ArgumentNullException>();
-            result.And.ParamName.Should().Be("newRecipe");
-        }
+        var result = await fun.Should().ThrowAsync<ArgumentNullException>();
+        result.And.ParamName.Should().Be("newRecipe");
     }
 }

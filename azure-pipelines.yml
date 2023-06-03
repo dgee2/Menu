@@ -9,110 +9,112 @@ trigger:
 pool:
   vmImage: 'windows-2022'
 
-variables:
-  buildConfiguration: 'Release'
-  testOutputDirectory: '$(Agent.TempDirectory)/testresults'
+stages:
+  - stage: Build
+    jobs:
+      - job:
+        displayName: API Build
+        variables:
+          solution: '**/*.sln'
+          testOutputDirectory: '$(Agent.TempDirectory)/testresults'
+          buildConfiguration: 'Release'
+          NUGET_PACKAGES: $(Pipeline.Workspace)/.nuget/packages
+        steps:
+        - task: Cache@2
+          inputs:
+            key: 'nuget | "$(Agent.OS)" | **/*.csproj'
+            restoreKeys: |
+                nuget | "$(Agent.OS)"
+                nuget
+            path: $(NUGET_PACKAGES)
+            cacheHitVar: 'CACHE_RESTORED'
+          displayName: Cache NuGet packages
 
-steps:
-- task: SonarCloudPrepare@1
-  displayName: 'Prepare analysis on SonarCloud (PR)'
-  inputs:
-    SonarCloud: 'SonarCloud'
-    organization: 'dgee2-github'
-    scannerMode: 'MSBuild'
-    projectKey: 'dgee2_Menu'
-    projectName: 'Menu'
-    extraProperties: |
-      sonar.exclusions=**/obj/**,**/*.dll
-      sonar.cs.vstest.reportsPaths=$(TestOutputDirectory)/*.trx
-      sonar.coverageReportPaths=$(TestOutputDirectory)/CodeCoverage/SonarQube.xml
-      sonar.coverage.exclusions=**/*Test*/**/*
-  condition: eq(variables['Build.Reason'], 'PullRequest')
-- task: SonarCloudPrepare@1
-  displayName: 'Prepare analysis on SonarCloud'
-  inputs:
-    SonarCloud: 'SonarCloud'
-    organization: 'dgee2-github'
-    scannerMode: 'MSBuild'
-    projectKey: 'dgee2_Menu'
-    projectName: 'Menu'
-    extraProperties: |
-      sonar.exclusions=**/obj/**,**/*.dll
-      sonar.branch.name=$(Build.SourceBranchName)
-      sonar.cs.vstest.reportsPaths=$(TestOutputDirectory)/*.trx
-      sonar.coverageReportPaths=$(TestOutputDirectory)/CodeCoverage/SonarQube.xml
-      sonar.coverage.exclusions=**/*Test*/**/*
-  condition: ne(variables['Build.Reason'], 'PullRequest')
-- task: DotNetCoreCLI@2
-  displayName: 'DotNet Restore'
-  inputs:
-    command: 'restore'
-    projects: '**/*.csproj'
-    feedsToUse: 'select'
-    verbosityRestore: 'Normal'
-- task: DotNetCoreCLI@2
-  displayName: 'DotNet Build'
-  inputs:
-    command: 'build'
-    projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --no-restore --nologo'
-    modifyOutputPath: true
-- task: DotNetCoreCLI@2
-  displayName: 'DotNet Test'
-  inputs:
-    command: 'test'
-    projects: |
-      **/*.test.csproj
-      **/*.tests.csproj
-      !**/*.integration.test.csproj
-      !**/*.integration.tests.csproj
-    arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage" --logger trx --results-directory $(TestOutputDirectory)'
-    publishTestResults: false
-- task: reportgenerator@4
-  inputs:
-    reports: '$(TestOutputDirectory)/*/coverage.cobertura.xml'
-    targetdir: '$(TestOutputDirectory)/CodeCoverage'
-    reporttypes: 'Cobertura;SonarQube'
-    assemblyfilters: '-*Tests*'
-    filefilters: '-*/Migrations/*.cs'
-  condition: succeededOrFailed()
-- task: PublishCodeCoverageResults@1
-  displayName: 'Publish code coverage report'
-  inputs:
-    codeCoverageTool: 'cobertura'
-    summaryFileLocation: '$(TestOutputDirectory)/CodeCoverage/Cobertura.xml'
-    failIfCoverageEmpty: true
-  condition: succeededOrFailed()
-- task: PublishTestResults@2
-  inputs:
-    testResultsFormat: 'VSTest'
-    testResultsFiles: '$(TestOutputDirectory)/*.trx'
-    failTaskOnFailedTests: true
-    buildConfiguration: '$(BuildConfiguration)'
-  condition: succeededOrFailed()
-- task: VSBuild@1
-  inputs:
-    solution: '**\*.sqlproj'
-    configuration: '$(buildConfiguration)'
-    clean: true
-    maximumCpuCount: true
-# - task: PublishBuildArtifacts@1
-#   inputs:
-#     PathtoPublish: '$(Pipeline.Workspace)'
-#     ArtifactName: 'drop'
-#     publishLocation: 'Container'
-# - task: PublishBuildArtifacts@1
-#   inputs:
-#     PathtoPublish: '$(Agent.TempDirectory)'
-#     ArtifactName: 'temp'
-#     publishLocation: 'Container'
-- task: SonarCloudAnalyze@1
-  displayName: 'Run Code Analysis'
-  continueOnError: false
-  condition: succeededOrFailed()
-- task: SonarCloudPublish@1
-  inputs:
-    pollingTimeoutSec: '300'
-  displayName: 'Publish Quality Gate Result'
-  continueOnError: false
-  condition: succeededOrFailed()
+        - task: DotNetCoreCLI@2
+          displayName: 'DotNet Restore'
+          inputs:
+            command: 'restore'
+            projects: '**/*.csproj'
+            feedsToUse: 'select'
+            verbosityRestore: 'Normal'
+        - task: DotNetCoreCLI@2
+          displayName: 'DotNet Build'
+          inputs:
+            command: 'build'
+            projects: '**/*.csproj'
+            arguments: '--configuration $(buildConfiguration) --no-restore --nologo'
+            modifyOutputPath: true
+        - task: DotNetCoreCLI@2
+          displayName: 'DotNet Test'
+          inputs:
+            command: 'test'
+            projects: |
+              **/*.test.csproj
+              **/*.tests.csproj
+              !**/*.integration.test.csproj
+              !**/*.integration.tests.csproj
+            arguments: '--no-restore --no-build --configuration $(BuildConfiguration) --collect "XPlat Code Coverage" --logger trx --results-directory $(TestOutputDirectory)'
+            publishTestResults: false
+        - task: reportgenerator@4
+          inputs:
+            reports: '$(TestOutputDirectory)/*/coverage.cobertura.xml'
+            targetdir: '$(TestOutputDirectory)/CodeCoverage'
+            reporttypes: 'Cobertura;SonarQube'
+            assemblyfilters: '-*Tests*'
+            filefilters: '-*/Migrations/*.cs'
+          condition: succeededOrFailed()
+        - task: PublishCodeCoverageResults@1
+          displayName: 'Publish code coverage report'
+          inputs:
+            codeCoverageTool: 'cobertura'
+            summaryFileLocation: '$(TestOutputDirectory)/CodeCoverage/Cobertura.xml'
+            failIfCoverageEmpty: true
+          condition: succeededOrFailed()
+        - task: PublishTestResults@2
+          inputs:
+            testResultsFormat: 'VSTest'
+            testResultsFiles: '$(TestOutputDirectory)/*.trx'
+            failTaskOnFailedTests: true
+            buildConfiguration: '$(BuildConfiguration)'
+          condition: succeededOrFailed()
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/MenuApi/bin/Release/net7.0'
+            ArtifactName: 'MenuAPI'
+            publishLocation: 'Container'
+        # - task: VSBuild@1
+        #   inputs:
+        #     solution: '**\*.sqlproj'
+        #     configuration: '$(buildConfiguration)'
+        #     clean: true
+        #     maximumCpuCount: true
+
+      - job:
+        displayName: Build Vue Component
+        variables:
+          componentDirectory: '$(Build.SourcesDirectory)/MenuUI'
+          YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
+        steps:
+        - task: Cache@2
+          inputs:
+            key: 'yarn | "$(Agent.OS)" | **/yarn.lock'
+            restoreKeys: |
+                yarn | "$(Agent.OS)"
+                yarn
+            path: $(YARN_CACHE_FOLDER)
+          displayName: Cache Yarn packages
+        - task: CmdLine@2
+          displayName: 'yarn install'
+          inputs:
+            script: 'yarn --frozen-lockfile'
+            workingDirectory: '$(componentDirectory)'
+        - task: CmdLine@2
+          displayName: 'yarn build'
+          inputs:
+            script: 'yarn run build'
+            workingDirectory: '$(componentDirectory)'
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(componentDirectory)/dist'
+            ArtifactName: 'UIBuild'
+            publishLocation: 'Container'

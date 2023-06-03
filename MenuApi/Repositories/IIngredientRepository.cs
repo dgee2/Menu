@@ -1,9 +1,8 @@
 ﻿using MenuApi.ViewModel;
 
-namespace MenuApi.Repositories
+namespace MenuApi.Repositories;
+
+public interface IIngredientRepository
 {
-    public interface IIngredientRepository
-    {
-        Task<IEnumerable<Ingredient>> GetIngredientsAsync();
-    }
+    Task<IEnumerable<Ingredient>> GetIngredientsAsync();
 }

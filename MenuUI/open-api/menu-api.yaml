@@ -1,0 +1,236 @@
+openapi: 3.0.1
+info:
+  title: MenuApi
+  version: '1.0'
+paths:
+  /api/Ingredient:
+    get:
+      tags:
+        - Ingredient
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+  /api/Recipe:
+    get:
+      tags:
+        - Recipe
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+    post:
+      tags:
+        - Recipe
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRecipe'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/NewRecipe'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/NewRecipe'
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FullRecipe'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullRecipe'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/FullRecipe'
+  '/api/Recipe/{recipeId}':
+    get:
+      tags:
+        - Recipe
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FullRecipe'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullRecipe'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/FullRecipe'
+    put:
+      tags:
+        - Recipe
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRecipe'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/NewRecipe'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/NewRecipe'
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FullRecipe'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullRecipe'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/FullRecipe'
+  '/api/Recipe/{recipeId}/Ingredient':
+    get:
+      tags:
+        - Recipe
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipeIngredient'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipeIngredient'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipeIngredient'
+components:
+  schemas:
+    FullRecipe:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+          nullable: true
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredient'
+          nullable: true
+      additionalProperties: false
+    Ingredient:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+          nullable: true
+        units:
+          type: array
+          items:
+            $ref: '#/components/schemas/StringStringValueTuple'
+          nullable: true
+      additionalProperties: false
+    NewRecipe:
+      type: object
+      properties:
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredient'
+          nullable: true
+        name:
+          type: string
+          nullable: true
+      additionalProperties: false
+    Recipe:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+          nullable: true
+      additionalProperties: false
+    RecipeIngredient:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        unit:
+          type: string
+          nullable: true
+        amount:
+          type: number
+          format: double
+      additionalProperties: false
+    StringStringValueTuple:
+      type: object
+      additionalProperties: false
