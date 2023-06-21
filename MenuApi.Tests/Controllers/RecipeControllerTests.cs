@@ -1,7 +1,6 @@
 ﻿using AutoFixture.NUnit3;
 using FakeItEasy;
 using FluentAssertions;
-using MenuApi.Controllers;
 using MenuApi.Services;
 using MenuApi.ViewModel;
 using NUnit.Framework;
