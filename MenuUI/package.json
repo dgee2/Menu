@@ -2,9 +2,10 @@
   "name": "MenuUI",
   "version": "0.0.0",
   "scripts": {
-    "dev": "yarn run generate-openapi && vite",
-    "build": "yarn run generate-openapi && vue-tsc --noEmit && vite build",
-    "preview": "vite preview",
+    "dev": "yarn run build-prerequisites && vite",
+    "build": "yarn run build-prerequisites && vite build",
+    "preview": "yarn run build-prerequisites && vite preview",
+    "build-prerequisites":"yarn run generate-openapi && vue-tsc --noEmit ",
     "lint": "eslint . --fix --ignore-path .gitignore",
     "generate-openapi": "openapi-typescript ./open-api/*.yaml --output ./src/generated/open-api"
   },
