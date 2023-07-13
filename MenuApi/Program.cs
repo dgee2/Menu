@@ -1,4 +1,3 @@
-using MenuApi.Configuration;
 using MenuApi.Repositories;
 using MenuApi.Services;
 using MenuApi.Factory;
@@ -50,8 +49,6 @@ builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddTransient<IIngredientRepository, IngredientRepository>();
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
-
-builder.Services.AddTransient<IStartupFilter, SettingValidationStartupFilter>();
 
 builder.Services.AddScoped<IDbConnection>(_ => new SqlConnection(builder.Configuration.GetConnectionString("menudb")));
 builder.Services.AddScoped<ITransactionFactory, TransactionFactory>();
