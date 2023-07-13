@@ -88,33 +88,3 @@ stages:
         #     configuration: '$(buildConfiguration)'
         #     clean: true
         #     maximumCpuCount: true
-
-      - job:
-        displayName: Build Vue Component
-        variables:
-          componentDirectory: '$(Build.SourcesDirectory)/MenuUI'
-          YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
-        steps:
-        - task: Cache@2
-          inputs:
-            key: 'yarn | "$(Agent.OS)" | **/MenuUI/yarn.lock'
-            restoreKeys: |
-                yarn | "$(Agent.OS)"
-                yarn
-            path: $(YARN_CACHE_FOLDER)
-          displayName: Cache Yarn packages
-        - task: CmdLine@2
-          displayName: 'yarn install'
-          inputs:
-            script: 'yarn --frozen-lockfile'
-            workingDirectory: '$(componentDirectory)'
-        - task: CmdLine@2
-          displayName: 'yarn build'
-          inputs:
-            script: 'yarn run build'
-            workingDirectory: '$(componentDirectory)'
-        - task: PublishBuildArtifacts@1
-          inputs:
-            PathtoPublish: '$(componentDirectory)/dist'
-            ArtifactName: 'UIBuild'
-            publishLocation: 'Container'

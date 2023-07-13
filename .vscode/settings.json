@@ -1,0 +1,7 @@
+{
+    "dotnet.defaultSolution": "MenuApi.sln",
+    "sonarlint.connectedMode.project": {
+        "connectionId": "dgee2-github",
+        "projectKey": "dgee2_Menu"
+    }
+}
