@@ -8,6 +8,8 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+const string CorsPolicyName = "CorsAll";
+
 // Configure auth
 //builder.AddAuthentication();
 //builder.Services.AddAuthorizationBuilder().AddCurrentUserHandler();
@@ -58,10 +60,21 @@ builder.Services.AddApplicationInsightsTelemetry(o =>
     o.ConnectionString = builder.Configuration["APPINSIGHTS_INSTRUMENTATIONKEY"];
 });
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: CorsPolicyName,
+        builder =>
+        {
+            builder.AllowAnyOrigin();
+        });
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseCors(CorsPolicyName);
     app.UseSwagger();
     app.UseSwaggerUI((o) =>
     {
@@ -75,8 +88,9 @@ if (app.Environment.IsDevelopment())
 //app.UseRateLimiter();
 
 // Configure the APIs
-app.MapRecipes();
-app.MapIngredients();
+var api = app.MapGroup("/api");
+api.MapRecipes();
+api.MapIngredients();
 
 // Configure the prometheus endpoint for scraping metrics
 //app.MapPrometheusScrapingEndpoint();
@@ -84,3 +98,5 @@ app.MapIngredients();
 // .RequireHost("*:9100");
 
 await app.RunAsync();
+
+public partial class Program { }

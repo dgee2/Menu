@@ -7,7 +7,7 @@ public static class RecipeApi
 {
     public static RouteGroupBuilder MapRecipes(this IEndpointRouteBuilder routes)
     {
-        var group = routes.MapGroup("/recipes");
+        var group = routes.MapGroup("/recipe");
 
         group.WithTags("Recipes");
 
@@ -21,7 +21,7 @@ public static class RecipeApi
             return await recipeService.GetRecipeAsync(recipeId);
         });
 
-        group.MapGet("/{recipeId}/Ingredient", async (IRecipeService recipeService, int recipeId) =>
+        group.MapGet("/{recipeId}/ingredient", async (IRecipeService recipeService, int recipeId) =>
         {
             return await recipeService.GetRecipeIngredientsAsync(recipeId);
         });
