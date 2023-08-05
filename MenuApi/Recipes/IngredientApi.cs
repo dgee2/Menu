@@ -10,11 +10,13 @@ public static class IngredientApi
 
         group.WithTags("Ingredients");
 
-        group.MapGet("/", async (IIngredientRepository ingredientRepository) =>
-        {
-            return await ingredientRepository.GetIngredientsAsync();
-        });
+        group.MapGet("/", GetIngredients);
 
         return group;
+    }
+
+    public static async Task<IEnumerable<ViewModel.Ingredient>> GetIngredients(IIngredientRepository ingredientRepository)
+    {
+        return await ingredientRepository.GetIngredientsAsync();
     }
 }
