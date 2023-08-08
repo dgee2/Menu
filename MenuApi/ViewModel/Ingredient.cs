@@ -2,7 +2,7 @@
 
 public class Ingredient
 {
-    public Ingredient(int id, string name, IEnumerable<(string Name, string Abbreviation)> units)
+    public Ingredient(int id, string name, IEnumerable<IngredientUnit> units)
     {
         Id = id;
         Name = name;
@@ -13,5 +13,17 @@ public class Ingredient
 
     public string Name { get; }
 
-    public IEnumerable<(string Name, string Abbreviation)> Units { get; }
+    public IEnumerable<IngredientUnit> Units { get; }
+}
+
+public class IngredientUnit
+{
+    public IngredientUnit(string name, string abbreviation)
+    {
+        Name = name;
+        Abbreviation = abbreviation;
+    }
+
+    public string Name { get; }
+    public string Abbreviation { get; }
 }

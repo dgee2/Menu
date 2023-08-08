@@ -1,10 +1,10 @@
-using AutoFixture.NUnit3;
+using AutoFixture.Xunit2;
 using FluentAssertions;
 using MenuApi.Integration.Tests.Factory;
-using NUnit.Framework;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Xunit;
 
 namespace MenuApi.Integration.Tests;
 
@@ -20,7 +20,7 @@ public class RecipeIntegrationTests : IntegrationBaseClass
         };
     }
 
-    [Test]
+    [Fact]
     public async Task Get_ReturnsAListOfCategories_CategoriesController()
     {
         using var client = Factory.CreateClient();
@@ -34,7 +34,7 @@ public class RecipeIntegrationTests : IntegrationBaseClass
         deserializedData.Should().NotBeNull();
     }
 
-    [Test, AutoData]
+    [Theory, AutoData]
     public async Task Create_Recipe(NewRecipe recipe)
     {
         using var client = Factory.CreateClient();
@@ -44,7 +44,7 @@ public class RecipeIntegrationTests : IntegrationBaseClass
         name.Should().Be(recipe.Name);
     }
 
-    [Test, AutoData]
+    [Theory, AutoData]
     public async Task Create_and_Update_Recipe(NewRecipe recipe, NewRecipe newRecipe)
     {
         using var client = Factory.CreateClient();
@@ -56,7 +56,7 @@ public class RecipeIntegrationTests : IntegrationBaseClass
         name.Should().Be(newRecipe.Name);
     }
 
-    [Test, AutoData]
+    [Theory, AutoData]
     public async Task Create_And_Get_Recipe(NewRecipe recipe)
     {
         using var client = Factory.CreateClient();
@@ -117,7 +117,6 @@ public class RecipeIntegrationTests : IntegrationBaseClass
         );
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S1144:Unused private types or members should be removed")]
     private class Recipe
     {
         public int Id { get; set; }

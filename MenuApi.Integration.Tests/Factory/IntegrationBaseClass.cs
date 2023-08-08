@@ -1,21 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc.Testing;
-using NUnit.Framework;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Hosting;
+using Xunit;
 
 namespace MenuApi.Integration.Tests.Factory;
 
 public class IntegrationBaseClass
 {
-    protected WebApplicationFactory<Startup> Factory { get; private set; }
+    protected WebApplicationFactory<Program> Factory { get; private set; }
 
-    [OneTimeSetUp]
-    public void Setup()
+    public IntegrationBaseClass()
     {
-        Factory = new WebApplicationFactory<Startup>();
-    }
-
-    [OneTimeTearDown]
-    public void Teardown()
-    {
-        Factory?.Dispose();
+        Factory = new WebApplicationFactory<Program>();
     }
 }
