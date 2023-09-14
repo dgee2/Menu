@@ -1,13 +1,17 @@
-﻿namespace MenuApi.ViewModel;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MenuApi.ViewModel;
 
 public class RecipeIngredient
 {
 #pragma warning disable CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
+    [Required]
+    public string Name { get; init; }
 
-    public string Name { get; set; }
+    [Required]
+    public string Unit { get; init; }
 
-    public string Unit { get; set; }
-
-    public decimal Amount { get; set; }
+    [Required]
+    public decimal Amount { get; init; }
 #pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
 }

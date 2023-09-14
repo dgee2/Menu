@@ -1,4 +1,6 @@
-﻿namespace MenuApi.ViewModel;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MenuApi.ViewModel;
 
 public class Ingredient
 {
@@ -9,10 +11,13 @@ public class Ingredient
         Units = units;
     }
 
+    [Required]
     public int Id { get; }
 
+    [Required]
     public string Name { get; }
 
+    [Required]
     public IEnumerable<IngredientUnit> Units { get; }
 }
 
@@ -24,6 +29,8 @@ public class IngredientUnit
         Abbreviation = abbreviation;
     }
 
+    [Required]
     public string Name { get; }
+    [Required]
     public string Abbreviation { get; }
 }

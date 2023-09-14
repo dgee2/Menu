@@ -1,10 +1,14 @@
-﻿namespace MenuApi.ViewModel;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MenuApi.ViewModel;
 
 public class NewRecipe
 {
 #pragma warning disable CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
-    public List<RecipeIngredient> Ingredients { get; set; }
+    [Required]
+    public List<RecipeIngredient> Ingredients { get; init; }
 
-    public string Name { get; set; }
+    [Required]
+    public string Name { get; init; }
 #pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
 }
