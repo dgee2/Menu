@@ -2,15 +2,8 @@
 
 namespace MenuApi.Factory;
 
-public class TransactionFactory : ITransactionFactory
+public class TransactionFactory(IDbConnection dbConnection) : ITransactionFactory
 {
-    private readonly IDbConnection dbConnection;
-
-    public TransactionFactory(IDbConnection dbConnection)
-    {
-        this.dbConnection = dbConnection ?? throw new ArgumentNullException(nameof(dbConnection));
-    }
-
     private IDbConnection EnsureOpenConnection
     {
         get

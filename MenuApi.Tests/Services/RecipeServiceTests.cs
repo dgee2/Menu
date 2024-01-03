@@ -14,11 +14,11 @@ namespace MenuApi.Tests;
 
 public class RecipeServiceTests
 {
-    private RecipeService sut;
-    private IMapper mapper;
-    private IRecipeRepository recipeRepository;
-    private ITransactionFactory transactionFactory;
-    private IDbTransaction transaction;
+    private readonly RecipeService sut;
+    private readonly IMapper mapper;
+    private readonly IRecipeRepository recipeRepository;
+    private readonly ITransactionFactory transactionFactory;
+    private readonly IDbTransaction transaction;
 
     public RecipeServiceTests()
     {
@@ -29,30 +29,6 @@ public class RecipeServiceTests
         A.CallTo(() => transactionFactory.BeginTransaction()).Returns(transaction);
 
         sut = new RecipeService(recipeRepository, mapper, transactionFactory);
-    }
-
-    [Fact]
-    public void Constructor_Should_Throw_Exception_For_null_recipeRepository()
-    {
-        Func<RecipeService> fun = () => new RecipeService(null, mapper, transactionFactory);
-        fun.Should().Throw<ArgumentNullException>()
-            .And.ParamName.Should().Be("recipeRepository");
-    }
-
-    [Fact]
-    public void Constructor_Should_Throw_Exception_For_null_mapper()
-    {
-        Func<RecipeService> fun = () => new RecipeService(recipeRepository, null, transactionFactory);
-        fun.Should().Throw<ArgumentNullException>()
-           .And.ParamName.Should().Be("mapper");
-    }
-
-    [Fact]
-    public void Constructor_Should_Throw_Exception_For_null_transactionFactory()
-    {
-        Func<RecipeService> fun = () => new RecipeService(recipeRepository, mapper, null);
-        fun.Should().Throw<ArgumentNullException>()
-           .And.ParamName.Should().Be("transactionFactory");
     }
 
     [Theory, AutoData]
@@ -68,7 +44,7 @@ public class RecipeServiceTests
             Unit = x.UnitName
         });
 
-        var result = await sut.GetRecipeAsync(recipe.Id).ConfigureAwait(false);
+        var result = await sut.GetRecipeAsync(recipe.Id);
 
         result.Name.Should().Be(recipe.Name);
         result.Id.Should().Be(recipe.Id);
@@ -85,7 +61,7 @@ public class RecipeServiceTests
         });
         A.CallTo(() => recipeRepository.GetRecipesAsync()).Returns(recipes.AsEnumerable());
 
-        var result = await sut.GetRecipesAsync().ConfigureAwait(false);
+        var result = await sut.GetRecipesAsync();
         result.Should().BeEquivalentTo(expected);
     }
 
@@ -101,7 +77,7 @@ public class RecipeServiceTests
 
         A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
 
-        var result = await sut.GetRecipeIngredientsAsync(recipeId).ConfigureAwait(false);
+        var result = await sut.GetRecipeIngredientsAsync(recipeId);
         result.Should().BeEquivalentTo(expected);
     }
 
@@ -130,7 +106,7 @@ public class RecipeServiceTests
             }).ToList()
         };
 
-        await sut.CreateRecipeAsync(newRecipe).ConfigureAwait(false);
+        await sut.CreateRecipeAsync(newRecipe);
 
         A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name, transaction)).MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();
@@ -150,7 +126,7 @@ public class RecipeServiceTests
             }).ToList()
         };
 
-        await sut.UpdateRecipeAsync(recipeId, newRecipe).ConfigureAwait(false);
+        await sut.UpdateRecipeAsync(recipeId, newRecipe);
 
         A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName, transaction)).MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();

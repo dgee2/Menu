@@ -5,19 +5,8 @@ using MenuApi.ViewModel;
 
 namespace MenuApi.Services;
 
-public class RecipeService : IRecipeService
+public class RecipeService(IRecipeRepository recipeRepository, IMapper mapper, ITransactionFactory transactionFactory) : IRecipeService
 {
-    private readonly IRecipeRepository recipeRepository;
-    private readonly IMapper mapper;
-    private readonly ITransactionFactory transactionFactory;
-
-    public RecipeService(IRecipeRepository recipeRepository, IMapper mapper, ITransactionFactory transactionFactory)
-    {
-        this.recipeRepository = recipeRepository ?? throw new ArgumentNullException(nameof(recipeRepository));
-        this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-        this.transactionFactory = transactionFactory ?? throw new ArgumentNullException(nameof(transactionFactory));
-    }
-
     public async Task<IEnumerable<Recipe>> GetRecipesAsync()
     {
         var recipes = await recipeRepository.GetRecipesAsync().ConfigureAwait(false);
@@ -43,10 +32,7 @@ public class RecipeService : IRecipeService
 
     public async Task<int> CreateRecipeAsync(NewRecipe newRecipe)
     {
-        if (newRecipe is null)
-        {
-            throw new ArgumentNullException(nameof(newRecipe));
-        }
+        ArgumentNullException.ThrowIfNull(newRecipe);
 
         var ingredients = newRecipe.Ingredients.Select(mapper.Map<DBModel.RecipeIngredient>);
 
@@ -61,10 +47,7 @@ public class RecipeService : IRecipeService
 
     public async Task UpdateRecipeAsync(int recipeId, NewRecipe newRecipe)
     {
-        if (newRecipe is null)
-        {
-            throw new ArgumentNullException(nameof(newRecipe));
-        }
+        ArgumentNullException.ThrowIfNull(newRecipe);
 
         var ingredients = newRecipe.Ingredients.Select(mapper.Map<DBModel.RecipeIngredient>);
 

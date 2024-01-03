@@ -6,23 +6,16 @@ using MenuApi.DBModel;
 namespace MenuApi.Repositories;
 
 [ExcludeFromCodeCoverage]
-public class RecipeRepository : IRecipeRepository
+public class RecipeRepository(IDbConnection dbConnection) : IRecipeRepository
 {
-    private readonly IDbConnection dbConnection;
-
-    public RecipeRepository(IDbConnection dbConnection)
-    {
-        this.dbConnection = dbConnection ?? throw new ArgumentNullException(nameof(dbConnection));
-    }
-
     public Task<IEnumerable<Recipe>> GetRecipesAsync() => GetRecipesAsync(null);
 
     public async Task<IEnumerable<Recipe>> GetRecipesAsync(IDbTransaction? transaction)
         => await dbConnection.QueryAsync<Recipe>("dbo.GetRecipes", commandType: CommandType.StoredProcedure, transaction: transaction).ConfigureAwait(false);
 
-    public Task<Recipe> GetRecipeAsync(int recipeId) => GetRecipeAsync(recipeId, null);
+    public Task<Recipe?> GetRecipeAsync(int recipeId) => GetRecipeAsync(recipeId, null);
 
-    public async Task<Recipe> GetRecipeAsync(int recipeId, IDbTransaction? transaction)
+    public async Task<Recipe?> GetRecipeAsync(int recipeId, IDbTransaction? transaction)
         => await dbConnection.QueryFirstOrDefaultAsync<Recipe>("dbo.GetRecipe", new { recipeId }, commandType: CommandType.StoredProcedure, transaction: transaction).ConfigureAwait(false);
 
     public Task<IEnumerable<GetRecipeIngredient>> GetRecipeIngredientsAsync(int recipeId) => GetRecipeIngredientsAsync(recipeId, null);
@@ -39,10 +32,7 @@ public class RecipeRepository : IRecipeRepository
 
     public async Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<RecipeIngredient> recipeIngredients, IDbTransaction? transaction)
     {
-        if (recipeIngredients == null)
-        {
-            throw new ArgumentNullException(nameof(recipeIngredients));
-        }
+        ArgumentNullException.ThrowIfNull(recipeIngredients);
 
         using var dt = new DataTable();
         dt.Columns.Add("name", typeof(string));

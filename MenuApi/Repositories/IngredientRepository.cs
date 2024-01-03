@@ -4,15 +4,8 @@ using MenuApi.DBModel;
 
 namespace MenuApi.Repositories;
 
-public class IngredientRepository : IIngredientRepository
+public class IngredientRepository(IDbConnection dbConnection) : IIngredientRepository
 {
-    private readonly IDbConnection dbConnection;
-
-    public IngredientRepository(IDbConnection dbConnection)
-    {
-        this.dbConnection = dbConnection ?? throw new ArgumentNullException(nameof(dbConnection));
-    }
-
     public async Task<IEnumerable<ViewModel.Ingredient>> GetIngredientsAsync()
         => (await dbConnection.QueryAsync<Ingredient>("dbo.GetIngredients", commandType: CommandType.StoredProcedure).ConfigureAwait(false))
                 .GroupBy(x => (x.Id, x.Name), x => new ViewModel.IngredientUnit(x.Unit, x.UnitAbbreviation))

@@ -2,35 +2,22 @@
 
 namespace MenuApi.ViewModel;
 
-public class Ingredient
+public class Ingredient(int id, string name, IEnumerable<IngredientUnit> units)
 {
-    public Ingredient(int id, string name, IEnumerable<IngredientUnit> units)
-    {
-        Id = id;
-        Name = name;
-        Units = units;
-    }
+    [Required]
+    public int Id { get; } = id;
 
     [Required]
-    public int Id { get; }
+    public string Name { get; } = name;
 
     [Required]
-    public string Name { get; }
-
-    [Required]
-    public IEnumerable<IngredientUnit> Units { get; }
+    public IEnumerable<IngredientUnit> Units { get; } = units;
 }
 
-public class IngredientUnit
+public class IngredientUnit(string name, string abbreviation)
 {
-    public IngredientUnit(string name, string abbreviation)
-    {
-        Name = name;
-        Abbreviation = abbreviation;
-    }
-
     [Required]
-    public string Name { get; }
+    public string Name { get; } = name;
     [Required]
-    public string Abbreviation { get; }
+    public string Abbreviation { get; } = abbreviation;
 }

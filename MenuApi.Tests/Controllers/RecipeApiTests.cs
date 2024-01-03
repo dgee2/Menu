@@ -10,7 +10,7 @@ namespace MenuApi.Tests.Controllers;
 
 public class RecipeApiTests
 {
-    private IRecipeService recipeService;
+    private readonly IRecipeService recipeService;
 
     public RecipeApiTests()
     {

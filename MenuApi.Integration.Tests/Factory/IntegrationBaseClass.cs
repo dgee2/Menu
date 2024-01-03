@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Hosting;
-using Xunit;
+﻿using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace MenuApi.Integration.Tests.Factory;
 

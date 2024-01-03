@@ -8,9 +8,9 @@ public interface IRecipeRepository
 
     Task<int> CreateRecipeAsync(string name, IDbTransaction? transaction);
 
-    Task<DBModel.Recipe> GetRecipeAsync(int recipeId);
+    Task<DBModel.Recipe?> GetRecipeAsync(int recipeId);
 
-    Task<DBModel.Recipe> GetRecipeAsync(int recipeId, IDbTransaction? transaction);
+    Task<DBModel.Recipe?> GetRecipeAsync(int recipeId, IDbTransaction? transaction);
 
     Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients);
 
