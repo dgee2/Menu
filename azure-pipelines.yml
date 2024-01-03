@@ -79,7 +79,7 @@ stages:
           condition: succeededOrFailed()
         - task: PublishBuildArtifacts@1
           inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/MenuApi/bin/Release/net7.0'
+            PathtoPublish: '$(Build.SourcesDirectory)/MenuApi/bin/Release/net8.0'
             ArtifactName: 'MenuAPI'
             publishLocation: 'Container'
         # - task: VSBuild@1
