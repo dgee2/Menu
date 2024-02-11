@@ -1,3 +1,11 @@
-﻿namespace MenuApi.DBModel;
+﻿using MenuApi.StrongIds;
 
-public sealed record Ingredient(int Id, string Name, string Unit, string UnitAbbreviation);
+namespace MenuApi.DBModel;
+
+public sealed record Ingredient
+{
+    public IngredientId Id { get; init; }
+    public required string Name { get; init; }
+    public required string Unit { get; init; }
+    public required string UnitAbbreviation { get; init; }
+};

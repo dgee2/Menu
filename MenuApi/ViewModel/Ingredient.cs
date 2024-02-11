@@ -1,11 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MenuApi.StrongIds;
+using System.ComponentModel.DataAnnotations;
 
 namespace MenuApi.ViewModel;
 
-public class Ingredient(int id, string name, IEnumerable<IngredientUnit> units)
+public class Ingredient(IngredientId id, string name, IEnumerable<IngredientUnit> units)
 {
     [Required]
-    public int Id { get; } = id;
+    public IngredientId Id { get; } = id;
 
     [Required]
     public string Name { get; } = name;

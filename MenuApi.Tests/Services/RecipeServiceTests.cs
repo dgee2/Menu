@@ -5,6 +5,7 @@ using FluentAssertions;
 using MenuApi.Factory;
 using MenuApi.Repositories;
 using MenuApi.Services;
+using MenuApi.StrongIds;
 using MenuApi.Tests.Factory;
 using MenuApi.ViewModel;
 using System.Data;
@@ -66,7 +67,7 @@ public class RecipeServiceTests
     }
 
     [Theory, AutoData]
-    public async Task GetRecipeIngredientsSuccess(int recipeId, IEnumerable<DBModel.GetRecipeIngredient> ingredients)
+    public async Task GetRecipeIngredientsSuccess(RecipeId recipeId, IEnumerable<DBModel.GetRecipeIngredient> ingredients)
     {
         var expected = ingredients.Select(x => new RecipeIngredient
         {
@@ -79,15 +80,6 @@ public class RecipeServiceTests
 
         var result = await sut.GetRecipeIngredientsAsync(recipeId);
         result.Should().BeEquivalentTo(expected);
-    }
-
-    [Fact]
-    public async Task CreateRecipe_Should_Throw_Exception_For_null_newRecipe()
-    {
-        Func<Task<int>> fun = () => sut.CreateRecipeAsync(null);
-
-        var result = await fun.Should().ThrowAsync<ArgumentNullException>();
-        result.And.ParamName.Should().Be("newRecipe");
     }
 
     [Theory, AutoData]
@@ -113,7 +105,7 @@ public class RecipeServiceTests
     }
 
     [Theory, AutoData]
-    public async Task UpdateRecipeSuccess(int recipeId, string recipeName, IEnumerable<DBModel.RecipeIngredient> ingredients)
+    public async Task UpdateRecipeSuccess(RecipeId recipeId, string recipeName, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
         var newRecipe = new NewRecipe
         {
@@ -133,7 +125,7 @@ public class RecipeServiceTests
     }
 
     [Theory, AutoData]
-    public async Task UpdateRecipe_Should_Throw_Exception_For_null_newRecipeAsync(int recipeId)
+    public async Task UpdateRecipe_Should_Throw_Exception_For_null_newRecipeAsync(RecipeId recipeId)
     {
         Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, null);
 

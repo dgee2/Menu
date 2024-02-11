@@ -1,30 +1,31 @@
-﻿using System.Data;
+﻿using MenuApi.StrongIds;
+using System.Data;
 
 namespace MenuApi.Repositories;
 
 public interface IRecipeRepository
 {
-    Task<int> CreateRecipeAsync(string name);
+    Task<RecipeId> CreateRecipeAsync(string name);
 
-    Task<int> CreateRecipeAsync(string name, IDbTransaction? transaction);
+    Task<RecipeId> CreateRecipeAsync(string name, IDbTransaction? transaction);
 
-    Task<DBModel.Recipe?> GetRecipeAsync(int recipeId);
+    Task<DBModel.Recipe?> GetRecipeAsync(RecipeId recipeId);
 
-    Task<DBModel.Recipe?> GetRecipeAsync(int recipeId, IDbTransaction? transaction);
+    Task<DBModel.Recipe?> GetRecipeAsync(RecipeId recipeId, IDbTransaction? transaction);
 
-    Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients);
+    Task UpsertRecipeIngredientsAsync(RecipeId recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients);
 
-    Task UpsertRecipeIngredientsAsync(int recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients, IDbTransaction? transaction);
+    Task UpsertRecipeIngredientsAsync(RecipeId recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients, IDbTransaction? transaction);
 
-    Task<IEnumerable<DBModel.GetRecipeIngredient>> GetRecipeIngredientsAsync(int recipeId);
+    Task<IEnumerable<DBModel.GetRecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId);
 
-    Task<IEnumerable<DBModel.GetRecipeIngredient>> GetRecipeIngredientsAsync(int recipeId, IDbTransaction? transaction);
+    Task<IEnumerable<DBModel.GetRecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId, IDbTransaction? transaction);
 
     Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync();
 
     Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync(IDbTransaction? transaction);
 
-    Task UpdateRecipeAsync(int recipeId, string name);
+    Task UpdateRecipeAsync(RecipeId recipeId, string name);
 
-    Task UpdateRecipeAsync(int recipeId, string name, IDbTransaction? transaction);
+    Task UpdateRecipeAsync(RecipeId recipeId, string name, IDbTransaction? transaction);
 }

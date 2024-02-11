@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MenuApi.Factory;
 using MenuApi.Repositories;
+using MenuApi.StrongIds;
 using MenuApi.ViewModel;
 
 namespace MenuApi.Services;
@@ -13,7 +14,7 @@ public class RecipeService(IRecipeRepository recipeRepository, IMapper mapper, I
         return recipes.Select(mapper.Map<Recipe>);
     }
 
-    public async Task<FullRecipe> GetRecipeAsync(int recipeId)
+    public async Task<FullRecipe> GetRecipeAsync(RecipeId recipeId)
     {
         var dbRecipe = await recipeRepository.GetRecipeAsync(recipeId).ConfigureAwait(false);
         var dbIngredients = await recipeRepository.GetRecipeIngredientsAsync(recipeId).ConfigureAwait(false);
@@ -24,13 +25,13 @@ public class RecipeService(IRecipeRepository recipeRepository, IMapper mapper, I
         return recipe;
     }
 
-    public async Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId)
+    public async Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId)
     {
         var ingredients = await recipeRepository.GetRecipeIngredientsAsync(recipeId).ConfigureAwait(false);
         return ingredients.Select(mapper.Map<RecipeIngredient>);
     }
 
-    public async Task<int> CreateRecipeAsync(NewRecipe newRecipe)
+    public async Task<RecipeId> CreateRecipeAsync(NewRecipe newRecipe)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 
@@ -45,7 +46,7 @@ public class RecipeService(IRecipeRepository recipeRepository, IMapper mapper, I
         return recipeId;
     }
 
-    public async Task UpdateRecipeAsync(int recipeId, NewRecipe newRecipe)
+    public async Task UpdateRecipeAsync(RecipeId recipeId, NewRecipe newRecipe)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 

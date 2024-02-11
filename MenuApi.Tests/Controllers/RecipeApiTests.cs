@@ -3,6 +3,7 @@ using FakeItEasy;
 using FluentAssertions;
 using MenuApi.Recipes;
 using MenuApi.Services;
+using MenuApi.StrongIds;
 using MenuApi.ViewModel;
 using Xunit;
 
@@ -28,7 +29,7 @@ public class RecipeApiTests
     }
 
     [Theory, AutoData]
-    public async Task GetRecipeAsync_Success(int recipeId, FullRecipe recipe)
+    public async Task GetRecipeAsync_Success(RecipeId recipeId, FullRecipe recipe)
     {
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
@@ -38,7 +39,7 @@ public class RecipeApiTests
     }
 
     [Theory, AutoData]
-    public async Task GetRecipeIngredientsAsync_Success(int recipeId, IEnumerable<RecipeIngredient> ingredients)
+    public async Task GetRecipeIngredientsAsync_Success(RecipeId recipeId, IEnumerable<RecipeIngredient> ingredients)
     {
         A.CallTo(() => recipeService.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
 
@@ -48,7 +49,7 @@ public class RecipeApiTests
     }
 
     [Theory, AutoData]
-    public async Task CreateRecipeAsync_Success(NewRecipe newRecipe, FullRecipe recipe, int recipeId)
+    public async Task CreateRecipeAsync_Success(NewRecipe newRecipe, FullRecipe recipe, RecipeId recipeId)
     {
         A.CallTo(() => recipeService.CreateRecipeAsync(newRecipe)).Returns(recipeId);
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
@@ -60,7 +61,7 @@ public class RecipeApiTests
     }
 
     [Theory, AutoData]
-    public async Task UpdateRecipeAsync_Success(int recipeId, NewRecipe newRecipe, FullRecipe recipe)
+    public async Task UpdateRecipeAsync_Success(RecipeId recipeId, NewRecipe newRecipe, FullRecipe recipe)
     {
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 

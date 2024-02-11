@@ -1,16 +1,17 @@
-﻿using MenuApi.ViewModel;
+﻿using MenuApi.StrongIds;
+using MenuApi.ViewModel;
 
 namespace MenuApi.Services;
 
 public interface IRecipeService
 {
-    Task<int> CreateRecipeAsync(NewRecipe newRecipe);
+    Task<RecipeId> CreateRecipeAsync(NewRecipe newRecipe);
 
-    Task<FullRecipe> GetRecipeAsync(int recipeId);
+    Task<FullRecipe> GetRecipeAsync(RecipeId recipeId);
 
-    Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(int recipeId);
+    Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId);
 
     Task<IEnumerable<Recipe>> GetRecipesAsync();
 
-    Task UpdateRecipeAsync(int recipeId, NewRecipe newRecipe);
+    Task UpdateRecipeAsync(RecipeId recipeId, NewRecipe newRecipe);
 }

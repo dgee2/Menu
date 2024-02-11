@@ -1,4 +1,5 @@
 ﻿using MenuApi.Services;
+using MenuApi.StrongIds;
 using MenuApi.ViewModel;
 
 namespace MenuApi.Recipes;
@@ -29,12 +30,12 @@ public static class RecipeApi
         return await recipeService.GetRecipesAsync();
     }
 
-    public static async Task<FullRecipe> GetRecipe(IRecipeService recipeService, int recipeId)
+    public static async Task<FullRecipe> GetRecipe(IRecipeService recipeService, RecipeId recipeId)
     {
         return await recipeService.GetRecipeAsync(recipeId);
     }
 
-    public static async Task<IEnumerable<RecipeIngredient>> GetRecipeIngredients(IRecipeService recipeService, int recipeId)
+    public static async Task<IEnumerable<RecipeIngredient>> GetRecipeIngredients(IRecipeService recipeService, RecipeId recipeId)
     {
         return await recipeService.GetRecipeIngredientsAsync(recipeId);
     }
@@ -45,7 +46,7 @@ public static class RecipeApi
         return await recipeService.GetRecipeAsync(recipeId);
     }
 
-    public static async Task<FullRecipe> UpdateRecipe(IRecipeService recipeService, int recipeId, NewRecipe newRecipe)
+    public static async Task<FullRecipe> UpdateRecipe(IRecipeService recipeService, RecipeId recipeId, NewRecipe newRecipe)
     {
         await recipeService.UpdateRecipeAsync(recipeId, newRecipe);
         return await recipeService.GetRecipeAsync(recipeId);

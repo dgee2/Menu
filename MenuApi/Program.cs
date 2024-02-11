@@ -5,6 +5,10 @@ using Microsoft.Data.SqlClient;
 using System.Data;
 using MenuApi.Recipes;
 using System.Reflection;
+using MenuApi.StrongIds;
+using Microsoft.OpenApi.Models;
+
+StrongIdConfig.ConfigureStrongIds();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +17,7 @@ const string CorsPolicyName = "CorsAll";
 // Configure auth
 //builder.AddAuthentication();
 //builder.Services.AddAuthorizationBuilder().AddCurrentUserHandler();
+
 
 // Add the service to generate JWT tokens
 //builder.Services.AddTokenService();
@@ -36,6 +41,9 @@ builder.Services.AddSwaggerGen(o =>
     o.SupportNonNullableReferenceTypes();
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     o.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+
+    o.MapType<RecipeId>(() => new OpenApiSchema { Type = "integer" });
+    o.MapType<IngredientId>(() => new OpenApiSchema { Type = "integer" });
 });
 
 // Configure rate limiting
@@ -101,4 +109,4 @@ api.MapIngredients();
 
 await app.RunAsync();
 
-public partial class Program { }
+public static partial class Program { }
