@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build">
-  <Sdk Name="Microsoft.Build.Sql" Version="0.1.10-preview" />
+  <Sdk Name="Microsoft.Build.Sql" Version="0.2.3-preview" />
   <PropertyGroup>
-    <Name>MenuDB</Name>
-    <ProjectGuid>{49c406a6-02dc-460d-92b3-3fcef10f4b55}</ProjectGuid>
-    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
-    <ModelCollation>1033, CI</ModelCollation>
+		<Name>MenuDB2</Name>
+		<DSP>Microsoft.Data.Tools.Schema.Sql.Sql160DatabaseSchemaProvider</DSP>
+		<ModelCollation>1033, CI</ModelCollation>
+		<RootNamespace>MenuDB</RootNamespace>
+		<AssemblyName>MenuDB</AssemblyName>
   </PropertyGroup>
-  <ItemGroup>
-    <PostDeploy Include="Scripts\PostDeployment\Units.sql" />
-  </ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="dbo\Stored Procedures\" />
+	</ItemGroup>
+	<ItemGroup>
+		<PostDeploy Include="Scripts\PostDeployment\Units.sql" />
+	</ItemGroup>
 </Project>
