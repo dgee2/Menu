@@ -11,6 +11,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MenuApi.Integration.Tests",
 EndProject
 Project("{42EA0DBD-9CF1-443E-919E-BE9C484E4577}") = "MenuDB", "MenuDB\MenuDB.sqlproj", "{4DDD7569-6AB4-41F7-AEED-6FD397879F37}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menu.AppHost", "Menu.AppHost\Menu.AppHost.csproj", "{E0F8E56A-BB00-4630-B264-09B333F21FC9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menu.ServiceDefaults", "Menu.ServiceDefaults\Menu.ServiceDefaults.csproj", "{A5CA45B2-8744-4E38-BC4E-9584704A2701}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{4DDD7569-6AB4-41F7-AEED-6FD397879F37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4DDD7569-6AB4-41F7-AEED-6FD397879F37}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4DDD7569-6AB4-41F7-AEED-6FD397879F37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0F8E56A-BB00-4630-B264-09B333F21FC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0F8E56A-BB00-4630-B264-09B333F21FC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0F8E56A-BB00-4630-B264-09B333F21FC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0F8E56A-BB00-4630-B264-09B333F21FC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5CA45B2-8744-4E38-BC4E-9584704A2701}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5CA45B2-8744-4E38-BC4E-9584704A2701}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5CA45B2-8744-4E38-BC4E-9584704A2701}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5CA45B2-8744-4E38-BC4E-9584704A2701}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

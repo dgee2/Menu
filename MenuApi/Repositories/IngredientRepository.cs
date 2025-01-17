@@ -1,10 +1,11 @@
 ﻿using System.Data;
 using Dapper;
 using MenuApi.DBModel;
+using Microsoft.Data.SqlClient;
 
 namespace MenuApi.Repositories;
 
-public class IngredientRepository(IDbConnection dbConnection) : IIngredientRepository
+public class IngredientRepository(SqlConnection dbConnection) : IIngredientRepository
 {
     public async Task<IEnumerable<ViewModel.Ingredient>> GetIngredientsAsync()
         => (await dbConnection.QueryAsync<Ingredient>("dbo.GetIngredients", commandType: CommandType.StoredProcedure).ConfigureAwait(false))

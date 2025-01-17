@@ -1,8 +1,9 @@
-﻿using System.Data;
+﻿using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace MenuApi.Factory;
 
-public class TransactionFactory(IDbConnection dbConnection) : ITransactionFactory
+public class TransactionFactory(SqlConnection dbConnection) : ITransactionFactory
 {
     private IDbConnection EnsureOpenConnection
     {

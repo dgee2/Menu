@@ -11,27 +11,7 @@ using Microsoft.OpenApi.Models;
 StrongIdConfig.ConfigureStrongIds();
 
 var builder = WebApplication.CreateBuilder(args);
-
-const string CorsPolicyName = "CorsAll";
-
-// Configure auth
-//builder.AddAuthentication();
-//builder.Services.AddAuthorizationBuilder().AddCurrentUserHandler();
-
-
-// Add the service to generate JWT tokens
-//builder.Services.AddTokenService();
-
-// Configure the database
-//var connectionString = builder.Configuration.GetConnectionString("Todos") ?? "Data Source=.db/Todos.db";
-//builder.Services.AddSqlite<TodoDbContext>(connectionString);
-
-// Configure identity
-//builder.Services.AddIdentityCore<TodoUser>()
-//                .AddEntityFrameworkStores<TodoDbContext>();
-
-// State that represents the current user from the database *and* the request
-//builder.Services.AddCurrentUser();
+builder.AddServiceDefaults();
 
 // Configure Open API
 builder.Services.AddEndpointsApiExplorer();
@@ -46,11 +26,8 @@ builder.Services.AddSwaggerGen(o =>
     o.MapType<IngredientId>(() => new OpenApiSchema { Type = "integer" });
 });
 
-// Configure rate limiting
-//builder.Services.AddRateLimiting();
-
-// Configure OpenTelemetry
-//builder.AddOpenTelemetry();
+// Problem details
+builder.Services.AddProblemDetails();
 
 // Recipe specific stuff (needs putting in extension methods)
 
@@ -60,31 +37,17 @@ builder.Services.AddTransient<IIngredientRepository, IngredientRepository>();
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
 
-builder.Services.AddScoped<IDbConnection>(_ => new SqlConnection(builder.Configuration.GetConnectionString("menudb")));
+builder.AddSqlServerClient(connectionName: "menu");
+builder.Services.AddTransient<IDbConnection, SqlConnection>();
 builder.Services.AddScoped<ITransactionFactory, TransactionFactory>();
-
-builder.Services.AddApplicationInsightsTelemetry(o =>
-{
-    o.ConnectionString = builder.Configuration["APPINSIGHTS_INSTRUMENTATIONKEY"];
-});
-
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: CorsPolicyName,
-        builder =>
-        {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
-});
 
 var app = builder.Build();
 
+// Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseCors(CorsPolicyName);
     app.UseSwagger();
     app.UseSwaggerUI((o) =>
     {
@@ -95,17 +58,12 @@ if (app.Environment.IsDevelopment())
     app.Map("/", () => Results.Redirect("/swagger"));
 }
 
-//app.UseRateLimiter();
-
 // Configure the APIs
 var api = app.MapGroup("/api");
 api.MapRecipes();
 api.MapIngredients();
 
-// Configure the prometheus endpoint for scraping metrics
-//app.MapPrometheusScrapingEndpoint();
-// NOTE: This should only be exposed on an internal port!
-// .RequireHost("*:9100");
+app.MapDefaultEndpoints();
 
 await app.RunAsync();
 

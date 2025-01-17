@@ -3,11 +3,12 @@ using System.Diagnostics.CodeAnalysis;
 using Dapper;
 using MenuApi.DBModel;
 using MenuApi.StrongIds;
+using Microsoft.Data.SqlClient;
 
 namespace MenuApi.Repositories;
 
 [ExcludeFromCodeCoverage]
-public class RecipeRepository(IDbConnection dbConnection) : IRecipeRepository
+public class RecipeRepository(SqlConnection dbConnection) : IRecipeRepository
 {
     public Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync() => GetRecipesAsync(null);
 

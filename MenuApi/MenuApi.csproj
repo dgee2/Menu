@@ -30,14 +30,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Aspire.Microsoft.Data.SqlClient" Version="9.0.0" />
 		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
 		<PackageReference Include="Dapper" Version="2.1.44" />
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.0" />
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
 		<PackageReference Include="StronglyTypedId" Version="1.0.0-beta08" />
 		<PackageReference Include="StronglyTypedId.Templates" Version="1.0.0-beta08" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Menu.ServiceDefaults\Menu.ServiceDefaults.csproj" />
 	</ItemGroup>
 
 

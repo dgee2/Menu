@@ -8,22 +8,25 @@ using Xunit;
 
 namespace MenuApi.Integration.Tests;
 
-public class RecipeIntegrationTests : IntegrationBaseClass
+[Collection("API Host Collection")]
+public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
 {
     readonly JsonSerializerOptions jsonOptions;
+    private readonly ApiTestFixture fixture;
 
-    public RecipeIntegrationTests()
+    public RecipeIntegrationTests(ApiTestFixture fixture)
     {
         jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
+        this.fixture = fixture;
     }
 
     [Fact]
     public async Task Get_ReturnsAListOfCategories_CategoriesController()
     {
-        using var client = Factory.CreateClient();
+        using var client = fixture.GetHttpClient();
         using var response = await client.GetAsync("/api/recipe");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -37,7 +40,7 @@ public class RecipeIntegrationTests : IntegrationBaseClass
     [Theory, AutoData]
     public async Task Create_Recipe(NewRecipe recipe)
     {
-        using var client = Factory.CreateClient();
+        using var client = fixture.GetHttpClient();
 
         var (_, name) = await PostRecipeAsync(client, recipe);
 
@@ -47,7 +50,7 @@ public class RecipeIntegrationTests : IntegrationBaseClass
     [Theory, AutoData]
     public async Task Create_and_Update_Recipe(NewRecipe recipe, NewRecipe newRecipe)
     {
-        using var client = Factory.CreateClient();
+        using var client = fixture.GetHttpClient();
 
         var (id, _) = await PostRecipeAsync(client, recipe);
 
@@ -59,7 +62,7 @@ public class RecipeIntegrationTests : IntegrationBaseClass
     [Theory, AutoData]
     public async Task Create_And_Get_Recipe(NewRecipe recipe)
     {
-        using var client = Factory.CreateClient();
+        using var client = fixture.GetHttpClient();
 
         var (id, _) = await PostRecipeAsync(client, recipe);
         var (getId, name) = await GetRecipeAsync(client, id);
@@ -119,9 +122,11 @@ public class RecipeIntegrationTests : IntegrationBaseClass
 
     private class Recipe
     {
+#pragma warning disable S1144 // Unused private types or members should be removed
         public int Id { get; set; }
 
         public string Name { get; set; }
+#pragma warning restore S1144 // Unused private types or members should be removed
     }
 
     public class NewRecipe
