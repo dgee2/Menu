@@ -17,7 +17,7 @@ public class ApiTestFixture : IAsyncLifetime
     async Task IAsyncLifetime.InitializeAsync()
     {
         appHost = await DistributedApplicationTestingBuilder
-            .CreateAsync<Projects.MenuApi>();
+            .CreateAsync<Projects.Menu_AppHost>();
 
         appHost.Services.ConfigureHttpClientDefaults(clientBuilder =>
         {
