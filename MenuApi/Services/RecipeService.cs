@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using MenuApi.Factory;
 using MenuApi.Repositories;
-using MenuApi.StrongIds;
+using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
 
 namespace MenuApi.Services;

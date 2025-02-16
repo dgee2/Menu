@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Dapper;
 using MenuApi.DBModel;
-using MenuApi.StrongIds;
+using MenuApi.ValueObjects;
 using Microsoft.Data.SqlClient;
 
 namespace MenuApi.Repositories;

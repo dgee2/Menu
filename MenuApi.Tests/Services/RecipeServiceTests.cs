@@ -5,7 +5,7 @@ using FluentAssertions;
 using MenuApi.Factory;
 using MenuApi.Repositories;
 using MenuApi.Services;
-using MenuApi.StrongIds;
+using MenuApi.ValueObjects;
 using MenuApi.Tests.Factory;
 using MenuApi.ViewModel;
 using System.Data;

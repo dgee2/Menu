@@ -1,4 +1,4 @@
-﻿using MenuApi.StrongIds;
+﻿using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
 
 namespace MenuApi.Services;

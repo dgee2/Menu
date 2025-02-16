@@ -5,10 +5,10 @@ using Microsoft.Data.SqlClient;
 using System.Data;
 using MenuApi.Recipes;
 using System.Reflection;
-using MenuApi.StrongIds;
+using MenuApi.ValueObjects;
 using Microsoft.OpenApi.Models;
 
-StrongIdConfig.ConfigureStrongIds();
+ValueObject.ConfigureDapperTypeHandlers();
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();

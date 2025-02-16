@@ -3,7 +3,7 @@ using FakeItEasy;
 using FluentAssertions;
 using MenuApi.Recipes;
 using MenuApi.Services;
-using MenuApi.StrongIds;
+using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
 using Xunit;
 

@@ -1,5 +1,5 @@
 ﻿using MenuApi.Services;
-using MenuApi.StrongIds;
+using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
 
 namespace MenuApi.Recipes;

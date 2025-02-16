@@ -1,4 +1,4 @@
-﻿using MenuApi.StrongIds;
+﻿using MenuApi.ValueObjects;
 using System.Data;
 
 namespace MenuApi.Repositories;
