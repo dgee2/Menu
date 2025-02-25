@@ -32,7 +32,7 @@ public class RecipeServiceTests
         sut = new RecipeService(recipeRepository, mapper, transactionFactory);
     }
 
-    [Theory, AutoData]
+    [Theory, CustomAutoData]
     public async Task GetRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.GetRecipeIngredient> ingredients)
     {
         A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(recipe);
@@ -52,7 +52,7 @@ public class RecipeServiceTests
         result.Ingredients.Should().BeEquivalentTo(expected);
     }
 
-    [Theory, AutoData]
+    [Theory, CustomAutoData]
     public async Task GetRecipesSuccess(IEnumerable<DBModel.Recipe> recipes)
     {
         var expected = recipes.Select(x => new Recipe
@@ -66,7 +66,7 @@ public class RecipeServiceTests
         result.Should().BeEquivalentTo(expected);
     }
 
-    [Theory, AutoData]
+    [Theory, CustomAutoData]
     public async Task GetRecipeIngredientsSuccess(RecipeId recipeId, IEnumerable<DBModel.GetRecipeIngredient> ingredients)
     {
         var expected = ingredients.Select(x => new RecipeIngredient
@@ -82,7 +82,7 @@ public class RecipeServiceTests
         result.Should().BeEquivalentTo(expected);
     }
 
-    [Theory, AutoData]
+    [Theory, CustomAutoData]
     public async Task CreateRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
         A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name, transaction)).Returns(recipe.Id);
@@ -104,7 +104,7 @@ public class RecipeServiceTests
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();
     }
 
-    [Theory, AutoData]
+    [Theory, CustomAutoData]
     public async Task UpdateRecipeSuccess(RecipeId recipeId, string recipeName, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
         var newRecipe = new NewRecipe
@@ -124,7 +124,7 @@ public class RecipeServiceTests
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();
     }
 
-    [Theory, AutoData]
+    [Theory, CustomAutoData]
     public async Task UpdateRecipe_Should_Throw_Exception_For_null_newRecipeAsync(RecipeId recipeId)
     {
         Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, null);

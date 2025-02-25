@@ -18,7 +18,7 @@ public class RecipeApiTests
         recipeService = A.Fake<IRecipeService>();
     }
 
-    [Theory, AutoData]
+    [Theory, CustomAutoData]
     public async Task GetRecipesAsync_Success(IEnumerable<Recipe> recipes)
     {
         A.CallTo(() => recipeService.GetRecipesAsync()).Returns(recipes);
@@ -28,7 +28,7 @@ public class RecipeApiTests
         result.Should().BeEquivalentTo(recipes);
     }
 
-    [Theory, AutoData]
+    [Theory, CustomAutoData]
     public async Task GetRecipeAsync_Success(RecipeId recipeId, FullRecipe recipe)
     {
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
@@ -38,7 +38,7 @@ public class RecipeApiTests
         result.Should().Be(recipe);
     }
 
-    [Theory, AutoData]
+    [Theory, CustomAutoData]
     public async Task GetRecipeIngredientsAsync_Success(RecipeId recipeId, IEnumerable<RecipeIngredient> ingredients)
     {
         A.CallTo(() => recipeService.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
@@ -48,7 +48,7 @@ public class RecipeApiTests
         result.Should().BeEquivalentTo(ingredients);
     }
 
-    [Theory, AutoData]
+    [Theory, CustomAutoData]
     public async Task CreateRecipeAsync_Success(NewRecipe newRecipe, FullRecipe recipe, RecipeId recipeId)
     {
         A.CallTo(() => recipeService.CreateRecipeAsync(newRecipe)).Returns(recipeId);
@@ -60,7 +60,7 @@ public class RecipeApiTests
         result.Should().Be(recipe);
     }
 
-    [Theory, AutoData]
+    [Theory, CustomAutoData]
     public async Task UpdateRecipeAsync_Success(RecipeId recipeId, NewRecipe newRecipe, FullRecipe recipe)
     {
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
