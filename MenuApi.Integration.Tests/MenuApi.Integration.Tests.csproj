@@ -19,7 +19,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Testing" Version="9.0.0" />		
+    <PackageReference Include="Aspire.Hosting.Testing" Version="9.1.0" />		
 		<PackageReference Include="AutoFixture.Xunit2" Version="4.18.1" />
     <PackageReference Include="coverlet.collector" Version="6.0.4" />		
 		<PackageReference Include="FluentAssertions" Version="8.1.1" />
