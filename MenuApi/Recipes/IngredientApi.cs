@@ -1,4 +1,5 @@
 ﻿using MenuApi.Repositories;
+using MenuApi.Services;
 
 namespace MenuApi.Recipes;
 
@@ -12,6 +13,8 @@ public static class IngredientApi
 
         group.MapGet("/", GetIngredients);
 
+        group.MapGet("/unit", GetIngredientUnits);
+
         return group;
     }
 
@@ -20,8 +23,8 @@ public static class IngredientApi
         return await ingredientRepository.GetIngredientsAsync();
     }
 
-    public static async Task<IEnumerable<ViewModel.IngredientUnit> GetIngredientUnits(IUnitRepository unitRepository)
+    public static async Task<IEnumerable<ViewModel.IngredientUnit>> GetIngredientUnits(IIngredientService ingredientService)
     {
-        return await unitRepository.GetIngredientUnitsAsync();
+        return await ingredientService.GetIngredientUnitsAsync();
     }
 }

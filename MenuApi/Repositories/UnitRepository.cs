@@ -1,5 +1,5 @@
 ﻿using Dapper;
-using MenuApi.ViewModel;
+using MenuApi.DBModel;
 using Microsoft.Data.SqlClient;
 
 namespace MenuApi.Repositories;

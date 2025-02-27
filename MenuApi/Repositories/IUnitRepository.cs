@@ -1,4 +1,4 @@
-﻿using MenuApi.ViewModel;
+﻿using MenuApi.DBModel;
 
 namespace MenuApi.Repositories
 {

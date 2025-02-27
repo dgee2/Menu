@@ -2,5 +2,6 @@
 AS
 SELECT
 	U.Name,
-	U.Abbreviation
-FROM Units
+	U.Abbreviation,
+	UT.Name AS UnitType
+FROM Unit U INNER JOIN UnitType UT ON U.UnitTypeId = UT.Id

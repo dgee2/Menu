@@ -17,7 +17,9 @@ builder.AddApiServiceDefaults();
 builder.Services.ConfigureSwaggerGen(o => o.MapVogenTypesInMenuApi());
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
+builder.Services.AddTransient<IUnitRepository, UnitRepository>();
 builder.Services.AddTransient<IIngredientRepository, IngredientRepository>();
+builder.Services.AddTransient<IIngredientService, IngredientService>();
 
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
