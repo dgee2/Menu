@@ -19,4 +19,9 @@ public static class IngredientApi
     {
         return await ingredientRepository.GetIngredientsAsync();
     }
+
+    public static async Task<IEnumerable<ViewModel.IngredientUnit> GetIngredientUnits(IUnitRepository unitRepository)
+    {
+        return await unitRepository.GetIngredientUnitsAsync();
+    }
 }
