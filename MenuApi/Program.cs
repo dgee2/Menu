@@ -6,34 +6,19 @@ using System.Data;
 using MenuApi.Recipes;
 using System.Reflection;
 using MenuApi.ValueObjects;
-using Microsoft.OpenApi.Models;
+using Menu.ApiServiceDefaults;
 
 ValueObject.ConfigureDapperTypeHandlers();
 
 var builder = WebApplication.CreateBuilder(args);
-builder.AddServiceDefaults();
-
-// Configure Open API
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(o =>
-{
-    o.InferSecuritySchemes();
-    o.SupportNonNullableReferenceTypes();
-    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    o.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
-
-    o.MapType<RecipeId>(() => new OpenApiSchema { Type = "integer" });
-    o.MapType<IngredientId>(() => new OpenApiSchema { Type = "integer" });
-});
-
-// Problem details
-builder.Services.AddProblemDetails();
+builder.AddApiServiceDefaults();
 
 // Recipe specific stuff (needs putting in extension methods)
-
+builder.Services.ConfigureSwaggerGen(o => o.MapVogenTypesInMenuApi());
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 builder.Services.AddTransient<IIngredientRepository, IngredientRepository>();
+
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
 
@@ -43,27 +28,12 @@ builder.Services.AddScoped<ITransactionFactory, TransactionFactory>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-app.UseExceptionHandler();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI((o) =>
-    {
-        o.DisplayRequestDuration();
-        o.EnablePersistAuthorization();
-        o.EnableTryItOutByDefault();
-    });
-    app.Map("/", () => Results.Redirect("/swagger"));
-}
+app.MapDefaultApiEndpoints();
 
 // Configure the APIs
 var api = app.MapGroup("/api");
 api.MapRecipes();
 api.MapIngredients();
-
-app.MapDefaultEndpoints();
 
 await app.RunAsync();
 

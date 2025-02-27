@@ -4,15 +4,15 @@ builder.AddRedis("cache");
 
 var sql = builder.AddSqlServer("sql")
                  .WithLifetime(ContainerLifetime.Persistent)
-    .AddDatabase("menu");
+                 .AddDatabase("menu");
 
 var menuDB = builder.AddSqlProject<Projects.MenuDB>("menuDB")
-    .WithReference(sql);
+                    .WithReference(sql);
 
 builder.AddProject<Projects.MenuApi>("apiservice")
-    .WithExternalHttpEndpoints()
-    .WithHttpsEndpoint(port: 5001)
-    .WithReference(sql)
-    .WaitForCompletion(menuDB);
+       .WithExternalHttpEndpoints()
+       .WithHttpsEndpoint(port: 5001)
+       .WithReference(sql)
+       .WaitForCompletion(menuDB);
 
 await builder.Build().RunAsync();

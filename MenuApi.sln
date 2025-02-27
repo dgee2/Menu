@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menu.ServiceDefaults", "Men
 EndProject
 Project("{42EA0DBD-9CF1-443E-919E-BE9C484E4577}") = "MenuDB", "MenuDB\MenuDB.sqlproj", "{BF472D09-2DA7-469C-8029-520E7A18CDD9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menu.ApiServiceDefaults", "Menu.ApiServiceDefaults\Menu.ApiServiceDefaults.csproj", "{CD01AF9F-E62C-4D8F-99CE-FAE71683CD5D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{BF472D09-2DA7-469C-8029-520E7A18CDD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF472D09-2DA7-469C-8029-520E7A18CDD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF472D09-2DA7-469C-8029-520E7A18CDD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD01AF9F-E62C-4D8F-99CE-FAE71683CD5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD01AF9F-E62C-4D8F-99CE-FAE71683CD5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD01AF9F-E62C-4D8F-99CE-FAE71683CD5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD01AF9F-E62C-4D8F-99CE-FAE71683CD5D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
