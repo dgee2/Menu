@@ -7,6 +7,7 @@ using MenuApi.Recipes;
 using System.Reflection;
 using MenuApi.ValueObjects;
 using Menu.ApiServiceDefaults;
+using System.Runtime.CompilerServices;
 
 ValueObject.ConfigureDapperTypeHandlers();
 
@@ -15,9 +16,11 @@ builder.AddApiServiceDefaults();
 
 // Recipe specific stuff (needs putting in extension methods)
 builder.Services.ConfigureSwaggerGen(o => o.MapVogenTypesInMenuApi());
-builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
+builder.Services.AddTransient<IUnitRepository, UnitRepository>();
 builder.Services.AddTransient<IIngredientRepository, IngredientRepository>();
+builder.Services.AddTransient<IIngredientService, IngredientService>();
 
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();

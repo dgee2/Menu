@@ -14,11 +14,3 @@ public class Ingredient(IngredientId id, string name, IEnumerable<IngredientUnit
     [Required]
     public IEnumerable<IngredientUnit> Units { get; } = units;
 }
-
-public class IngredientUnit(string name, string abbreviation)
-{
-    [Required]
-    public string Name { get; } = name;
-    [Required]
-    public string Abbreviation { get; } = abbreviation;
-}
