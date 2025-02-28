@@ -12,41 +12,41 @@ public static class RecipeApi
 
         group.WithTags("Recipes");
 
-        group.MapGet("/", GetRecipes);
+        group.MapGet("/", GetRecipesAsync);
 
-        group.MapGet("/{recipeId}", GetRecipe);
+        group.MapGet("/{recipeId}", GetRecipeAsync);
 
-        group.MapGet("/{recipeId}/ingredient", GetRecipeIngredients);
+        group.MapGet("/{recipeId}/ingredient", GetRecipeIngredientsAsync);
 
-        group.MapPost("/", CreateRecipe);
+        group.MapPost("/", CreateRecipeAsync);
 
-        group.MapPut("{recipeId}", UpdateRecipe);
+        group.MapPut("{recipeId}", UpdateRecipeAsync);
 
         return group;
     }
 
-    public static async Task<IEnumerable<Recipe>> GetRecipes(IRecipeService recipeService)
+    public static async Task<IEnumerable<Recipe>> GetRecipesAsync(IRecipeService recipeService)
     {
         return await recipeService.GetRecipesAsync();
     }
 
-    public static async Task<FullRecipe> GetRecipe(IRecipeService recipeService, RecipeId recipeId)
+    public static async Task<FullRecipe> GetRecipeAsync(IRecipeService recipeService, RecipeId recipeId)
     {
         return await recipeService.GetRecipeAsync(recipeId);
     }
 
-    public static async Task<IEnumerable<RecipeIngredient>> GetRecipeIngredients(IRecipeService recipeService, RecipeId recipeId)
+    public static async Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(IRecipeService recipeService, RecipeId recipeId)
     {
         return await recipeService.GetRecipeIngredientsAsync(recipeId);
     }
 
-    public static async Task<FullRecipe> CreateRecipe(IRecipeService recipeService, NewRecipe newRecipe)
+    public static async Task<FullRecipe> CreateRecipeAsync(IRecipeService recipeService, NewRecipe newRecipe)
     {
         var recipeId = await recipeService.CreateRecipeAsync(newRecipe);
         return await recipeService.GetRecipeAsync(recipeId);
     }
 
-    public static async Task<FullRecipe> UpdateRecipe(IRecipeService recipeService, RecipeId recipeId, NewRecipe newRecipe)
+    public static async Task<FullRecipe> UpdateRecipeAsync(IRecipeService recipeService, RecipeId recipeId, NewRecipe newRecipe)
     {
         await recipeService.UpdateRecipeAsync(recipeId, newRecipe);
         return await recipeService.GetRecipeAsync(recipeId);
