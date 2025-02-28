@@ -1,4 +1,4 @@
-name: .NET 8 Aspire to Azure Deployment
+name: .NET Build
 # For more information on this YAML file, please reference blog: https://agramont.net/blog/devops-intro-deploy-net-aspire-azure-github-actions
 
 on:
