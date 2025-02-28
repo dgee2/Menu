@@ -13,6 +13,8 @@ public class ViewModelProfile : Profile
         CreateMap<ViewModel.RecipeIngredient, DBModel.RecipeIngredient>()
             .ForCtorParam("IngredientName", o => o.MapFrom(s => s.Name))
             .ForCtorParam("UnitName", o => o.MapFrom(s => s.Unit));
+        CreateMap<DBModel.IngredientUnit, ViewModel.IngredientUnit>()
+            .ForCtorParam("type", x => x.MapFrom(o => o.UnitType));
 
         CreateMap<DBModel.GetRecipeIngredient, ViewModel.RecipeIngredient>()
             .ForMember(x => x.Name, x => x.MapFrom(o => o.IngredientName))

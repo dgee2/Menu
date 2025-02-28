@@ -23,7 +23,7 @@ public class RecipeApiTests
     {
         A.CallTo(() => recipeService.GetRecipesAsync()).Returns(recipes);
 
-        var result = await RecipeApi.GetRecipes(recipeService);
+        var result = await RecipeApi.GetRecipesAsync(recipeService);
 
         result.Should().BeEquivalentTo(recipes);
     }
@@ -33,7 +33,7 @@ public class RecipeApiTests
     {
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
-        var result = await RecipeApi.GetRecipe(recipeService, recipeId);
+        var result = await RecipeApi.GetRecipeAsync(recipeService, recipeId);
 
         result.Should().Be(recipe);
     }
@@ -43,7 +43,7 @@ public class RecipeApiTests
     {
         A.CallTo(() => recipeService.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
 
-        var result = await RecipeApi.GetRecipeIngredients(recipeService, recipeId);
+        var result = await RecipeApi.GetRecipeIngredientsAsync(recipeService, recipeId);
 
         result.Should().BeEquivalentTo(ingredients);
     }
@@ -54,7 +54,7 @@ public class RecipeApiTests
         A.CallTo(() => recipeService.CreateRecipeAsync(newRecipe)).Returns(recipeId);
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
-        var result = await RecipeApi.CreateRecipe(recipeService, newRecipe);
+        var result = await RecipeApi.CreateRecipeAsync(recipeService, newRecipe);
 
         A.CallTo(() => recipeService.CreateRecipeAsync(newRecipe)).MustHaveHappenedOnceExactly();
         result.Should().Be(recipe);
@@ -65,7 +65,7 @@ public class RecipeApiTests
     {
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
-        var result = await RecipeApi.UpdateRecipe(recipeService, recipeId, newRecipe);
+        var result = await RecipeApi.UpdateRecipeAsync(recipeService, recipeId, newRecipe);
 
         A.CallTo(() => recipeService.UpdateRecipeAsync(recipeId, newRecipe)).MustHaveHappenedOnceExactly();
         result.Should().Be(recipe);
