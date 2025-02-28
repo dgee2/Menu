@@ -2,6 +2,7 @@
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 
@@ -23,6 +24,8 @@ public class ApiTestFixture : IAsyncLifetime
         {
             clientBuilder.AddStandardResilienceHandler();
         });
+
+        appHost.Services.AddLogging((builder) => builder.AddXUnit());
 
         appHost.WithContainersLifetime(ContainerLifetime.Session);
 
