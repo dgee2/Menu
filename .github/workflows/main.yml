@@ -25,7 +25,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.x'
-          cache: true
 
       - name: Install .NET Aspire workload
         run: dotnet workload install aspire
