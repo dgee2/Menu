@@ -38,7 +38,7 @@ jobs:
       - name: clean ssl cert
         run: dotnet dev-certs https --clean
 
-      - name: clean ssl cert
+      - name: trust ssl cert
         run: dotnet dev-certs https --trust
 
       - name: Test with the dotnet CLI
