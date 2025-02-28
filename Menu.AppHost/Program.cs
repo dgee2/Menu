@@ -7,7 +7,8 @@ var sql = builder.AddSqlServer("sql")
                  .AddDatabase("menu");
 
 var menuDB = builder.AddSqlProject<Projects.MenuDB>("menuDB")
-                    .WithReference(sql);
+                    .WithReference(sql)
+                    .WithParentRelationship(sql);
 
 builder.AddProject<Projects.MenuApi>("apiservice")
        .WithExternalHttpEndpoints()
