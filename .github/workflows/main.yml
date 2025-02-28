@@ -29,13 +29,18 @@ jobs:
       - name: Install .NET Aspire workload
         run: dotnet workload install aspire
 
-      
       - name: Install dependencies
         run: dotnet restore
         
       - name: Build
         run: dotnet build
-        
+
+      - name: clean ssl cert
+        run: dotnet dev-certs https --clean
+
+      - name: clean ssl cert
+        run: dotnet dev-certs https --trust
+
       - name: Test with the dotnet CLI
         run: dotnet test --logger trx --results-directory TestResults
 
