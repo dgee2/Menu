@@ -10,7 +10,7 @@ on:
      - master
      - main
   pull_request:
-    branches: [ "dev" ]
+    branches: [ "dev", "master", "main" ]
 
 # Based from https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-net
 jobs:
