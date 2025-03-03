@@ -1,9 +1,10 @@
-﻿namespace MenuApi.DBModel
+﻿using MenuApi.ValueObjects;
+
+namespace MenuApi.DBModel;
+
+public sealed record IngredientUnit
 {
-    public sealed record IngredientUnit
-    {
-        public required string Name { get; init; }
-        public required string Abbreviation { get; init; }
-        public required string UnitType { get; init; }
-    }
+    public required IngredientUnitName Name { get; init; }
+    public required IngredientUnitAbbreviation? Abbreviation { get; init; }
+    public required IngredientUnitType UnitType { get; init; }
 }

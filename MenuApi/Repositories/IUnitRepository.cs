@@ -1,9 +1,8 @@
 ﻿using MenuApi.DBModel;
 
-namespace MenuApi.Repositories
+namespace MenuApi.Repositories;
+
+public interface IUnitRepository
 {
-    public interface IUnitRepository
-    {
-        Task<IEnumerable<IngredientUnit>> GetIngredientUnitsAsync();
-    }
+    Task<IEnumerable<IngredientUnit>> GetIngredientUnitsAsync();
 }

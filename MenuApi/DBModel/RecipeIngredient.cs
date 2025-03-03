@@ -1,3 +1,5 @@
-﻿namespace MenuApi.DBModel;
+﻿using MenuApi.ValueObjects;
 
-public sealed record RecipeIngredient(string IngredientName, decimal Amount, string UnitName);
+namespace MenuApi.DBModel;
+
+public sealed record RecipeIngredient(IngredientName IngredientName, IngredientAmount Amount, IngredientUnitName UnitName);

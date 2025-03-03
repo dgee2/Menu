@@ -1,9 +1,11 @@
-﻿namespace MenuApi.DBModel;
+﻿using MenuApi.ValueObjects;
+
+namespace MenuApi.DBModel;
 
 public sealed class GetRecipeIngredient
 {
-    public required string IngredientName { get; init; }
-    public decimal Amount { get; init; }
-    public required string UnitName { get; init; }
-    public required string UnitAbbreviation { get; init; }
+    public required IngredientName IngredientName { get; init; }
+    public required IngredientAmount Amount { get; init; }
+    public required IngredientUnitName UnitName { get; init; }
+    public required IngredientUnitAbbreviation UnitAbbreviation { get; init; }
 }

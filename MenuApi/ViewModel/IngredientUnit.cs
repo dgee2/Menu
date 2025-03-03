@@ -1,13 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MenuApi.ValueObjects;
+using System.ComponentModel.DataAnnotations;
 
 namespace MenuApi.ViewModel;
 
-public class IngredientUnit(string name, string abbreviation, string type)
+public class IngredientUnit(IngredientUnitName name, IngredientUnitAbbreviation abbreviation, IngredientUnitType type)
 {
     [Required]
-    public string Name { get; } = name;
+    public IngredientUnitName Name { get; } = name;
     [Required]
-    public string Abbreviation { get; } = abbreviation;
+    public IngredientUnitAbbreviation Abbreviation { get; } = abbreviation;
     [Required]
-    public string Type { get; } = type;
+    public IngredientUnitType Type { get; } = type;
 }

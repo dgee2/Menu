@@ -105,7 +105,7 @@ public class RecipeServiceTests
     }
 
     [Theory, CustomAutoData]
-    public async Task UpdateRecipeSuccess(RecipeId recipeId, string recipeName, IEnumerable<DBModel.RecipeIngredient> ingredients)
+    public async Task UpdateRecipeSuccess(RecipeId recipeId, RecipeName recipeName, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
         var newRecipe = new NewRecipe
         {
