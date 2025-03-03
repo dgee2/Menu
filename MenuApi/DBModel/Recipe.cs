@@ -4,6 +4,6 @@ namespace MenuApi.DBModel;
 
 public sealed record Recipe
 {
-    public RecipeId Id { get; init; }
-    public required string Name { get; init; }
+    public required RecipeId Id { get; init; }
+    public required RecipeName Name { get; init; }
 }

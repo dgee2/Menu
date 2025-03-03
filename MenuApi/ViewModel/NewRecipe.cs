@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MenuApi.ValueObjects;
+using System.ComponentModel.DataAnnotations;
 
 namespace MenuApi.ViewModel;
 
@@ -9,6 +10,6 @@ public class NewRecipe
     public List<RecipeIngredient> Ingredients { get; init; }
 
     [Required]
-    public string Name { get; init; }
+    public RecipeName Name { get; init; }
 #pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
 }

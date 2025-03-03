@@ -25,9 +25,9 @@ public class RecipeRepository(SqlConnection dbConnection) : IRecipeRepository
     public async Task<IEnumerable<GetRecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId, IDbTransaction? transaction)
         => await dbConnection.QueryAsync<GetRecipeIngredient>("dbo.GetRecipeIngredients", new { recipeId }, commandType: CommandType.StoredProcedure, transaction: transaction).ConfigureAwait(false);
 
-    public Task<RecipeId> CreateRecipeAsync(string name) => CreateRecipeAsync(name, null);
+    public Task<RecipeId> CreateRecipeAsync(RecipeName name) => CreateRecipeAsync(name, null);
 
-    public async Task<RecipeId> CreateRecipeAsync(string name, IDbTransaction? transaction)
+    public async Task<RecipeId> CreateRecipeAsync(RecipeName name, IDbTransaction? transaction)
         => await dbConnection.ExecuteScalarAsync<RecipeId>("dbo.CreateRecipe", new { name }, commandType: CommandType.StoredProcedure, transaction: transaction).ConfigureAwait(false);
 
     public Task UpsertRecipeIngredientsAsync(RecipeId recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients) => UpsertRecipeIngredientsAsync(recipeId, recipeIngredients, null);
@@ -43,15 +43,15 @@ public class RecipeRepository(SqlConnection dbConnection) : IRecipeRepository
 
         foreach (var ingredient in recipeIngredients)
         {
-            dt.Rows.Add(ingredient.IngredientName, ingredient.UnitName, ingredient.Amount);
+            dt.Rows.Add(ingredient.IngredientName.Value, ingredient.UnitName.Value, ingredient.Amount.Value);
         }
 
         await dbConnection.ExecuteAsync("dbo.UpsertRecipeIngredients", new { recipeId, tvpIngredients = dt.AsTableValuedParameter() }, commandType: CommandType.StoredProcedure, transaction: transaction).ConfigureAwait(false);
     }
 
-    public Task UpdateRecipeAsync(RecipeId recipeId, string name) => UpdateRecipeAsync(recipeId, name, null);
+    public Task UpdateRecipeAsync(RecipeId recipeId, RecipeName name) => UpdateRecipeAsync(recipeId, name, null);
 
-    public async Task UpdateRecipeAsync(RecipeId recipeId, string name, IDbTransaction? transaction)
+    public async Task UpdateRecipeAsync(RecipeId recipeId, RecipeName name, IDbTransaction? transaction)
     {
         await dbConnection.ExecuteAsync("dbo.UpdateRecipe", new { recipeId, name }, commandType: CommandType.StoredProcedure, transaction: transaction).ConfigureAwait(false);
     }

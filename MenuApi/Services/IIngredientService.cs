@@ -1,9 +1,8 @@
 ﻿using MenuApi.ViewModel;
 
-namespace MenuApi.Services
+namespace MenuApi.Services;
+
+public interface IIngredientService
 {
-    public interface IIngredientService
-    {
-        Task<IEnumerable<IngredientUnit>> GetIngredientUnitsAsync();
-    }
+    Task<IEnumerable<IngredientUnit>> GetIngredientUnitsAsync();
 }
