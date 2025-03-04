@@ -15,7 +15,7 @@
     <PackageReference Include="Aspire.Hosting.AppHost" Version="9.1.0" />
     <PackageReference Include="Aspire.Hosting.Redis" Version="9.1.0" />
     <PackageReference Include="Aspire.Hosting.SqlServer" Version="9.1.0" />
-    <PackageReference Include="CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects" Version="9.1.0" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects" Version="9.2.1" />
   </ItemGroup>
 
   <ItemGroup>
