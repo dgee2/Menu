@@ -8,7 +8,7 @@ public class IngredientUnit(IngredientUnitName name, IngredientUnitAbbreviation 
     [Required]
     public IngredientUnitName Name { get; } = name;
     [Required]
-    public IngredientUnitAbbreviation? Abbreviation { get; } = abbreviation;
+    public IngredientUnitAbbreviation Abbreviation { get; } = abbreviation;
     [Required]
     public IngredientUnitType Type { get; } = type;
 }
