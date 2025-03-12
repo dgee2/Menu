@@ -1,12 +1,9 @@
-using AutoFixture.Xunit2;
-using AutoMapper;
 using FakeItEasy;
 using FluentAssertions;
 using MenuApi.Factory;
 using MenuApi.Repositories;
 using MenuApi.Services;
 using MenuApi.ValueObjects;
-using MenuApi.Tests.Factory;
 using MenuApi.ViewModel;
 using System.Data;
 using Xunit;
@@ -16,20 +13,18 @@ namespace MenuApi.Tests;
 public class RecipeServiceTests
 {
     private readonly RecipeService sut;
-    private readonly IMapper mapper;
     private readonly IRecipeRepository recipeRepository;
     private readonly ITransactionFactory transactionFactory;
     private readonly IDbTransaction transaction;
 
     public RecipeServiceTests()
     {
-        mapper = AutoMapperFactory.CreateMapper();
         recipeRepository = A.Fake<IRecipeRepository>();
         transactionFactory = A.Fake<ITransactionFactory>();
         transaction = A.Fake<IDbTransaction>();
         A.CallTo(() => transactionFactory.BeginTransaction()).Returns(transaction);
 
-        sut = new RecipeService(recipeRepository, mapper, transactionFactory);
+        sut = new RecipeService(recipeRepository, transactionFactory);
     }
 
     [Theory, CustomAutoData]
