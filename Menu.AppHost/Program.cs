@@ -11,8 +11,9 @@ var menuDB = builder.AddSqlProject<Projects.MenuDB>("menuDB")
                     .WithParentRelationship(sql);
 
 builder.AddProject<Projects.MenuApi>("apiservice")
+       .WithHttpEndpoint()
+       .WithHttpsEndpoint()
        .WithExternalHttpEndpoints()
-       .WithHttpsEndpoint(port: 5001)
        .WithReference(sql)
        .WaitForCompletion(menuDB);
 
