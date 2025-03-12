@@ -7,7 +7,7 @@ public interface IRecipeService
 {
     Task<RecipeId> CreateRecipeAsync(NewRecipe newRecipe);
 
-    Task<FullRecipe> GetRecipeAsync(RecipeId recipeId);
+    Task<FullRecipe?> GetRecipeAsync(RecipeId recipeId);
 
     Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId);
 

@@ -30,7 +30,7 @@ public static class RecipeApi
         return await recipeService.GetRecipesAsync();
     }
 
-    public static async Task<FullRecipe> GetRecipeAsync(IRecipeService recipeService, RecipeId recipeId)
+    public static async Task<FullRecipe?> GetRecipeAsync(IRecipeService recipeService, RecipeId recipeId)
     {
         return await recipeService.GetRecipeAsync(recipeId);
     }
@@ -43,12 +43,14 @@ public static class RecipeApi
     public static async Task<FullRecipe> CreateRecipeAsync(IRecipeService recipeService, NewRecipe newRecipe)
     {
         var recipeId = await recipeService.CreateRecipeAsync(newRecipe);
-        return await recipeService.GetRecipeAsync(recipeId);
+        var recipe = await recipeService.GetRecipeAsync(recipeId);
+        return recipe ?? throw new InvalidOperationException("Recipe was not updated");
     }
 
     public static async Task<FullRecipe> UpdateRecipeAsync(IRecipeService recipeService, RecipeId recipeId, NewRecipe newRecipe)
     {
         await recipeService.UpdateRecipeAsync(recipeId, newRecipe);
-        return await recipeService.GetRecipeAsync(recipeId);
+        var recipe = await recipeService.GetRecipeAsync(recipeId);
+        return recipe ?? throw new InvalidOperationException("Recipe was not updated");
     }
 }
