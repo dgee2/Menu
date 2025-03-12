@@ -13,6 +13,7 @@ var menuDB = builder.AddSqlProject<Projects.MenuDB>("menuDB")
 builder.AddProject<Projects.MenuApi>("apiservice")
        .WithHttpEndpoint()
        .WithHttpsEndpoint()
+       .WithExternalHttpEndpoints()
        .WithReference(sql)
        .WaitForCompletion(menuDB);
 
