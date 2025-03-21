@@ -11,6 +11,7 @@ public static class Extensions
 {
     public static TBuilder AddApiServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
+        var assemblyName = Assembly.GetCallingAssembly()?.GetName().Name;
         builder.AddServiceDefaults();
 
         // Configure Open API
@@ -19,7 +20,7 @@ public static class Extensions
         {
             o.InferSecuritySchemes();
             o.SupportNonNullableReferenceTypes();
-            RegisterDocumentation(o);
+            RegisterDocumentation(o, assemblyName);
         });
 
         // Problem details
@@ -28,9 +29,8 @@ public static class Extensions
         return builder;
     }
 
-    private static void RegisterDocumentation(SwaggerGenOptions o)
+    private static void RegisterDocumentation(SwaggerGenOptions o, string? assemblyName)
     {
-        var assemblyName = Assembly.GetEntryAssembly()?.GetName().Name;
         if (assemblyName is not null)
         {
             var xmlFilename = $"{assemblyName}.xml";
