@@ -1,15 +1,15 @@
-﻿using AutoMapper;
+﻿using MenuApi.MappingProfiles;
 using MenuApi.Repositories;
 using MenuApi.ViewModel;
 
 namespace MenuApi.Services;
 
-public class IngredientService(IUnitRepository unitRepository, IMapper mapper) : IIngredientService
+public class IngredientService(IUnitRepository unitRepository) : IIngredientService
 {
     public async Task<IEnumerable<IngredientUnit>> GetIngredientUnitsAsync()
     {
         var ingredientUnits = await unitRepository.GetIngredientUnitsAsync().ConfigureAwait(false);
-        return mapper.Map<IEnumerable<IngredientUnit>>(ingredientUnits);
+        return ViewModelMapper.Map(ingredientUnits);
     }
 }
 
