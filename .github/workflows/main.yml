@@ -42,4 +42,8 @@ jobs:
         run: dotnet dev-certs https --trust
 
       - name: Test with the dotnet CLI
-        run: dotnet test --configuration Release --logger GitHubActions
+        run: >
+          dotnet test
+          --configuration Release
+          --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true"
+          -- RunConfiguration.CollectSourceInformation=true
