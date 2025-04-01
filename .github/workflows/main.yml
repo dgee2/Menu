@@ -1,4 +1,4 @@
-name: .NET Build
+name: Build
 # For more information on this YAML file, please reference blog: https://agramont.net/blog/devops-intro-deploy-net-aspire-azure-github-actions
 
 on:
@@ -7,10 +7,10 @@ on:
     # Run when commits are pushed to mainline branch (main or master)
     # Set this to the mainline branch you are using
     branches:
-     - master
-     - main
+      - master
+      - main
   pull_request:
-    branches: [ "dev", "master", "main" ]
+    branches: ["dev", "master", "main"]
 
 # Based from https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-net
 jobs:
@@ -20,18 +20,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup dotnet 9.x
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       - name: Install .NET Aspire workload
         run: dotnet workload install aspire
 
       - name: Install dependencies
         run: dotnet restore
-        
+
       - name: Build
         run: dotnet build
 
@@ -47,3 +47,29 @@ jobs:
           --configuration Release
           --logger "GitHubActions;summary.includeSkippedTests=true"
           -- RunConfiguration.CollectSourceInformation=true
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: "ui/menu-website/node_modules"
+          key: node-modules-${{ hashFiles('ui/menu-website/package-lock.json') }}
+
+      - run: npm ci
+        working-directory: ./ui/menu-website
+
+      - run: npm run generate-openapi --if-present
+        working-directory: ./ui/menu-website
+
+      - run: npm run lint --if-present
+        working-directory: ./ui/menu-website
+
+      - run: npm run build --if-present
+        working-directory: ./ui/menu-website
+
+      - run: npm test
+        working-directory: ./ui/menu-website
