@@ -55,7 +55,7 @@ jobs:
           cache: "npm"
 
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: "ui/menu-website/node_modules"
           key: node-modules-${{ hashFiles('ui/menu-website/package-lock.json') }}
