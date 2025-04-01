@@ -54,6 +54,12 @@ jobs:
           node-version: 22.x
           cache: "npm"
 
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: "ui/menu-website/node_modules"
+          key: node-modules-${{ hashFiles('ui/menu-website/package-lock.json') }}
+
       - run: npm ci
         working-directory: ./ui/menu-website
 
