@@ -1,8 +1,11 @@
 ﻿using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Configuration;
+using System.Net.Http.Headers;
 using Xunit;
 
 
@@ -13,7 +16,15 @@ public class ApiTestFixture : IAsyncLifetime
     public DistributedApplication app { get; private set; }
     private IDistributedApplicationTestingBuilder appHost;
 
-    public HttpClient GetHttpClient() => app.CreateHttpClient("apiservice");
+    public async Task<HttpClient> GetHttpClient()
+    {
+        var httpClient = app.CreateHttpClient("apiservice");
+
+        var auth = new ApiAuthentication();
+
+        httpClient.DefaultRequestHeaders.Authorization = await auth.GetAuthenticationHeaderValue();
+        return httpClient;
+    }
 
     async Task IAsyncLifetime.InitializeAsync()
     {

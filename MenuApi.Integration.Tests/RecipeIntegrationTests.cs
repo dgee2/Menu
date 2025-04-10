@@ -26,7 +26,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     [Fact]
     public async Task Get_ReturnsAListOfCategories_CategoriesController()
     {
-        using var client = fixture.GetHttpClient();
+        using var client = await fixture.GetHttpClient();
         using var response = await client.GetAsync("/api/recipe");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -40,7 +40,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     [Theory, AutoData]
     public async Task Create_Recipe(NewRecipe recipe)
     {
-        using var client = fixture.GetHttpClient();
+        using var client = await fixture.GetHttpClient();
 
         var (_, name) = await PostRecipeAsync(client, recipe);
 
@@ -50,7 +50,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     [Theory, AutoData]
     public async Task Create_and_Update_Recipe(NewRecipe recipe, NewRecipe newRecipe)
     {
-        using var client = fixture.GetHttpClient();
+        using var client = await fixture.GetHttpClient();
 
         var (id, _) = await PostRecipeAsync(client, recipe);
 
@@ -62,7 +62,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     [Theory, AutoData]
     public async Task Create_And_Get_Recipe(NewRecipe recipe)
     {
-        using var client = fixture.GetHttpClient();
+        using var client = await fixture.GetHttpClient();
 
         var (id, _) = await PostRecipeAsync(client, recipe);
         var (getId, name) = await GetRecipeAsync(client, id);

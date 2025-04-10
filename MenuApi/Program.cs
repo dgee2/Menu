@@ -1,13 +1,14 @@
+using Menu.ApiServiceDefaults;
+using MenuApi.Factory;
+using MenuApi.Recipes;
 using MenuApi.Repositories;
 using MenuApi.Services;
-using MenuApi.Factory;
-using Microsoft.Data.SqlClient;
-using System.Data;
-using MenuApi.Recipes;
-using System.Reflection;
 using MenuApi.ValueObjects;
-using Menu.ApiServiceDefaults;
-using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Data.SqlClient;
+using Microsoft.IdentityModel.Tokens;
+using System.Data;
+using System.Security.Claims;
 
 ValueObject.ConfigureDapperTypeHandlers();
 
@@ -29,12 +30,28 @@ builder.AddSqlServerClient(connectionName: "menu");
 builder.Services.AddTransient<IDbConnection, SqlConnection>();
 builder.Services.AddScoped<ITransactionFactory, TransactionFactory>();
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = $"https://{builder.Configuration["Auth0Domain"]}/";
+        options.Audience = builder.Configuration["Auth0Audience"];
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            NameClaimType = ClaimTypes.NameIdentifier
+        };
+    });
+builder.Services.AddAuthorizationBuilder();
+
 var app = builder.Build();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapDefaultApiEndpoints();
 
 // Configure the APIs
-var api = app.MapGroup("/api");
+var api = app.MapGroup("/api")
+    .RequireAuthorization();
+
 api.MapRecipes();
 api.MapIngredients();
 
