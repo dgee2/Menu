@@ -23,7 +23,7 @@ var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
 builder.AddNpmApp("menu-ui", "../ui/menu-website", scriptName: "dev")
     .WithReference(menuApi)
     .WaitFor(menuApi)
-    .WithHttpEndpoint(env: "PORT")
+    .WithHttpEndpoint(env: "PORT", port: 65276)
     .WithNpmPackageInstallation(useCI: true)
     .PublishAsDockerFile();
 
