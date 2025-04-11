@@ -18,7 +18,7 @@
   "dependencies": {
     "@auth0/auth0-vue": "^2.4.0",
     "@quasar/extras": "^1.16.17",
-    "pinia": "^3.0.1",
+    "pinia": "^3.0.2",
     "quasar": "^2.18.1",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
@@ -31,12 +31,12 @@
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.5.0",
     "autoprefixer": "^10.4.21",
-    "eslint": "^9.23.0",
+    "eslint": "^9.24.0",
     "eslint-plugin-vue": "^10.0.0",
     "globals": "^16.0.0",
     "openapi-typescript": "^7.6.1",
     "prettier": "^3.5.3",
-    "typescript": "~5.8.2",
+    "typescript": "~5.8.3",
     "vite-plugin-checker": "^0.9.1",
     "vue-tsc": "^2.2.8"
   },
