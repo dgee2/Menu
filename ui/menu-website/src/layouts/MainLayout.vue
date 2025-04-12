@@ -16,8 +16,8 @@
 
 <script setup lang="ts">
 import LogoutButton from 'components/LogoutButton.vue';
-import { useAuth0 } from '@auth0/auth0-vue';
+import { useAuth } from '../services/auth';
 import LoginButton from 'components/LoginButton.vue';
 
-const { isAuthenticated } = useAuth0();
+const { isAuthenticated } = useAuth();
 </script>
