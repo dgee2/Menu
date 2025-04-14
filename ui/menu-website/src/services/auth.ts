@@ -6,6 +6,8 @@ type User = {
   name: string;
   picture: URL | undefined;
   subject: string;
+  email: string | undefined;
+  emailVerified: boolean | undefined;
 };
 
 export const useAuth = () => {
@@ -17,17 +19,19 @@ export const useAuth = () => {
     await logout({ logoutParams: { returnTo: window.location.origin } });
   };
   const auth0User = computed(() => {
-    if (!isAuthenticated || user.value === undefined || user.value.sub === undefined)
-      return undefined;
+    const userValue = user.value;
+    if (!isAuthenticated || userValue?.sub === undefined) return undefined;
 
     return {
-      name: user.value.name ?? '',
-      nickname: user.value.nickname ?? '',
+      name: userValue.name ?? '',
+      nickname: userValue.nickname ?? '',
       picture:
-        user.value.picture && URL.canParse(user.value.picture)
-          ? new URL(user.value.picture)
+        userValue.picture && URL.canParse(userValue.picture)
+          ? new URL(userValue.picture)
           : undefined,
-      subject: user.value.sub,
+      subject: userValue.sub,
+      email: userValue.email,
+      emailVerified: userValue.email_verified,
     } satisfies User;
   });
 
