@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿// Ignore Spelling: Auth
+
+using Microsoft.Extensions.Configuration;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
@@ -18,7 +20,7 @@ internal class ApiAuthentication
             .AddUserSecrets<ApiTestFixture>()                     // User secrets for local development.
             .Build();
 
-        config = Configuration.GetValue<TestParameters>("Parameters");
+        config = Configuration.GetRequiredSection("Parameters").Get<TestParameters>();
     }
 
 
