@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router';
+import { authGuard } from '@auth0/auth0-vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -13,11 +14,18 @@ const routes: RouteRecordRaw[] = [
         path: '',
         component: () => import('pages/IndexPage.vue'),
       },
+    ],
+  },
+  {
+    path: '/',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
       {
         path: 'profile',
         component: () => import('pages/UserInfo.vue'),
       },
     ],
+    beforeEnter: authGuard,
   },
 
   // Always leave this as last one,

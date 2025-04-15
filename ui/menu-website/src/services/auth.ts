@@ -4,7 +4,7 @@ import { computed } from 'vue';
 type User = {
   nickname: string;
   name: string;
-  picture: URL | undefined;
+  picture: string | undefined;
   subject: string;
   email: string | undefined;
   emailVerified: boolean | undefined;
@@ -25,10 +25,7 @@ export const useAuth = () => {
     return {
       name: userValue.name ?? '',
       nickname: userValue.nickname ?? '',
-      picture:
-        userValue.picture && URL.canParse(userValue.picture)
-          ? new URL(userValue.picture)
-          : undefined,
+      picture: userValue.picture && URL.canParse(userValue.picture) ? userValue.picture : undefined,
       subject: userValue.sub,
       email: userValue.email,
       emailVerified: userValue.email_verified,

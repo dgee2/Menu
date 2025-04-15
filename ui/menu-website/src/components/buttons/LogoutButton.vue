@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuth } from '../services/auth';
+import { useAuth } from '../../services/auth';
 
 const { logout } = useAuth();
 </script>

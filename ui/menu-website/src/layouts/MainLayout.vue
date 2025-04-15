@@ -3,6 +3,7 @@
     <q-header elevated>
       <q-toolbar>
         <q-toolbar-title> Menu</q-toolbar-title>
+        <profile-button v-if="isAuthenticated" />
         <logout-button v-if="isAuthenticated" />
         <login-button v-else />
       </q-toolbar>
@@ -15,9 +16,10 @@
 </template>
 
 <script setup lang="ts">
-import LogoutButton from 'components/LogoutButton.vue';
+import LogoutButton from 'components/buttons/LogoutButton.vue';
 import { useAuth } from '../services/auth';
-import LoginButton from 'components/LoginButton.vue';
+import LoginButton from 'components/buttons/LoginButton.vue';
+import ProfileButton from 'components/buttons/ProfileButton.vue';
 
 const { isAuthenticated } = useAuth();
 </script>
