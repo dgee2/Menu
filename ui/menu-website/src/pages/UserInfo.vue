@@ -16,5 +16,3 @@ const auth0 = useAuth0();
     {{ auth0 }}
   </code>
 </template>
-
-<style scoped></style>

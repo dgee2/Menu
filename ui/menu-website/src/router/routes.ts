@@ -3,10 +3,6 @@ import { authGuard } from '@auth0/auth0-vue';
 
 const routes: RouteRecordRaw[] = [
   {
-    path: '/login',
-    component: () => import('pages/LoginPage.vue'),
-  },
-  {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [

@@ -7,5 +7,3 @@ const { logout } = useAuth();
 <template>
   <q-btn flat dense @click="logout">Logout</q-btn>
 </template>
-
-<style scoped></style>

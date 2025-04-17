@@ -7,5 +7,3 @@ const { login } = useAuth();
 <template>
   <q-btn flat dense @click="login" label="Login" />
 </template>
-
-<style scoped></style>

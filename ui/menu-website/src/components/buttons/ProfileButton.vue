@@ -30,5 +30,3 @@ const userInitials = computed(() => {
     </q-avatar>
   </q-btn>
 </template>
-
-<style scoped></style>
