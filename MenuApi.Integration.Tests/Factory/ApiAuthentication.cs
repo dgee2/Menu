@@ -22,8 +22,6 @@ internal class ApiAuthentication
             .Build();
 
         config = Configuration.GetRequiredSection("Parameters").Get<TestParameters>();
-
-        Console.WriteLine("Config Data: " + JsonSerializer.Serialize(config));
     }
 
 
