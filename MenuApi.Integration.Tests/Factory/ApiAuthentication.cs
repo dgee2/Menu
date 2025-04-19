@@ -3,6 +3,7 @@
 using Microsoft.Extensions.Configuration;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace MenuApi.Integration.Tests.Factory;
 
@@ -21,6 +22,8 @@ internal class ApiAuthentication
             .Build();
 
         config = Configuration.GetRequiredSection("Parameters").Get<TestParameters>();
+
+        Console.WriteLine("Config Data: " + JsonSerializer.Serialize(config));
     }
 
 
