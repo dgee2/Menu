@@ -47,6 +47,11 @@ jobs:
           --configuration Release
           --logger "GitHubActions;summary.includeSkippedTests=true"
           -- RunConfiguration.CollectSourceInformation=true
+        env:
+          parameters__Auth0TestClientId: ${{ vars.AUTH0_CLIENT_ID }}
+          parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
+          parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
+          parameters__Auth0Audience: http://localhost:65273
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
