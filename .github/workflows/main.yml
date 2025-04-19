@@ -50,8 +50,8 @@ jobs:
         env:
           parameters__Auth0TestClientId: ${{ vars.Auth0TestClientId }}
           parameters__Auth0TestClientSecret: ${{ secrets.Auth0TestClientSecret }}
-          parameters__Auth0TestDomain: ${{ vars.Auth0TestDomain }}
-          parameters__Auth0TestAudience: http://localhost:65273
+          parameters__Auth0Domain: ${{ vars.Auth0TestDomain }}
+          parameters__Auth0Audience: http://localhost:65273
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
