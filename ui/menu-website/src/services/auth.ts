@@ -14,6 +14,7 @@ export const useAuth = () => {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
 
+  const auth0IsAuthenticated = computed(() => isAuthenticated.value && user.value !== undefined);
   const auth0Login = () => loginWithRedirect({});
   const auth0Logout = async () => {
     await logout({ logoutParams: { returnTo: window.location.origin } });
@@ -35,7 +36,7 @@ export const useAuth = () => {
   return {
     login: auth0Login,
     logout: auth0Logout,
-    isAuthenticated: isAuthenticated && user.value,
+    isAuthenticated: auth0IsAuthenticated,
     user: auth0User,
   };
 };
