@@ -26,8 +26,16 @@ jobs:
         with:
           node-version: 22.x
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4.1.0
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('ui/menu-website/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Enable pnpm with corepack
+        run: corepack enable pnpm
 
       - name: Setup dotnet 9.x
         uses: actions/setup-dotnet@v4
@@ -60,14 +68,6 @@ jobs:
           parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
           parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
           parameters__Auth0Audience: http://localhost:65273
-
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('ui/menu-website/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
 
       - run: pnpm install --frozen-lockfile
         working-directory: ./ui/menu-website
