@@ -44,7 +44,7 @@ public static class RecipeApi
     {
         var recipeId = await recipeService.CreateRecipeAsync(newRecipe);
         var recipe = await recipeService.GetRecipeAsync(recipeId);
-        return recipe ?? throw new InvalidOperationException("Recipe was not updated");
+        return recipe ?? throw new InvalidOperationException("Recipe creation failed");
     }
 
     public static async Task<FullRecipe> UpdateRecipeAsync(IRecipeService recipeService, RecipeId recipeId, NewRecipe newRecipe)
