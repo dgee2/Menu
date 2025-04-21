@@ -17,7 +17,6 @@ builder.AddApiServiceDefaults();
 
 // Recipe specific stuff (needs putting in extension methods)
 builder.Services.ConfigureSwaggerGen(o => o.MapVogenTypesInMenuApi());
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 builder.Services.AddTransient<IUnitRepository, UnitRepository>();
 builder.Services.AddTransient<IIngredientRepository, IngredientRepository>();

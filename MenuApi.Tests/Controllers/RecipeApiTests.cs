@@ -1,5 +1,4 @@
-﻿using AutoFixture.Xunit2;
-using FakeItEasy;
+﻿using FakeItEasy;
 using FluentAssertions;
 using MenuApi.Recipes;
 using MenuApi.Services;
