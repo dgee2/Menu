@@ -8,9 +8,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
 using System.Data;
-using MenuApi.Recipes;
-using MenuApi.ValueObjects;
-using Menu.ApiServiceDefaults;
 using System.Security.Claims;
 
 ValueObject.ConfigureDapperTypeHandlers();
