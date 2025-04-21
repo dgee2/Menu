@@ -21,6 +21,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: pnpm
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4.1.0
+
       - name: Setup dotnet 9.x
         uses: actions/setup-dotnet@v4
         with:
@@ -52,15 +61,6 @@ jobs:
           parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
           parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
           parameters__Auth0Audience: http://localhost:65273
-
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: pnpm
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4.1.0
 
       - name: Cache
         uses: actions/cache@v4
