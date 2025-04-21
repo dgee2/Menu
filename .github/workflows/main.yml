@@ -21,6 +21,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('ui/menu-website/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Enable pnpm with corepack
+        run: corepack enable pnpm
+
       - name: Setup dotnet 9.x
         uses: actions/setup-dotnet@v4
         with:
@@ -53,28 +69,17 @@ jobs:
           parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
           parameters__Auth0Audience: http://localhost:65273
 
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: "ui/menu-website/node_modules"
-          key: node-modules-${{ hashFiles('ui/menu-website/package-lock.json') }}
-
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
         working-directory: ./ui/menu-website
 
-      - run: npm run generate-openapi --if-present
+      - run: pnpm run generate-openapi
         working-directory: ./ui/menu-website
 
-      - run: npm run lint --if-present
+      - run: pnpm run lint
         working-directory: ./ui/menu-website
 
-      - run: npm run build --if-present
+      - run: pnpm run build
         working-directory: ./ui/menu-website
 
-      - run: npm test
+      - run: pnpm run test
         working-directory: ./ui/menu-website

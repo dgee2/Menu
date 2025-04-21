@@ -20,11 +20,11 @@ var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
        .WithEnvironment("Auth0Domain", auth0Domain)
        .WithEnvironment("Auth0Audience", auth0Audience);
 
-builder.AddNpmApp("menu-ui", "../ui/menu-website", scriptName: "dev")
+builder.AddPnpmApp("menu-ui", "../ui/menu-website", scriptName: "dev")
     .WithReference(menuApi)
     .WaitFor(menuApi)
     .WithHttpEndpoint(env: "PORT", port: 65276)
-    .WithNpmPackageInstallation(useCI: true)
+    .WithPnpmPackageInstallation()
     .PublishAsDockerFile();
 
 await builder.Build().RunAsync();
