@@ -51,6 +51,6 @@ public static class RecipeApi
     {
         await recipeService.UpdateRecipeAsync(recipeId, newRecipe);
         var recipe = await recipeService.GetRecipeAsync(recipeId);
-        return recipe ?? throw new InvalidOperationException("Recipe was not updated");
+        return recipe ?? throw new InvalidOperationException($"Failed to retrieve the updated recipe with ID {recipeId} after the update operation.");
     }
 }
