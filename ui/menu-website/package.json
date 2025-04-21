@@ -12,7 +12,6 @@
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev --devtools",
     "build": "quasar build",
-    "preinstall": "npx only-allow pnpm",
     "postinstall": "quasar prepare",
     "generate-openapi": "openapi-typescript ../../open-api/menu-api.json --output ./src/generated/open-api/menu-api.ts"
   },
