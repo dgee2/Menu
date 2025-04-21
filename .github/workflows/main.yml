@@ -72,13 +72,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
         working-directory: ./ui/menu-website
 
-      - run: pnpm run generate-openapi --if-present
+      - run: pnpm run generate-openapi
         working-directory: ./ui/menu-website
 
-      - run: pnpm run lint --if-present
+      - run: pnpm run lint
         working-directory: ./ui/menu-website
 
-      - run: pnpm run build --if-present
+      - run: pnpm run build
         working-directory: ./ui/menu-website
 
       - run: pnpm run test
