@@ -5,5 +5,5 @@ const { login } = useAuth();
 </script>
 
 <template>
-  <q-btn flat dense @click="login" label="Login" />
+  <q-btn flat dense label="Login" @click="login" />
 </template>

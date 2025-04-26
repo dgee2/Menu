@@ -10,7 +10,8 @@
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",
-    "dev": "quasar dev --devtools",
+    "dev": "cross-env VITE_MENU_API_URL=\"http://localhost:54200/\" && quasar dev --devtools",
+    "aspire": "quasar dev",
     "build": "quasar build",
     "postinstall": "quasar prepare",
     "generate-openapi": "openapi-typescript ../../open-api/menu-api.json --output ./src/generated/open-api/menu-api.ts"
@@ -18,6 +19,7 @@
   "dependencies": {
     "@auth0/auth0-vue": "^2.4.0",
     "@quasar/extras": "^1.16.17",
+    "openapi-fetch": "^0.13.5",
     "pinia": "^3.0.2",
     "quasar": "^2.18.1",
     "vue": "^3.5.13",
@@ -32,6 +34,7 @@
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.5.0",
     "autoprefixer": "^10.4.21",
+    "cross-env": "^7.0.3",
     "eslint": "^9.25.1",
     "eslint-plugin-vue": "^10.0.0",
     "globals": "^16.0.0",
