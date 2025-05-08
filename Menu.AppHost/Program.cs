@@ -20,8 +20,9 @@ var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
        .WithEnvironment("Auth0Domain", auth0Domain)
        .WithEnvironment("Auth0Audience", auth0Audience);
 
-builder.AddPnpmApp("menu-ui", "../ui/menu-website", scriptName: "dev")
+builder.AddPnpmApp("menu-ui", "../ui/menu-website", scriptName: "aspire")
     .WithReference(menuApi)
+    .WithEnvironment("VITE_MENU_API_URL", menuApi.GetEndpoint("http"))
     .WaitFor(menuApi)
     .WithHttpEndpoint(env: "PORT", port: 65276)
     .WithPnpmPackageInstallation()

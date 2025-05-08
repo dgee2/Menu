@@ -20,6 +20,10 @@ const routes: RouteRecordRaw[] = [
         path: 'profile',
         component: () => import('pages/UserInfo.vue'),
       },
+      {
+        path: 'new-recipe',
+        component: () => import('pages/NewRecipe.vue'),
+      },
     ],
     beforeEnter: authGuard,
   },
