@@ -19,6 +19,8 @@
   "dependencies": {
     "@auth0/auth0-vue": "^2.4.0",
     "@quasar/extras": "^1.16.17",
+    "@tanstack/vue-query": "^5.75.4",
+    "@tanstack/vue-query-devtools": "^5.75.4",
     "openapi-fetch": "^0.13.5",
     "pinia": "^3.0.2",
     "quasar": "^2.18.1",
@@ -29,6 +31,7 @@
     "@eslint/js": "^10.0.0",
     "@quasar/app-vite": "^2.2.0",
     "@quasar/cli": "^2.5.0",
+    "@tanstack/eslint-plugin-query": "^5.74.7",
     "@types/node": "^22.15.12",
     "@vue/devtools": "^7.7.6",
     "@vue/eslint-config-prettier": "^10.2.0",

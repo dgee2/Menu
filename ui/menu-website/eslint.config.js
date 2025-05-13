@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 import pluginVue from 'eslint-plugin-vue';
 import pluginQuasar from '@quasar/app-vite/eslint';
+import pluginQuery from '@tanstack/eslint-plugin-query';
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 import prettierSkipFormatting from '@vue/eslint-config-prettier/skip-formatting';
 
@@ -20,6 +21,7 @@ export default defineConfigWithVueTs(
 
   pluginQuasar.configs.recommended(),
   js.configs.recommended,
+  ...pluginQuery.configs['flat/recommended'],
 
   /**
    * https://eslint.vuejs.org

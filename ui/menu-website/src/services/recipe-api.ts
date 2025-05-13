@@ -18,28 +18,65 @@ const client = createClient<paths>({
 
 client.use(authMiddleware);
 
-export const createRecipe = async (recipe: components['schemas']['NewRecipe']) => {
-  const result = await client.POST('/api/recipe', {
+export type NewRecipe = components['schemas']['NewRecipe'];
+export type Recipe = components['schemas']['Recipe'];
+export type FullRecipe = components['schemas']['FullRecipe'];
+
+export const postRecipe = async (recipe: NewRecipe) => {
+  const { data, error } = await client.POST('/api/recipe', {
     body: recipe,
   });
 
-  return result.data;
+  if (error) {
+    console.error('Failed to post recipe:', error);
+    throw new Error('Failed to post recipe');
+  }
+
+  return data;
 };
 
-export const getRecipes = async (): Promise<components['schemas']['Recipe'][] | undefined> => {
-  const result = await client.GET('/api/recipe');
-  return result.data;
+export const putRecipe = async (recipeId: string, recipe: NewRecipe) => {
+  const { data, error } = await client.PUT('/api/recipe/{recipeId}', {
+    params: {
+      path: {
+        recipeId: recipeId,
+      },
+    },
+    body: recipe,
+  });
+
+  if (error) {
+    console.error('Failed to put recipe:', error);
+    throw new Error('Failed to put recipe');
+  }
+
+  return data;
 };
 
-export const getRecipe = async (
-  recipeId: string,
-): Promise<components['schemas']['FullRecipe'] | undefined> => {
-  const result = await client.GET('/api/recipe/{recipeId}', {
+export const getRecipes = async (): Promise<Recipe[]> => {
+  const { data, error } = await client.GET('/api/recipe');
+
+  if (error) {
+    console.error('Failed to get recipes:', error);
+    throw new Error('Failed to get recipes');
+  }
+
+  return data;
+};
+
+export const getRecipe = async (recipeId: string): Promise<FullRecipe> => {
+  const { data, error } = await client.GET('/api/recipe/{recipeId}', {
     params: {
       path: {
         recipeId,
       },
     },
   });
-  return result.data;
+
+  if (error) {
+    console.error('Failed to get recipe:', error);
+    throw new Error('Failed to get recipe');
+  }
+
+  return data;
 };
