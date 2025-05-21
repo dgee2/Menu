@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@auth0/auth0-vue": "^2.4.0",
-    "@quasar/extras": "^1.16.17",
+    "@quasar/extras": "^1.17.0",
     "pinia": "^3.0.2",
     "quasar": "^2.18.1",
     "vue": "^3.5.14",
