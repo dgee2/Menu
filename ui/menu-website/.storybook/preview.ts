@@ -4,8 +4,8 @@ import type { Preview } from '@storybook/vue3';
 import { Quasar } from 'quasar';
 import { vueRouter } from 'storybook-vue3-router';
 
-import '@quasar/extras/roboto-font/roboto-font.css'
-import '@quasar/extras/material-icons/material-icons.css'
+import '@quasar/extras/roboto-font/roboto-font.css';
+import '@quasar/extras/material-icons/material-icons.css';
 
 // Loads the quasar styles and registers quasar functionality with storybook
 import 'quasar/dist/quasar.css';

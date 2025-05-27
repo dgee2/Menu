@@ -1,6 +1,6 @@
-import HeaderButton from '@/components/generic/header/HeaderButton.vue'
-import type { Meta, StoryObj } from '@storybook/vue3'
-import { fn } from '@storybook/test'
+import HeaderButton from '@/components/generic/header/HeaderButton.vue';
+import type { Meta, StoryObj } from '@storybook/vue3';
+import { fn } from '@storybook/test';
 
 const meta = {
   title: 'Generic/HeaderButton',
@@ -9,14 +9,14 @@ const meta = {
   args: {
     label: 'Button',
     onClick: fn(),
-  }
-} satisfies Meta<typeof HeaderButton>
+  },
+} satisfies Meta<typeof HeaderButton>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const ChangeLabel: Story = {
-  args:{
+  args: {
     label: 'Click Me',
-  }
-}
+  },
+};

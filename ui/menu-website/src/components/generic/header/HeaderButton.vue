@@ -1,10 +1,10 @@
 <script setup lang="ts">
 const emit = defineEmits<{
-  click: []
-}>()
+  click: [];
+}>();
 defineProps<{
-  label: string
-}>()
+  label: string;
+}>();
 </script>
 
 <template>
