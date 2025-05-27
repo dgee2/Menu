@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import type { NewRecipe } from 'src/services/recipe-api';
-import { getRecipes, getRecipe, postRecipe, putRecipe } from 'src/services/recipe-api';
+import type { NewRecipe } from '@/services/recipe-api';
+import { getRecipes, getRecipe, postRecipe, putRecipe } from '@/services/recipe-api';
 import { toValue, type MaybeRef } from 'vue';
 
 const RECIPE_QUERY_KEY = 'recipe';

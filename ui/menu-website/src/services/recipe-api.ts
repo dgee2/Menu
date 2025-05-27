@@ -1,7 +1,7 @@
 import type { Middleware } from 'openapi-fetch';
 import createClient from 'openapi-fetch';
-import type { paths, components } from 'src/generated/open-api/menu-api';
-import { useAuth } from 'src/services/auth';
+import type { paths, components } from '@/generated/open-api/menu-api';
+import { useAuth } from '@/services/auth';
 
 const authMiddleware: Middleware = {
   async onRequest({ request }) {
