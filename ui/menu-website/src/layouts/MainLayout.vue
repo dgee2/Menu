@@ -18,10 +18,10 @@
 
 <script setup lang="ts">
 import LogoutButton from '@/components/buttons/LogoutButton.vue';
-import { useAuth } from '../services/auth';
+import { useAuth } from '@/services/auth';
 import LoginButton from '@/components/buttons/LoginButton.vue';
 import ProfileButton from '@/components/buttons/ProfileButton.vue';
-import NewRecipeHeaderButton from 'components/buttons/NewRecipeHeaderButton.vue';
+import NewRecipeHeaderButton from '@/components/buttons/NewRecipeHeaderButton.vue';
 
 const { isAuthenticated } = useAuth();
 </script>

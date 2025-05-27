@@ -1,7 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { authGuard } from '@auth0/auth0-vue';
-import { authenticatedRoutes } from 'src/router/authenticated.routes';
-import { publicRoutes } from 'src/router/public.routes';
+import { authenticatedRoutes } from '@/router/authenticated.routes';
+import { publicRoutes } from '@/router/public.routes';
 
 const routes: RouteRecordRaw[] = [
   {

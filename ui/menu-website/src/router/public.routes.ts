@@ -1,6 +1,6 @@
 export const publicRoutes = [
   {
     path: '',
-    component: () => import('pages/IndexPage.vue')
+    component: () => import('@/pages/IndexPage.vue')
   }
 ];

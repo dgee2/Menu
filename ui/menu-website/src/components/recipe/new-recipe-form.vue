@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import IngredientField from 'components/recipe/recipe-fields/ingredient-field.vue';
+import IngredientField from './recipe-fields/ingredient-field.vue';
 </script>
 
 <template>

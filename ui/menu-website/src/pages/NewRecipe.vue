@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import NewRecipeForm from 'components/recipe/new-recipe-form.vue';
+import NewRecipeForm from '@/components/recipe/new-recipe-form.vue';
 </script>
 
 <template>
