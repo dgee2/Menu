@@ -1,3 +1,17 @@
 {
-  "extends": "./.quasar/tsconfig.json"
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.storybook.json"
+    },
+    {
+      "path": "./tsconfig.vitest.json"
+    }
+  ]
 }

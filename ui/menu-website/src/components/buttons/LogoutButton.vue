@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { useAuth } from '../../services/auth';
+import { useAuth } from '@/services/auth';
+import HeaderButton from '@/components/generic/header/HeaderButton.vue';
 
 const { logout } = useAuth();
 </script>
 
 <template>
-  <q-btn flat dense @click="logout">Logout</q-btn>
+  <header-button label="Logout" @click="logout" />
 </template>
