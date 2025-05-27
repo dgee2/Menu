@@ -4,21 +4,21 @@ import { authGuard } from '@auth0/auth0-vue';
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => import('@/layouts/MainLayout.vue'),
     children: [
       {
         path: '',
-        component: () => import('pages/IndexPage.vue'),
+        component: () => import('@/pages/IndexPage.vue'),
       },
     ],
   },
   {
     path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => import('@/layouts/MainLayout.vue'),
     children: [
       {
         path: 'profile',
-        component: () => import('pages/UserInfo.vue'),
+        component: () => import('@/pages/UserInfo.vue'),
       },
     ],
     beforeEnter: authGuard,
@@ -28,7 +28,7 @@ const routes: RouteRecordRaw[] = [
   // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue'),
+    component: () => import('@/pages/ErrorNotFound.vue'),
   },
 ];
 

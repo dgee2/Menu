@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { computed } from 'vue';
-import { useAuth } from 'src/services/auth';
+import { useAuth } from '@/services/auth';
 
 const { user } = useAuth();
 const router = useRouter();

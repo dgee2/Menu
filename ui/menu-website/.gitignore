@@ -31,3 +31,9 @@ yarn-error.log*
 
 # local .env files
 .env.local*
+
+# unit test results
+/test-results
+
+# Playwright test results
+/playwright-report

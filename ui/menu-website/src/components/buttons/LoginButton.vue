@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { useAuth } from '../../services/auth';
+import { useAuth } from '@/services/auth'
+import HeaderButton from '@/components/generic/header/HeaderButton.vue'
 
-const { login } = useAuth();
+const { login } = useAuth()
 </script>
 
 <template>
-  <q-btn flat dense @click="login" label="Login" />
+  <header-button label="Login" @click="login"/>
 </template>
