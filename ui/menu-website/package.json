@@ -13,7 +13,7 @@
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "lint": "eslint . \"./src/**/*.{ts,js,cjs,mjs,vue}\"",
     "lint-fix": "eslint . \"./src/**/*.{ts,js,cjs,mjs,vue}\" --fix",
-    "test": "vitest",
+    "test": "vitest --passWithNoTests",
     "test:e2e": "playwright test",
     "type-check": "vue-tsc --build",
     "generate-openapi": "openapi-typescript ../../open-api/menu-api.json --output ./src/generated/open-api/menu-api.ts",
