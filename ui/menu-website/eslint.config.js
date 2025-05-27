@@ -1,7 +1,7 @@
-import js from '@eslint/js';
 import { globalIgnores } from 'eslint/config';
 import globals from 'globals';
 import pluginVue from 'eslint-plugin-vue';
+import pluginVitest from '@vitest/eslint-plugin';
 import pluginQuasar from '@quasar/app-vite/eslint';
 import pluginPlaywright from 'eslint-plugin-playwright';
 import pluginStorybook from 'eslint-plugin-storybook';
@@ -20,7 +20,6 @@ export default defineConfigWithVueTs(
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
 
   pluginQuasar.configs.recommended(),
-  js.configs.recommended,
 
   /**
    * https://eslint.vuejs.org
