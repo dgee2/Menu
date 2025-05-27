@@ -35,7 +35,7 @@ pnpm build
 ### Run Unit Tests with [Vitest](https://vitest.dev/)
 
 ```sh
-pnpm test:unit
+pnpm test
 ```
 
 ### Run End-to-End Tests with [Playwright](https://playwright.dev)
