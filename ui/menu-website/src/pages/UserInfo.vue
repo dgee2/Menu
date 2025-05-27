@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuth } from '../services/auth';
+import { useAuth } from '@/services/auth';
 import { useAuth0 } from '@auth0/auth0-vue';
 
 const { isAuthenticated, user } = useAuth();
