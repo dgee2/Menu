@@ -16,10 +16,10 @@ importers:
         version: 1.17.0
       '@tanstack/vue-query':
         specifier: ^5.75.4
-        version: 5.77.2(vue@3.5.15(typescript@5.8.3))
+        version: 5.77.2(vue@3.5.16(typescript@5.8.3))
       '@tanstack/vue-query-devtools':
         specifier: ^5.75.4
-        version: 5.77.2(@tanstack/vue-query@5.77.2(vue@3.5.15(typescript@5.8.3)))(vue@3.5.15(typescript@5.8.3))
+        version: 5.77.2(@tanstack/vue-query@5.77.2(vue@3.5.16(typescript@5.8.3)))(vue@3.5.16(typescript@5.8.3))
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.4)
@@ -4833,19 +4833,19 @@ snapshots:
 
   '@tanstack/query-devtools@5.76.0': {}
 
-  '@tanstack/vue-query-devtools@5.77.2(@tanstack/vue-query@5.77.2(vue@3.5.15(typescript@5.8.3)))(vue@3.5.15(typescript@5.8.3))':
+  '@tanstack/vue-query-devtools@5.77.2(@tanstack/vue-query@5.77.2(vue@3.5.16(typescript@5.8.3)))(vue@3.5.16(typescript@5.8.3))':
     dependencies:
       '@tanstack/query-devtools': 5.76.0
-      '@tanstack/vue-query': 5.77.2(vue@3.5.15(typescript@5.8.3))
-      vue: 3.5.15(typescript@5.8.3)
+      '@tanstack/vue-query': 5.77.2(vue@3.5.16(typescript@5.8.3))
+      vue: 3.5.16(typescript@5.8.3)
 
-  '@tanstack/vue-query@5.77.2(vue@3.5.15(typescript@5.8.3))':
+  '@tanstack/vue-query@5.77.2(vue@3.5.16(typescript@5.8.3))':
     dependencies:
       '@tanstack/match-sorter-utils': 8.19.4
       '@tanstack/query-core': 5.77.2
       '@vue/devtools-api': 6.6.4
-      vue: 3.5.15(typescript@5.8.3)
-      vue-demi: 0.14.10(vue@3.5.15(typescript@5.8.3))
+      vue: 3.5.16(typescript@5.8.3)
+      vue-demi: 0.14.10(vue@3.5.16(typescript@5.8.3))
 
   '@testing-library/dom@10.4.0':
     dependencies:
@@ -7767,9 +7767,9 @@ snapshots:
 
   vue-component-type-helpers@2.2.10: {}
 
-  vue-demi@0.14.10(vue@3.5.15(typescript@5.8.3)):
+  vue-demi@0.14.10(vue@3.5.16(typescript@5.8.3)):
     dependencies:
-      vue: 3.5.15(typescript@5.8.3)
+      vue: 3.5.16(typescript@5.8.3)
 
   vue-docgen-api@4.79.2(vue@3.5.16(typescript@5.8.3)):
     dependencies:
