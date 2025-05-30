@@ -45,7 +45,7 @@
     "@storybook/vue3-vite": "8.6.14",
     "@tsconfig/node22": "^22.0.2",
     "@types/jsdom": "^21.1.7",
-    "@types/node": "^22.15.21",
+    "@types/node": "^22.15.27",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vitest/eslint-plugin": "^1.2.1",
     "@vue/eslint-config-prettier": "^10.2.0",
