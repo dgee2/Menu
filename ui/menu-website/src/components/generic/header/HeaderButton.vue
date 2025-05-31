@@ -8,7 +8,7 @@ defineProps<{
 </script>
 
 <template>
-  <q-btn flat dense @click="emit('click')" :label="label" />
+  <q-btn flat dense :label="label" @click="emit('click')" />
 </template>
 
 <style scoped></style>
