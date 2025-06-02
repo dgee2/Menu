@@ -36,7 +36,7 @@
     "@quasar/vite-plugin": "^1.9.0",
     "@storybook/addon-docs": "9.1.0-alpha.1",
     "@storybook/addon-links": "9.1.0-alpha.1",
-    "@storybook/addon-onboarding": "9.1.0-alpha.1",
+    "@storybook/addon-onboarding": "9.1.0-alpha.2",
     "@storybook/addon-vitest": "9.1.0-alpha.1",
     "@storybook/vue3-vite": "9.1.0-alpha.1",
     "@tsconfig/node22": "^22.0.2",
