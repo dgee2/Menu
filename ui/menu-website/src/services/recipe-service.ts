@@ -4,7 +4,7 @@ import { getRecipes, getRecipe, postRecipe, putRecipe } from '@/services/recipe-
 import { toValue, type MaybeRef } from 'vue';
 
 const RECIPE_QUERY_KEY = 'recipe';
-const RECIPE_LIST_QUERY_KEY = 'recipe';
+const RECIPE_LIST_QUERY_KEY = 'recipe-list';
 
 export const useRecipes = () =>
   useQuery({ queryKey: [RECIPE_LIST_QUERY_KEY], queryFn: getRecipes });
