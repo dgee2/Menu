@@ -1,5 +1,5 @@
 using AutoFixture.Xunit2;
-using FluentAssertions;
+using AwesomeAssertions;
 using MenuApi.Integration.Tests.Factory;
 using System.Net;
 using System.Text;
