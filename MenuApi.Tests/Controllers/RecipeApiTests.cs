@@ -1,5 +1,5 @@
-﻿using FakeItEasy;
-using FluentAssertions;
+﻿using AwesomeAssertions;
+using FakeItEasy;
 using MenuApi.Recipes;
 using MenuApi.Services;
 using MenuApi.ValueObjects;
