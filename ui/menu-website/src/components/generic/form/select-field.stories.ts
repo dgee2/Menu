@@ -1,11 +1,12 @@
 import SearchableSelectField from './select-field.vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
+import { fn } from 'storybook/test';
 
 const meta = {
   title: 'Generic/Form/SelectField',
   tags: ['autodocs'],
   args: {
-    modelValue: undefined,
+    'onUpdate:modelValue': fn(),
     options: [
       { label: 'Flour', value: 1 },
       { label: 'Sugar', value: 2 },
@@ -15,6 +16,7 @@ const meta = {
     ],
     label: 'Recipe Ingredient',
   },
+
   component: SearchableSelectField,
 } satisfies Meta<typeof SearchableSelectField>;
 
