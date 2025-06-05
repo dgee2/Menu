@@ -21,6 +21,7 @@ client.use(authMiddleware);
 export type NewRecipe = components['schemas']['NewRecipe'];
 export type Recipe = components['schemas']['Recipe'];
 export type FullRecipe = components['schemas']['FullRecipe'];
+export type IngredientUnit = components['schemas']['IngredientUnit'];
 
 export const postRecipe = async (recipe: NewRecipe) => {
   const { data, error } = await client.POST('/api/recipe', {
@@ -76,6 +77,17 @@ export const getRecipe = async (recipeId: string): Promise<FullRecipe> => {
   if (error) {
     console.error('Failed to get recipe:', error);
     throw new Error('Failed to get recipe');
+  }
+
+  return data;
+};
+
+export const getIngredientUnits = async (): Promise<IngredientUnit[]> => {
+  const { data, error } = await client.GET('/api/ingredient/unit', {});
+
+  if (error) {
+    console.error('Failed to get ingredient units:', error);
+    throw new Error('Failed to get ingredient units');
   }
 
   return data;
