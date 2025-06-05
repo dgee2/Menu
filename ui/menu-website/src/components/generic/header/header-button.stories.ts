@@ -1,4 +1,4 @@
-import HeaderButton from '@/components/generic/header/HeaderButton.vue';
+import HeaderButton from '@/components/generic/header/header-button.vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { fn } from 'storybook/test';
 
