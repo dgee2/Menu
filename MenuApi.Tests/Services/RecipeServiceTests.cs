@@ -1,5 +1,5 @@
+using AwesomeAssertions;
 using FakeItEasy;
-using FluentAssertions;
 using MenuApi.Factory;
 using MenuApi.Repositories;
 using MenuApi.Services;
