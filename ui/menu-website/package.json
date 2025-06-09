@@ -51,7 +51,7 @@
     "eslint": "^9.28.0",
     "eslint-plugin-playwright": "^2.2.0",
     "eslint-plugin-storybook": "^9.1.0-alpha.3",
-    "eslint-plugin-vue": "~10.1.0",
+    "eslint-plugin-vue": "~10.2.0",
     "globals": "^16.2.0",
     "jiti": "^2.4.2",
     "jsdom": "^26.1.0",
