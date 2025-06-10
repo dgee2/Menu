@@ -52,8 +52,8 @@ importers:
         specifier: ^9.1.0-alpha.3
         version: 9.1.0-alpha.3(storybook@9.1.0-alpha.3(@testing-library/dom@10.4.0)(prettier@3.5.3))
       '@storybook/addon-vitest':
-        specifier: ^9.1.0-alpha.3
-        version: 9.1.0-alpha.3(@vitest/runner@3.2.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(storybook@9.1.0-alpha.3(@testing-library/dom@10.4.0)(prettier@3.5.3))(vitest@3.2.3(@types/node@22.15.30)(jiti@2.4.2)(jsdom@26.1.0)(sass-embedded@1.89.1)(sass@1.89.0)(terser@5.41.0))
+        specifier: ^9.1.0-alpha.4
+        version: 9.1.0-alpha.4(@vitest/runner@3.2.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(storybook@9.1.0-alpha.3(@testing-library/dom@10.4.0)(prettier@3.5.3))(vitest@3.2.3(@types/node@22.15.30)(jiti@2.4.2)(jsdom@26.1.0)(sass-embedded@1.89.1)(sass@1.89.0)(terser@5.41.0))
       '@storybook/vue3-vite':
         specifier: ^9.1.0-alpha.3
         version: 9.1.0-alpha.3(storybook@9.1.0-alpha.3(@testing-library/dom@10.4.0)(prettier@3.5.3))(vite@6.3.5(@types/node@22.15.30)(jiti@2.4.2)(sass-embedded@1.89.1)(sass@1.89.0)(terser@5.41.0))(vue@3.5.16(typescript@5.8.3))
@@ -882,12 +882,12 @@ packages:
     peerDependencies:
       storybook: ^9.1.0-alpha.3
 
-  '@storybook/addon-vitest@9.1.0-alpha.3':
-    resolution: {integrity: sha512-Ww7HUN6g06xKWHul5aqdR+HxTOp9Wn3IBvbxMwWyIXX1ewcmkrd92VVF6sJmmwNIUAcnkccEnK5Jq/QiTfZ6LQ==}
+  '@storybook/addon-vitest@9.1.0-alpha.4':
+    resolution: {integrity: sha512-40sCGBpd7L+yYMOLtEuQKxrwkjPz4/WBZ9JqIkd3zWa0WVgrxKkB40k5WTyYTaOpYebT6nD6EebaRwuZ/tDO2w==}
     peerDependencies:
       '@vitest/browser': ^3.0.0
       '@vitest/runner': ^3.0.0
-      storybook: ^9.1.0-alpha.3
+      storybook: ^9.1.0-alpha.4
       vitest: ^3.0.0
     peerDependenciesMeta:
       '@vitest/browser':
@@ -4496,7 +4496,7 @@ snapshots:
     dependencies:
       storybook: 9.1.0-alpha.3(@testing-library/dom@10.4.0)(prettier@3.5.3)
 
-  '@storybook/addon-vitest@9.1.0-alpha.3(@vitest/runner@3.2.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(storybook@9.1.0-alpha.3(@testing-library/dom@10.4.0)(prettier@3.5.3))(vitest@3.2.3(@types/node@22.15.30)(jiti@2.4.2)(jsdom@26.1.0)(sass-embedded@1.89.1)(sass@1.89.0)(terser@5.41.0))':
+  '@storybook/addon-vitest@9.1.0-alpha.4(@vitest/runner@3.2.3)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(storybook@9.1.0-alpha.3(@testing-library/dom@10.4.0)(prettier@3.5.3))(vitest@3.2.3(@types/node@22.15.30)(jiti@2.4.2)(jsdom@26.1.0)(sass-embedded@1.89.1)(sass@1.89.0)(terser@5.41.0))':
     dependencies:
       '@storybook/global': 5.0.0
       '@storybook/icons': 1.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
