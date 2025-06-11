@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.53.0",
-    "@quasar/app-vite": "^2.2.0",
+    "@quasar/app-vite": "^2.2.1",
     "@quasar/vite-plugin": "^1.9.0",
     "@storybook/addon-docs": "^9.0.8",
     "@storybook/addon-links": "^9.0.8",
