@@ -8,11 +8,13 @@ const auth0 = useAuth0();
 </script>
 
 <template>
-  <code v-if="isAuthenticated">
-    {{ user }}
-  </code>
-  <q-img v-if="user?.picture" :src="user?.picture.toString()" />
-  <code>
-    {{ auth0 }}
-  </code>
+  <q-page class="items-center justify-evenly">
+    <code v-if="isAuthenticated">
+      {{ user }}
+    </code>
+    <q-img v-if="user?.picture" :src="user?.picture.toString()" />
+    <code>
+      {{ auth0 }}
+    </code>
+  </q-page>
 </template>
