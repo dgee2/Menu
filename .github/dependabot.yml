@@ -21,3 +21,6 @@ updates:
       storybook:
         patterns:
           - "*storybook*"
+      eslint:
+        patterns:
+          - "*eslint*"
