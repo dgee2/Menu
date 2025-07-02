@@ -21,3 +21,13 @@ updates:
       storybook:
         patterns:
           - "*storybook*"
+  - package-ecosystem: "npm"
+    directories:
+      - "**/*"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 20
+    groups:
+      storybook:
+        patterns:
+          - "*eslint*"
