@@ -24,3 +24,9 @@ updates:
       eslint:
         patterns:
           - "*eslint*"
+      quasar:
+        patterns:
+          - "*quasar*"
+      vue:
+        patterns:
+          - "*vue*"
