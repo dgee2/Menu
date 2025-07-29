@@ -39,3 +39,6 @@ yarn-error.log*
 /playwright-report
 
 /build
+
+# Storybook build output
+/storybook-static
