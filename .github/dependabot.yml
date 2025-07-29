@@ -17,3 +17,16 @@ updates:
     schedule:
       interval: "daily"
     open-pull-requests-limit: 20
+    groups:
+      storybook:
+        patterns:
+          - "*storybook*"
+      eslint:
+        patterns:
+          - "*eslint*"
+      quasar:
+        patterns:
+          - "*quasar*"
+      vue:
+        patterns:
+          - "*vue*"
