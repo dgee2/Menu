@@ -4,6 +4,7 @@
   "exclude": [],
   "compilerOptions": {
     "lib": [],
-    "types": ["node", "jsdom"]
+    "types": ["node", "jsdom"],
+    "tsBuildInfoFile": "./build/tsconfig.vitest.tsbuildinfo"
   }
 }

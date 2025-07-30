@@ -1,26 +1,18 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { authGuard } from '@auth0/auth0-vue';
+import { authenticatedRoutes } from '@/router/authenticated.routes';
+import { publicRoutes } from '@/router/public.routes';
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('@/layouts/MainLayout.vue'),
-    children: [
-      {
-        path: '',
-        component: () => import('@/pages/IndexPage.vue'),
-      },
-    ],
+    children: publicRoutes,
   },
   {
     path: '/',
     component: () => import('@/layouts/MainLayout.vue'),
-    children: [
-      {
-        path: 'profile',
-        component: () => import('@/pages/UserInfo.vue'),
-      },
-    ],
+    children: authenticatedRoutes,
     beforeEnter: authGuard,
   },
 

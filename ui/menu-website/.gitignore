@@ -38,5 +38,7 @@ yarn-error.log*
 # Playwright test results
 /playwright-report
 
+/build
+
 # Storybook build output
 /storybook-static

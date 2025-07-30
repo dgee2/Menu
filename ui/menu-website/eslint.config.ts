@@ -1,12 +1,17 @@
 import { globalIgnores } from 'eslint/config';
+import js from '@eslint/js';
 import globals from 'globals';
 import pluginVue from 'eslint-plugin-vue';
 import pluginVitest from '@vitest/eslint-plugin';
-import pluginQuasar from '@quasar/app-vite/eslint';
+import pluginQuery from '@tanstack/eslint-plugin-query';
 import pluginPlaywright from 'eslint-plugin-playwright';
 import pluginStorybook from 'eslint-plugin-storybook';
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 import prettierSkipFormatting from '@vue/eslint-config-prettier/skip-formatting';
+
+// Doesn't export a type definition file, so we need to use require.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pluginQuasar = require('@quasar/app-vite/eslint');
 
 export default defineConfigWithVueTs(
   /**
@@ -20,6 +25,8 @@ export default defineConfigWithVueTs(
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
 
   pluginQuasar.configs.recommended(),
+  js.configs.recommended,
+  ...pluginQuery.configs['flat/recommended'],
 
   /**
    * https://eslint.vuejs.org
@@ -33,7 +40,7 @@ export default defineConfigWithVueTs(
    * pluginVue.configs["flat/recommended"]
    *   -> Above, plus rules to enforce subjective community defaults to ensure consistency.
    */
-  pluginVue.configs['flat/essential'],
+  pluginVue.configs['flat/recommended'],
 
   {
     files: ['**/*.ts', '**/*.vue'],
@@ -69,6 +76,10 @@ export default defineConfigWithVueTs(
         Capacitor: 'readonly',
         chrome: 'readonly', // BEX related
         browser: 'readonly', // BEX related
+      },
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
 

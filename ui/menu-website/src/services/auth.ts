@@ -12,7 +12,7 @@ type User = {
 
 export const useAuth = () => {
   // eslint-disable-next-line @typescript-eslint/unbound-method
-  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
+  const { loginWithRedirect, logout, isAuthenticated, user, getAccessTokenSilently } = useAuth0();
 
   const auth0IsAuthenticated = computed(() => isAuthenticated.value && user.value !== undefined);
   const auth0Login = () => loginWithRedirect({});
@@ -33,10 +33,15 @@ export const useAuth = () => {
     } satisfies User;
   });
 
+  const getAccessToken = async () => {
+    return await getAccessTokenSilently();
+  };
+
   return {
     login: auth0Login,
     logout: auth0Logout,
     isAuthenticated: auth0IsAuthenticated,
     user: auth0User,
+    getAccessToken: getAccessToken,
   };
 };

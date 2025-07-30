@@ -8,6 +8,10 @@ import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
 
 // https://vite.dev/config/
 export default defineConfig({
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+  },
   plugins: [
     tsconfigPaths(),
     vue({
