@@ -30,3 +30,6 @@ updates:
       vue:
         patterns:
           - "*vue*"
+      tanstack:
+        patterns:
+          - "*tanstack*"
