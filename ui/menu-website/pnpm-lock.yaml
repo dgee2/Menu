@@ -15,11 +15,11 @@ importers:
         specifier: ^1.17.0
         version: 1.17.0
       '@tanstack/vue-query':
-        specifier: ^5.83.1
-        version: 5.83.1(vue@3.5.18(typescript@5.8.3))
+        specifier: ^5.85.2
+        version: 5.85.2(vue@3.5.18(typescript@5.8.3))
       '@tanstack/vue-query-devtools':
-        specifier: ^5.84.0
-        version: 5.84.0(@tanstack/vue-query@5.83.1(vue@3.5.18(typescript@5.8.3)))(vue@3.5.18(typescript@5.8.3))
+        specifier: ^5.85.2
+        version: 5.85.2(@tanstack/vue-query@5.85.2(vue@3.5.18(typescript@5.8.3)))(vue@3.5.18(typescript@5.8.3))
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.6)
@@ -308,8 +308,8 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/runtime@7.28.2':
-    resolution: {integrity: sha512-KHp2IflsnGywDjBWDkR9iEqiWSpc8GIi0lgTT3mOElT0PP1tG26P4tmFI2YvAdzgq9RGyoHZQEIEdZy6Ec5xCA==}
+  '@babel/runtime@7.28.3':
+    resolution: {integrity: sha512-9uIQ10o0WGdpP6GDhXcdOJPJuDgFtIDtN/9+ArJQ2NAfAmiuhTQdzkaTGR33v43GYS2UrSA0eX2pPPHoFVvpxA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.27.2':
@@ -1127,20 +1127,20 @@ packages:
     resolution: {integrity: sha512-Wo1iKt2b9OT7d+YGhvEPD3DXvPv2etTusIMhMUoG7fbhmxcXCtIjJDEygy91Y2JFlwGyjqiBPRozme7UD8hoqg==}
     engines: {node: '>=12'}
 
-  '@tanstack/query-core@5.83.1':
-    resolution: {integrity: sha512-OG69LQgT7jSp+5pPuCfzltq/+7l2xoweggjme9vlbCPa/d7D7zaqv5vN/S82SzSYZ4EDLTxNO1PWrv49RAS64Q==}
+  '@tanstack/query-core@5.85.2':
+    resolution: {integrity: sha512-h9vFUVYKoNNgXzb5mK4dP686yawJp9CLLTMjB2PF4KA1D5AbUI2KfxnxBdEQKnLwzzMjmBpucmmsGChZK7RqcQ==}
 
   '@tanstack/query-devtools@5.84.0':
     resolution: {integrity: sha512-fbF3n+z1rqhvd9EoGp5knHkv3p5B2Zml1yNRjh7sNXklngYI5RVIWUrUjZ1RIcEoscarUb0+bOvIs5x9dwzOXQ==}
 
-  '@tanstack/vue-query-devtools@5.84.0':
-    resolution: {integrity: sha512-RA3bNvaIsFFngycBd7vF/hB4SwvSeTaZ7eiUDnWPbOwg8lxBZrBmF7d4uI3OYQwSmnA2B8tER2UWxkKgqrNFpg==}
+  '@tanstack/vue-query-devtools@5.85.2':
+    resolution: {integrity: sha512-ySJH4gGHeZuSF7OBgVAqSoaCNKDUuWxeH3YrZw9n/gyaONRJq3w0p1pdiA54vjw2y+DL9Tgb11yq1PrLVnzJzg==}
     peerDependencies:
-      '@tanstack/vue-query': ^5.83.1
+      '@tanstack/vue-query': ^5.85.2
       vue: ^3.3.0
 
-  '@tanstack/vue-query@5.83.1':
-    resolution: {integrity: sha512-Ss7LJGC2LZMZBsFFnrEfmQYcooDtJOjFZhmnXXUmlawk9EXHHDHUDaH2v7/r9jzyp2nOgABDQlDmjcBLXiyuvQ==}
+  '@tanstack/vue-query@5.85.2':
+    resolution: {integrity: sha512-jDa2lxDt8HMe5dxIYWbMsuE832juIpkdgkuLKY6s0W+eaVjpULGmgvGYF1iwB4PXrzQRUfIP5xuJ+JJP3uwXNw==}
     peerDependencies:
       '@vue/composition-api': ^1.1.2
       vue: ^2.6.0 || ^3.3.0
@@ -4384,7 +4384,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/runtime@7.28.2': {}
+  '@babel/runtime@7.28.3': {}
 
   '@babel/template@7.27.2':
     dependencies:
@@ -5045,20 +5045,20 @@ snapshots:
     dependencies:
       remove-accents: 0.5.0
 
-  '@tanstack/query-core@5.83.1': {}
+  '@tanstack/query-core@5.85.2': {}
 
   '@tanstack/query-devtools@5.84.0': {}
 
-  '@tanstack/vue-query-devtools@5.84.0(@tanstack/vue-query@5.83.1(vue@3.5.18(typescript@5.8.3)))(vue@3.5.18(typescript@5.8.3))':
+  '@tanstack/vue-query-devtools@5.85.2(@tanstack/vue-query@5.85.2(vue@3.5.18(typescript@5.8.3)))(vue@3.5.18(typescript@5.8.3))':
     dependencies:
       '@tanstack/query-devtools': 5.84.0
-      '@tanstack/vue-query': 5.83.1(vue@3.5.18(typescript@5.8.3))
+      '@tanstack/vue-query': 5.85.2(vue@3.5.18(typescript@5.8.3))
       vue: 3.5.18(typescript@5.8.3)
 
-  '@tanstack/vue-query@5.83.1(vue@3.5.18(typescript@5.8.3))':
+  '@tanstack/vue-query@5.85.2(vue@3.5.18(typescript@5.8.3))':
     dependencies:
       '@tanstack/match-sorter-utils': 8.19.4
-      '@tanstack/query-core': 5.83.1
+      '@tanstack/query-core': 5.85.2
       '@vue/devtools-api': 6.6.4
       vue: 3.5.18(typescript@5.8.3)
       vue-demi: 0.14.10(vue@3.5.18(typescript@5.8.3))
@@ -5066,7 +5066,7 @@ snapshots:
   '@testing-library/dom@10.4.0':
     dependencies:
       '@babel/code-frame': 7.27.1
-      '@babel/runtime': 7.28.2
+      '@babel/runtime': 7.28.3
       '@types/aria-query': 5.0.4
       aria-query: 5.3.0
       chalk: 4.1.2
