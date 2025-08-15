@@ -11,6 +11,10 @@ updates:
     schedule:
       interval: daily
     open-pull-requests-limit: 20
+    groups:
+      aspire:
+        patterns:
+          - "*aspire*"
   - package-ecosystem: "npm"
     directories:
       - "**/*"
