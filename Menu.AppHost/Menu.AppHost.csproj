@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="9.4.0" />
-    <PackageReference Include="Aspire.Hosting.Redis" Version="9.4.0" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="9.4.1" />
     <PackageReference Include="Aspire.Hosting.SqlServer" Version="9.4.0" />
     <PackageReference Include="CommunityToolkit.Aspire.Hosting.NodeJS.Extensions" Version="9.7.0" />
     <PackageReference Include="CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects" Version="9.7.0" />
