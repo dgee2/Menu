@@ -29,7 +29,7 @@
     "@tanstack/vue-query-devtools": "^5.89.0",
     "openapi-fetch": "^0.14.0",
     "pinia": "^3.0.3",
-    "quasar": "^2.18.2",
+    "quasar": "^2.18.4",
     "vite-tsconfig-paths": "^5.1.4",
     "vue": "^3.5.21",
     "vue-router": "^4.5.1"
