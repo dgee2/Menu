@@ -27,7 +27,7 @@
     "autoprefixer": "^10.4.21",
     "@tanstack/vue-query": "^5.89.0",
     "@tanstack/vue-query-devtools": "^5.89.0",
-    "openapi-fetch": "^0.14.0",
+    "openapi-fetch": "^0.14.1",
     "pinia": "^3.0.3",
     "quasar": "^2.18.5",
     "vite-tsconfig-paths": "^5.1.4",
