@@ -17,7 +17,9 @@ export default defineConfig({
     vue({
       template: { transformAssetUrls },
     }),
-    vueDevTools(),
+    vueDevTools({
+      launchEditor: 'webstorm',
+    }),
     // @quasar/plugin-vite options list:
     // https://github.com/quasarframework/quasar/blob/dev/vite-plugin/index.d.ts
     quasar({

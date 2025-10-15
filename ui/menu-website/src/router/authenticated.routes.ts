@@ -9,4 +9,8 @@ export const authenticatedRoutes: RouteRecordRaw[] = [
     path: 'new-recipe',
     component: () => import('@/pages/NewRecipe.vue'),
   },
+  {
+    path: 'recipes',
+    component: () => import('@/pages/RecipeList.vue'),
+  },
 ];

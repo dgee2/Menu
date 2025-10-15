@@ -15,7 +15,12 @@ export const useAuth = () => {
   const { loginWithRedirect, logout, isAuthenticated, user, getAccessTokenSilently } = useAuth0();
 
   const auth0IsAuthenticated = computed(() => isAuthenticated.value && user.value !== undefined);
-  const auth0Login = () => loginWithRedirect({});
+  const auth0Login = () =>
+    loginWithRedirect({
+      authorizationParams: {
+        audience: import.meta.env.VITE_MENU_API_URL,
+      },
+    });
   const auth0Logout = async () => {
     await logout({ logoutParams: { returnTo: window.location.origin } });
   };
@@ -34,7 +39,11 @@ export const useAuth = () => {
   });
 
   const getAccessToken = async () => {
-    return await getAccessTokenSilently();
+    return await getAccessTokenSilently({
+      authorizationParams: {
+        audience: import.meta.env.VITE_MENU_API_URL,
+      },
+    });
   };
 
   return {
