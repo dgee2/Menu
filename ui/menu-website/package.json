@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
-    "@playwright/test": "^1.55.0",
+    "@playwright/test": "^1.56.0",
     "@quasar/app-vite": "^2.4.0",
     "@quasar/vite-plugin": "^1.10.0",
     "@storybook/addon-docs": "^9.1.8",
