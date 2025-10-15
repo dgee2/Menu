@@ -14,8 +14,19 @@ import 'quasar/src/css/index.sass';
 import App from './App.vue';
 import router from './router';
 import { createAuth0 } from './boot/auth0';
+import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
 
 const app = createApp(App);
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
+
+app.use(VueQueryPlugin, { queryClient, enableDevtoolsV6Plugin: true });
 
 app.use(Quasar, {
   plugins: {}, // import Quasar plugins and add here

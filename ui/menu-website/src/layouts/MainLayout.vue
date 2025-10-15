@@ -3,6 +3,7 @@
     <q-header elevated>
       <q-toolbar>
         <q-toolbar-title> Menu</q-toolbar-title>
+        <recipe-list-button />
         <new-recipe-header-button v-if="isAuthenticated" />
         <profile-button v-if="isAuthenticated" />
         <logout-button v-if="isAuthenticated" />
@@ -22,6 +23,7 @@ import { useAuth } from '@/services/auth';
 import LoginButton from '@/components/buttons/LoginButton.vue';
 import ProfileButton from '@/components/buttons/ProfileButton.vue';
 import NewRecipeHeaderButton from '@/components/buttons/NewRecipeHeaderButton.vue';
+import RecipeListButton from '@/components/buttons/RecipeListButton.vue';
 
 const { isAuthenticated } = useAuth();
 </script>
