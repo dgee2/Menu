@@ -14,7 +14,7 @@ var menuDB = builder.AddSqlProject<Projects.MenuDB>("menuDB")
                     .WithParentRelationship(sql);
 
 var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
-       .WithHttpEndpoint(port: 65273)
+       .WithHttpEndpoint(name: "menuApiHttp", port: 65273)
        .WithReference(sql)
        .WaitForCompletion(menuDB)
        .WithEnvironment("Auth0Domain", auth0Domain)
@@ -22,9 +22,9 @@ var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
 
 builder.AddPnpmApp("menu-ui", "../ui/menu-website", scriptName: "aspire")
     .WithReference(menuApi)
-    .WithEnvironment("VITE_MENU_API_URL", menuApi.GetEndpoint("http"))
+    .WithEnvironment("VITE_MENU_API_URL", menuApi.GetEndpoint("menuApiHttp"))
     .WaitFor(menuApi)
-    .WithHttpEndpoint(env: "PORT", port: 65276, targetPort: 5173)
+    .WithHttpEndpoint(name: "menuUI", env: "PORT", port: 65276, targetPort: 5173)
     .WithPnpmPackageInstallation()
     .PublishAsDockerFile();
 
