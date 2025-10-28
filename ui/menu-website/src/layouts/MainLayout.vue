@@ -1,9 +1,10 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-layout view="hHh LpR fFf">
     <q-header elevated>
       <q-toolbar>
-        <q-toolbar-title> Menu</q-toolbar-title>
+        <q-toolbar-title shrink>MENU</q-toolbar-title>
         <recipe-list-button />
+        <q-space />
         <new-recipe-header-button v-if="isAuthenticated" />
         <profile-button v-if="isAuthenticated" />
         <logout-button v-if="isAuthenticated" />
