@@ -59,7 +59,7 @@
     "eslint-plugin-playwright": "^2.2.2",
     "eslint-plugin-storybook": "^9.1.13",
     "eslint-plugin-vue": "~10.5.1",
-    "globals": "^16.4.0",
+    "globals": "^17.3.0",
     "jiti": "^2.6.1",
     "jsdom": "^27.0.1",
     "npm-run-all2": "^8.0.4",
