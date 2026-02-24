@@ -32,10 +32,6 @@
 	<ItemGroup>
 		<PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" Version="9.5.1" />
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
 		<PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="9.0.10">
 		  <PrivateAssets>all</PrivateAssets>
@@ -48,6 +44,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Menu.ApiServiceDefaults\Menu.ApiServiceDefaults.csproj" />
+	  <ProjectReference Include="..\MenuDB\MenuDB.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

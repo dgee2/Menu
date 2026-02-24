@@ -1,4 +1,4 @@
-namespace MenuApi.Data;
+namespace MenuDB.Data;
 
 public class RecipeIngredientEntity
 {

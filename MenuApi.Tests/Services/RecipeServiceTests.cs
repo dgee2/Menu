@@ -1,6 +1,6 @@
 using AwesomeAssertions;
 using FakeItEasy;
-using MenuApi;
+using MenuDB;
 using MenuApi.Repositories;
 using MenuApi.Services;
 using MenuApi.ValueObjects;

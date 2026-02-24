@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace MenuApi;
+namespace MenuDB;
 
 /// <summary>Used by EF Core tooling (migrations, scaffolding) and the OpenAPI build-time generator.</summary>
 internal sealed class MenuDbContextFactory : IDesignTimeDbContextFactory<MenuDbContext>

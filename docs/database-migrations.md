@@ -1,6 +1,6 @@
 # Database Migrations
 
-This project uses **Entity Framework Core** with SQL Server to manage the database schema for `MenuDbContext`. Migrations are stored under `MenuApi/Migrations/` and are applied automatically at startup when running inside .NET Aspire.
+This project uses **Entity Framework Core** with SQL Server to manage the database schema for `MenuDbContext`. Migrations are stored under `MenuDB/Migrations/` and are applied automatically at startup when running inside .NET Aspire.
 
 ---
 
@@ -24,27 +24,27 @@ Verify installation:
 dotnet ef --version
 ```
 
-> The `Microsoft.EntityFrameworkCore.Design` package is already referenced in `MenuApi.csproj` and is required for the tooling to work.
+> The `Microsoft.EntityFrameworkCore.Design` package is referenced in `MenuDB.csproj` and is required for the tooling to work.
 
 ---
 
 ## Creating a New Migration
 
-All `dotnet ef` commands must be run from the **solution root** (`C:\git\Menu\`) and target the `MenuApi` project, which contains `MenuDbContext` and `MenuDbContextFactory`.
+All `dotnet ef` commands must be run from the **solution root** (`C:\git\Menu\`) and target the `MenuDB` project, which contains `MenuDbContext` and `MenuDbContextFactory`. `MenuApi` is used as the startup project to provide the runtime host.
 
-After modifying any entity in `MenuApi/Data/` or the model configuration in `MenuDbContext.cs`, create a new migration:
+After modifying any entity in `MenuDB/Data/` or the model configuration in `MenuDB/MenuDbContext.cs`, create a new migration:
 
 ```bash
-dotnet ef migrations add <MigrationName> --project MenuApi --startup-project MenuApi
+dotnet ef migrations add <MigrationName> --project MenuDB --startup-project MenuApi
 ```
 
 Replace `<MigrationName>` with a short, descriptive name in `PascalCase` that describes what changed, for example:
 
 ```bash
-dotnet ef migrations add AddRecipeDescription --project MenuApi --startup-project MenuApi
+dotnet ef migrations add AddRecipeDescription --project MenuDB --startup-project MenuApi
 ```
 
-This generates three files under `MenuApi/Migrations/`:
+This generates three files under `MenuDB/Migrations/`:
 
 | File | Purpose |
 |---|---|
@@ -66,7 +66,7 @@ Always review the generated migration file before applying it:
 To preview the SQL that would be executed without touching the database:
 
 ```bash
-dotnet ef migrations script --idempotent --project MenuApi --startup-project MenuApi
+dotnet ef migrations script --idempotent --project MenuDB --startup-project MenuApi
 ```
 
 The `--idempotent` flag generates `IF NOT EXISTS` guards so the script is safe to run against any database state.
@@ -90,13 +90,13 @@ This means migrations are applied automatically when you run the `Menu.AppHost` 
 To apply pending migrations against a specific database:
 
 ```bash
-dotnet ef database update --project MenuApi --startup-project MenuApi
+dotnet ef database update --project MenuDB --startup-project MenuApi
 ```
 
 To apply up to a specific migration (useful for rolling back to a known state):
 
 ```bash
-dotnet ef database update <MigrationName> --project MenuApi --startup-project MenuApi
+dotnet ef database update <MigrationName> --project MenuDB --startup-project MenuApi
 ```
 
 To revert all migrations (drops all tables managed by EF Core):

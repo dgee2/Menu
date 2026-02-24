@@ -46,6 +46,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\MenuApi\MenuApi.csproj" />
+		<ProjectReference Include="..\MenuDB\MenuDB.csproj" />
 	</ItemGroup>
 
 </Project>

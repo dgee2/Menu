@@ -1,7 +1,7 @@
-using MenuApi.Data;
+using MenuDB.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace MenuApi;
+namespace MenuDB;
 
 public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(options)
 {
