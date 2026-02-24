@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menu.ApiServiceDefaults", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MenuDB", "MenuDB\MenuDB.csproj", "{3C3AC543-FEFE-46C8-B0BA-F9A0E58551B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menu.MigrationService", "Menu.MigrationService\Menu.MigrationService.csproj", "{678A54EA-9237-49D6-B4DC-ACEF67F6385E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,18 @@ Global
 		{3C3AC543-FEFE-46C8-B0BA-F9A0E58551B7}.Release|x64.Build.0 = Release|Any CPU
 		{3C3AC543-FEFE-46C8-B0BA-F9A0E58551B7}.Release|x86.ActiveCfg = Release|Any CPU
 		{3C3AC543-FEFE-46C8-B0BA-F9A0E58551B7}.Release|x86.Build.0 = Release|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Debug|x64.Build.0 = Debug|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Debug|x86.Build.0 = Debug|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Release|x64.ActiveCfg = Release|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Release|x64.Build.0 = Release|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Release|x86.ActiveCfg = Release|Any CPU
+		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

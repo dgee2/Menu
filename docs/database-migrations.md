@@ -75,15 +75,27 @@ The `--idempotent` flag generates `IF NOT EXISTS` guards so the script is safe t
 
 ## Applying Migrations
 
-### At Runtime (Aspire / Development)
+### Via the Migration Service (Aspire / Development)
 
-`Program.cs` already calls `MigrateAsync()` on startup when a connection string named `menu` is configured:
+Migrations are applied by the dedicated **`Menu.MigrationService`** worker, not by the API. When you run `Menu.AppHost`, Aspire starts the services in this order:
+
+1. SQL Server container starts
+2. `Menu.MigrationService` runs — applies all pending migrations, then exits
+3. `MenuApi` starts — guaranteed to find the schema already up to date
+
+This is enforced in `Menu.AppHost/Program.cs`:
 
 ```csharp
-await dbContext.Database.MigrateAsync().ConfigureAwait(false);
+var migrations = builder.AddProject<Projects.Menu_MigrationService>("migrations")
+    .WithReference(sql)
+    .WaitFor(sql);
+
+var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
+    .WithReference(sql)
+    .WaitForCompletion(migrations); // API will not start until migrations finish
 ```
 
-This means migrations are applied automatically when you run the `Menu.AppHost` Aspire project. The SQL Server container is started with a `Persistent` lifetime, so the database survives restarts.
+The migration service uses an **execution strategy** to handle transient SQL Server errors, and reports progress via OpenTelemetry traces visible in the Aspire dashboard.
 
 ### Manually via CLI
 
@@ -102,7 +114,7 @@ dotnet ef database update <MigrationName> --project MenuDB --startup-project Men
 To revert all migrations (drops all tables managed by EF Core):
 
 ```bash
-dotnet ef database update 0 --project MenuApi --startup-project MenuApi
+dotnet ef database update 0 --project MenuDB --startup-project MenuApi
 ```
 
 ---
@@ -124,7 +136,7 @@ This allows `dotnet ef` commands to run without starting the application. If you
 If you created a migration but have not yet applied it to any database, you can remove it cleanly:
 
 ```bash
-dotnet ef migrations remove --project MenuApi --startup-project MenuApi
+dotnet ef migrations remove --project MenuDB --startup-project MenuApi
 ```
 
 > This only works if the migration has **not** been applied. If it has been applied, revert the database first with `dotnet ef database update <PreviousMigrationName>`.
@@ -168,10 +180,10 @@ dotnet ef migrations remove --project MenuApi --startup-project MenuApi
 
 | Task | Command |
 |---|---|
-| Add a migration | `dotnet ef migrations add <Name> --project MenuApi --startup-project MenuApi` |
-| Remove last migration | `dotnet ef migrations remove --project MenuApi --startup-project MenuApi` |
-| Apply all pending migrations | `dotnet ef database update --project MenuApi --startup-project MenuApi` |
-| Revert to a specific migration | `dotnet ef database update <Name> --project MenuApi --startup-project MenuApi` |
-| Revert all migrations | `dotnet ef database update 0 --project MenuApi --startup-project MenuApi` |
-| Generate idempotent SQL script | `dotnet ef migrations script --idempotent --project MenuApi --startup-project MenuApi` |
-| List all migrations and status | `dotnet ef migrations list --project MenuApi --startup-project MenuApi` |
+| Add a migration | `dotnet ef migrations add <Name> --project MenuDB --startup-project MenuApi` |
+| Remove last migration | `dotnet ef migrations remove --project MenuDB --startup-project MenuApi` |
+| Apply all pending migrations | `dotnet ef database update --project MenuDB --startup-project MenuApi` |
+| Revert to a specific migration | `dotnet ef database update <Name> --project MenuDB --startup-project MenuApi` |
+| Revert all migrations | `dotnet ef database update 0 --project MenuDB --startup-project MenuApi` |
+| Generate idempotent SQL script | `dotnet ef migrations script --idempotent --project MenuDB --startup-project MenuApi` |
+| List all migrations and status | `dotnet ef migrations list --project MenuDB --startup-project MenuApi` |

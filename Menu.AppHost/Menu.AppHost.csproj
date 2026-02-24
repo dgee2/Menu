@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MenuApi\MenuApi.csproj" />
+    <ProjectReference Include="..\Menu.MigrationService\Menu.MigrationService.csproj" />
   </ItemGroup>
 
 </Project>
