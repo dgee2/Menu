@@ -9,14 +9,10 @@ var sql = builder.AddSqlServer("sql")
                  .WithLifetime(ContainerLifetime.Persistent)
                  .AddDatabase("menu");
 
-var menuDB = builder.AddSqlProject<Projects.MenuDB>("menuDB")
-                    .WithReference(sql)
-                    .WithParentRelationship(sql);
-
 var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
        .WithHttpEndpoint(name: "menuApiHttp", port: 65273)
        .WithReference(sql)
-       .WaitForCompletion(menuDB)
+       .WaitFor(sql)
        .WithEnvironment("Auth0Domain", auth0Domain)
        .WithEnvironment("Auth0Audience", auth0Audience);
 

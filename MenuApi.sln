@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menu.AppHost", "Menu.AppHos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menu.ServiceDefaults", "Menu.ServiceDefaults\Menu.ServiceDefaults.csproj", "{A5CA45B2-8744-4E38-BC4E-9584704A2701}"
 EndProject
-Project("{42EA0DBD-9CF1-443E-919E-BE9C484E4577}") = "MenuDB", "MenuDB\MenuDB.sqlproj", "{BF472D09-2DA7-469C-8029-520E7A18CDD9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menu.ApiServiceDefaults", "Menu.ApiServiceDefaults\Menu.ApiServiceDefaults.csproj", "{CD01AF9F-E62C-4D8F-99CE-FAE71683CD5D}"
 EndProject
 Global
@@ -43,10 +41,6 @@ Global
 		{A5CA45B2-8744-4E38-BC4E-9584704A2701}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5CA45B2-8744-4E38-BC4E-9584704A2701}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5CA45B2-8744-4E38-BC4E-9584704A2701}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BF472D09-2DA7-469C-8029-520E7A18CDD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BF472D09-2DA7-469C-8029-520E7A18CDD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BF472D09-2DA7-469C-8029-520E7A18CDD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BF472D09-2DA7-469C-8029-520E7A18CDD9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CD01AF9F-E62C-4D8F-99CE-FAE71683CD5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CD01AF9F-E62C-4D8F-99CE-FAE71683CD5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD01AF9F-E62C-4D8F-99CE-FAE71683CD5D}.Release|Any CPU.ActiveCfg = Release|Any CPU

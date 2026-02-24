@@ -1,12 +1,12 @@
-﻿using MenuApi.Factory;
-using MenuApi.MappingProfiles;
+﻿using MenuApi.MappingProfiles;
 using MenuApi.Repositories;
 using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
+using Microsoft.EntityFrameworkCore;
 
 namespace MenuApi.Services;
 
-public class RecipeService(IRecipeRepository recipeRepository, ITransactionFactory transactionFactory) : IRecipeService
+public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db) : IRecipeService
 {
     public async Task<IEnumerable<Recipe>> GetRecipesAsync()
     {
@@ -20,7 +20,7 @@ public class RecipeService(IRecipeRepository recipeRepository, ITransactionFacto
 
         var recipe = ViewModelMapper.MapToFullRecipe(dbRecipe);
 
-        if ((recipe is not null))
+        if (recipe is not null)
         {
             recipe.Ingredients = await GetRecipeIngredientsAsync(recipeId).ConfigureAwait(false);
         }
@@ -40,12 +40,11 @@ public class RecipeService(IRecipeRepository recipeRepository, ITransactionFacto
 
         var ingredients = ViewModelMapper.Map(newRecipe.Ingredients);
 
-        using var tran = transactionFactory.BeginTransaction();
-        var recipeId = await recipeRepository.CreateRecipeAsync(newRecipe.Name, tran).ConfigureAwait(false);
+        await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+        var recipeId = await recipeRepository.CreateRecipeAsync(newRecipe.Name).ConfigureAwait(false);
+        await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
+        await tran.CommitAsync().ConfigureAwait(false);
 
-        await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients, tran).ConfigureAwait(false);
-
-        tran.Commit();
         return recipeId;
     }
 
@@ -55,10 +54,9 @@ public class RecipeService(IRecipeRepository recipeRepository, ITransactionFacto
 
         var ingredients = ViewModelMapper.Map(newRecipe.Ingredients);
 
-        using var tran = transactionFactory.BeginTransaction();
-        await recipeRepository.UpdateRecipeAsync(recipeId, newRecipe.Name, tran).ConfigureAwait(false);
-
-        await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients, tran).ConfigureAwait(false);
-        tran.Commit();
+        await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+        await recipeRepository.UpdateRecipeAsync(recipeId, newRecipe.Name).ConfigureAwait(false);
+        await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
+        await tran.CommitAsync().ConfigureAwait(false);
     }
 }

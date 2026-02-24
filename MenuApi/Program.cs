@@ -1,16 +1,12 @@
 using Menu.ApiServiceDefaults;
-using MenuApi.Factory;
+using MenuApi;
 using MenuApi.Recipes;
 using MenuApi.Repositories;
 using MenuApi.Services;
-using MenuApi.ValueObjects;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Data;
 using System.Security.Claims;
-
-ValueObject.ConfigureDapperTypeHandlers();
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddApiServiceDefaults();
@@ -25,9 +21,13 @@ builder.Services.AddTransient<IIngredientService, IngredientService>();
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
 
-builder.AddSqlServerClient(connectionName: "menu");
-builder.Services.AddTransient<IDbConnection, SqlConnection>();
-builder.Services.AddScoped<ITransactionFactory, TransactionFactory>();
+builder.Services.AddDbContext<MenuDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("menu");
+    options.UseSqlServer(!string.IsNullOrWhiteSpace(connectionString)
+        ? connectionString
+        : "Server=.;Database=menu;Trusted_Connection=True;");
+});
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -53,6 +53,13 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+if (!string.IsNullOrWhiteSpace(app.Configuration.GetConnectionString("menu")))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
+    await dbContext.Database.MigrateAsync().ConfigureAwait(false);
+}
 
 // Use CORS middleware before authentication/authorization
 app.UseCors("AllowAll");
