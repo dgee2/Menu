@@ -41,29 +41,28 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     public async Task Create_Recipe(NewRecipe recipe)
     {
         using var client = await fixture.GetHttpClient();
-
         var (_, name) = await PostRecipeAsync(client, recipe);
 
         name.Should().Be(recipe.Name);
     }
 
     [Theory, AutoData]
-    public async Task Create_and_Update_Recipe(NewRecipe recipe, NewRecipe newRecipe)
+    public async Task Create_and_Update_Recipe(NewRecipe recipe, NewRecipe updatedRecipe)
     {
         using var client = await fixture.GetHttpClient();
-
+       
         var (id, _) = await PostRecipeAsync(client, recipe);
 
-        var (_, name) = await PutRecipeAsync(client, id, newRecipe);
+        var (_, name) = await PutRecipeAsync(client, id, updatedRecipe);
 
-        name.Should().Be(newRecipe.Name);
+        name.Should().Be(updatedRecipe.Name);
     }
 
     [Theory, AutoData]
     public async Task Create_And_Get_Recipe(NewRecipe recipe)
     {
         using var client = await fixture.GetHttpClient();
-
+     
         var (id, _) = await PostRecipeAsync(client, recipe);
         var (getId, name) = await GetRecipeAsync(client, id);
 

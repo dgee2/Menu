@@ -73,8 +73,10 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
 
         foreach (var item in incoming)
         {
-            var ingredient = await db.Ingredients.FirstAsync(i => i.Name == item.IngredientName.Value).ConfigureAwait(false);
-            var unit = await db.Units.FirstAsync(u => u.Name == item.UnitName.Value).ConfigureAwait(false);
+            var ingredient = await db.Ingredients.FirstOrDefaultAsync(i => i.Name == item.IngredientName.Value).ConfigureAwait(false)
+                ?? throw new InvalidOperationException($"Ingredient '{item.IngredientName.Value}' does not exist.");
+            var unit = await db.Units.FirstOrDefaultAsync(u => u.Name == item.UnitName.Value).ConfigureAwait(false)
+                ?? throw new InvalidOperationException($"Unit '{item.UnitName.Value}' does not exist.");
 
             var existingRow = existing.FirstOrDefault(e => e.IngredientId == ingredient.Id && e.UnitId == unit.Id);
             if (existingRow is not null)

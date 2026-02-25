@@ -1,6 +1,7 @@
 ﻿using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
@@ -49,7 +50,6 @@ public class ApiTestFixture : IAsyncLifetime
             )
             .WaitAsync(TimeSpan.FromSeconds(30));
     }
-
     async Task IAsyncLifetime.DisposeAsync()
     {
         await app.StopAsync();
