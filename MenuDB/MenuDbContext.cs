@@ -26,7 +26,7 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
         {
             e.ToTable("Ingredient");
             e.HasKey(x => x.Id);
-            e.Property(x => x.Id).ValueGeneratedNever();
+            e.Property(x => x.Id).UseIdentityColumn();
             e.Property(x => x.Name).HasColumnType("varchar(50)").IsRequired();
         });
 
