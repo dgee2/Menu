@@ -39,19 +39,14 @@ public class IngredientRepository(MenuDbContext db) : IIngredientRepository
     {
         ArgumentNullException.ThrowIfNull(newIngredient);
 
-        var entity = new IngredientEntity { Name = newIngredient.Name.Value };
-        db.Ingredients.Add(entity);
-        await db.SaveChangesAsync().ConfigureAwait(false);
-
-        foreach (var unitId in newIngredient.UnitIds)
+        var entity = new IngredientEntity
         {
-            db.IngredientUnits.Add(new IngredientUnitEntity
-            {
-                IngredientId = entity.Id,
-                UnitId = unitId,
-            });
-        }
-
+            Name = newIngredient.Name.Value,
+            IngredientUnits = newIngredient.UnitIds
+                .Select(unitId => new IngredientUnitEntity { UnitId = unitId })
+                .ToList(),
+        };
+        db.Ingredients.Add(entity);
         await db.SaveChangesAsync().ConfigureAwait(false);
 
         var created = await db.Ingredients
