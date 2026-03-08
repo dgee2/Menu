@@ -2,14 +2,14 @@
 
 <PropertyGroup>
   <OutputType>Exe</OutputType>
-  <TargetFramework>net9.0</TargetFramework>
+  <TargetFramework>net10.0</TargetFramework>
   <Nullable>enable</Nullable>
   <ImplicitUsings>enable</ImplicitUsings>
   <UserSecretsId>b3c2d1e0-f4a5-4b6c-8d7e-9f0a1b2c3d4e</UserSecretsId>
 </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" Version="9.5.1" />
+    <PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" Version="13.1.2" />
   </ItemGroup>
 
   <ItemGroup>
