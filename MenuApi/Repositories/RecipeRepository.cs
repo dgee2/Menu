@@ -71,14 +71,27 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             .ToList();
         db.RecipeIngredients.RemoveRange(toDelete);
 
+        var ingredientNames = incoming.Select(i => i.IngredientName.Value).Distinct().ToList();
+        var unitNames = incoming.Select(i => i.UnitName.Value).Distinct().ToList();
+
+        var ingredientLookup = await db.Ingredients
+            .Where(i => ingredientNames.Contains(i.Name))
+            .ToDictionaryAsync(i => i.Name, i => i.Id)
+            .ConfigureAwait(false);
+
+        var unitLookup = await db.Units
+            .Where(u => unitNames.Contains(u.Name))
+            .ToDictionaryAsync(u => u.Name, u => u.Id)
+            .ConfigureAwait(false);
+
         foreach (var item in incoming)
         {
-            var ingredient = await db.Ingredients.FirstOrDefaultAsync(i => i.Name == item.IngredientName.Value).ConfigureAwait(false)
-                ?? throw new InvalidOperationException($"Ingredient '{item.IngredientName.Value}' does not exist.");
-            var unit = await db.Units.FirstOrDefaultAsync(u => u.Name == item.UnitName.Value).ConfigureAwait(false)
-                ?? throw new InvalidOperationException($"Unit '{item.UnitName.Value}' does not exist.");
+            if (!ingredientLookup.TryGetValue(item.IngredientName.Value, out var ingredientId))
+                throw new InvalidOperationException($"Ingredient '{item.IngredientName.Value}' does not exist.");
+            if (!unitLookup.TryGetValue(item.UnitName.Value, out var unitId))
+                throw new InvalidOperationException($"Unit '{item.UnitName.Value}' does not exist.");
 
-            var existingRow = existing.FirstOrDefault(e => e.IngredientId == ingredient.Id && e.UnitId == unit.Id);
+            var existingRow = existing.FirstOrDefault(e => e.IngredientId == ingredientId && e.UnitId == unitId);
             if (existingRow is not null)
             {
                 existingRow.Amount = item.Amount.Value;
@@ -88,8 +101,8 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
                 db.RecipeIngredients.Add(new RecipeIngredientEntity
                 {
                     RecipeId = recipeId.Value,
-                    IngredientId = ingredient.Id,
-                    UnitId = unit.Id,
+                    IngredientId = ingredientId,
+                    UnitId = unitId,
                     Amount = item.Amount.Value,
                 });
             }
