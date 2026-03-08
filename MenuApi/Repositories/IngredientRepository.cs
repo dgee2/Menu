@@ -1,19 +1,78 @@
-﻿using System.Data;
-using Dapper;
-using MenuApi.DBModel;
-using Microsoft.Data.SqlClient;
+﻿﻿using MenuDB;
+using MenuDB.Data;
+using MenuApi.ValueObjects;
+using Microsoft.EntityFrameworkCore;
 
 namespace MenuApi.Repositories;
 
-public class IngredientRepository(SqlConnection dbConnection) : IIngredientRepository
+public class IngredientRepository(MenuDbContext db) : IIngredientRepository
 {
     public async Task<IEnumerable<ViewModel.Ingredient>> GetIngredientsAsync()
-        => (await dbConnection.QueryAsync<Ingredient>("dbo.GetIngredients", commandType: CommandType.StoredProcedure).ConfigureAwait(false))
-                .GroupBy(x => (x.Id, x.Name), x => new ViewModel.IngredientUnit(x.Unit, x.UnitAbbreviation, x.UnitType))
-                .Select(x => new ViewModel.Ingredient
+    {
+        var rows = await db.Ingredients
+            .Select(i => new
+            {
+                i.Id,
+                i.Name,
+                Units = i.IngredientUnits.Select(iu => new
                 {
-                    Id = x.Key.Id,
-                    Name = x.Key.Name,
-                    Units = x
-                });
+                    iu.Unit.Name,
+                    iu.Unit.Abbreviation,
+                    UnitType = iu.Unit.UnitType.Name,
+                })
+            })
+            .ToListAsync()
+            .ConfigureAwait(false);
+
+        return rows.Select(i => new ViewModel.Ingredient
+        {
+            Id = IngredientId.From(i.Id),
+            Name = IngredientName.From(i.Name),
+            Units = i.Units.Select(u => new ViewModel.IngredientUnit(
+                IngredientUnitName.From(u.Name),
+                u.Abbreviation is not null ? IngredientUnitAbbreviation.From(u.Abbreviation) : null,
+                IngredientUnitType.From(u.UnitType))),
+        });
+    }
+
+    public async Task<ViewModel.Ingredient> CreateIngredientAsync(ViewModel.NewIngredient newIngredient)
+    {
+        ArgumentNullException.ThrowIfNull(newIngredient);
+
+        var entity = new IngredientEntity
+        {
+            Name = newIngredient.Name.Value,
+            IngredientUnits = newIngredient.UnitIds
+                .Select(unitId => new IngredientUnitEntity { UnitId = unitId })
+                .ToList(),
+        };
+        db.Ingredients.Add(entity);
+        await db.SaveChangesAsync().ConfigureAwait(false);
+
+        var created = await db.Ingredients
+            .Where(i => i.Id == entity.Id)
+            .Select(i => new
+            {
+                i.Id,
+                i.Name,
+                Units = i.IngredientUnits.Select(iu => new
+                {
+                    iu.Unit.Name,
+                    iu.Unit.Abbreviation,
+                    UnitType = iu.Unit.UnitType.Name,
+                })
+            })
+            .FirstAsync()
+            .ConfigureAwait(false);
+
+        return new ViewModel.Ingredient
+        {
+            Id = IngredientId.From(created.Id),
+            Name = IngredientName.From(created.Name),
+            Units = created.Units.Select(u => new ViewModel.IngredientUnit(
+                IngredientUnitName.From(u.Name),
+                u.Abbreviation is not null ? IngredientUnitAbbreviation.From(u.Abbreviation) : null,
+                IngredientUnitType.From(u.UnitType))),
+        };
+    }
 }

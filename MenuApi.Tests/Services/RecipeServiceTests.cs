@@ -1,11 +1,11 @@
 using AwesomeAssertions;
 using FakeItEasy;
-using MenuApi.Factory;
+using MenuDB;
 using MenuApi.Repositories;
 using MenuApi.Services;
 using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
-using System.Data;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace MenuApi.Tests;
@@ -14,17 +14,19 @@ public class RecipeServiceTests
 {
     private readonly RecipeService sut;
     private readonly IRecipeRepository recipeRepository;
-    private readonly ITransactionFactory transactionFactory;
-    private readonly IDbTransaction transaction;
+    private readonly MenuDbContext db;
 
     public RecipeServiceTests()
     {
         recipeRepository = A.Fake<IRecipeRepository>();
-        transactionFactory = A.Fake<ITransactionFactory>();
-        transaction = A.Fake<IDbTransaction>();
-        A.CallTo(() => transactionFactory.BeginTransaction()).Returns(transaction);
 
-        sut = new RecipeService(recipeRepository, transactionFactory);
+        var options = new DbContextOptionsBuilder<MenuDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
+            .Options;
+        db = new MenuDbContext(options);
+
+        sut = new RecipeService(recipeRepository, db);
     }
 
     [Theory, CustomAutoData]
@@ -80,7 +82,7 @@ public class RecipeServiceTests
     [Theory, CustomAutoData]
     public async Task CreateRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
-        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name, transaction)).Returns(recipe.Id);
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).Returns(recipe.Id);
 
         var newRecipe = new NewRecipe
         {
@@ -95,8 +97,8 @@ public class RecipeServiceTests
 
         await sut.CreateRecipeAsync(newRecipe);
 
-        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name, transaction)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
     }
 
     [Theory, CustomAutoData]
@@ -115,8 +117,8 @@ public class RecipeServiceTests
 
         await sut.UpdateRecipeAsync(recipeId, newRecipe);
 
-        A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName, transaction)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._, transaction)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
     }
 
     [Theory, CustomAutoData]

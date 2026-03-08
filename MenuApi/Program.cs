@@ -1,16 +1,12 @@
 using Menu.ApiServiceDefaults;
-using MenuApi.Factory;
+using MenuDB;
+using MenuApi;
 using MenuApi.Recipes;
 using MenuApi.Repositories;
 using MenuApi.Services;
-using MenuApi.ValueObjects;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
-using System.Data;
 using System.Security.Claims;
-
-ValueObject.ConfigureDapperTypeHandlers();
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddApiServiceDefaults();
@@ -25,9 +21,7 @@ builder.Services.AddTransient<IIngredientService, IngredientService>();
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
 
-builder.AddSqlServerClient(connectionName: "menu");
-builder.Services.AddTransient<IDbConnection, SqlConnection>();
-builder.Services.AddScoped<ITransactionFactory, TransactionFactory>();
+builder.AddSqlServerDbContext<MenuDbContext>("menu");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

@@ -1,4 +1,3 @@
-using AutoFixture.Xunit2;
 using AwesomeAssertions;
 using MenuApi.Integration.Tests.Factory;
 using System.Net;
@@ -29,7 +28,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         using var client = await fixture.GetHttpClient();
         using var response = await client.GetAsync("/api/recipe");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        await response.ShouldHaveStatusCode(HttpStatusCode.OK);
 
         var data = await response.Content.ReadAsStringAsync();
 
@@ -37,33 +36,32 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         deserializedData.Should().NotBeNull();
     }
 
-    [Theory, AutoData]
+    [Theory, ShortStringAutoData]
     public async Task Create_Recipe(NewRecipe recipe)
     {
         using var client = await fixture.GetHttpClient();
-
         var (_, name) = await PostRecipeAsync(client, recipe);
 
         name.Should().Be(recipe.Name);
     }
 
-    [Theory, AutoData]
-    public async Task Create_and_Update_Recipe(NewRecipe recipe, NewRecipe newRecipe)
+    [Theory, ShortStringAutoData]
+    public async Task Create_and_Update_Recipe(NewRecipe recipe, NewRecipe updatedRecipe)
     {
         using var client = await fixture.GetHttpClient();
-
+       
         var (id, _) = await PostRecipeAsync(client, recipe);
 
-        var (_, name) = await PutRecipeAsync(client, id, newRecipe);
+        var (_, name) = await PutRecipeAsync(client, id, updatedRecipe);
 
-        name.Should().Be(newRecipe.Name);
+        name.Should().Be(updatedRecipe.Name);
     }
 
-    [Theory, AutoData]
+    [Theory, ShortStringAutoData]
     public async Task Create_And_Get_Recipe(NewRecipe recipe)
     {
         using var client = await fixture.GetHttpClient();
-
+     
         var (id, _) = await PostRecipeAsync(client, recipe);
         var (getId, name) = await GetRecipeAsync(client, id);
 
@@ -71,12 +69,28 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         name.Should().Be(recipe.Name);
     }
 
+    [Theory, ShortStringAutoData]
+    public async Task Create_Recipe_And_Get_Ingredients_Returns_Empty_List(NewRecipe recipe)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        var (id, _) = await PostRecipeAsync(client, recipe);
+
+        using var response = await client.GetAsync($"/api/recipe/{id}/ingredient");
+        await response.ShouldHaveStatusCode(HttpStatusCode.OK);
+
+        var data = await response.Content.ReadAsStringAsync();
+        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(data, jsonOptions);
+        ingredients.Should().NotBeNull();
+        ingredients.Should().BeEmpty();
+    }
+
     private static async Task<(int Id, string Name)> PostRecipeAsync(HttpClient client, NewRecipe recipe)
     {
         var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
         using var response = await client.PostAsync("/api/recipe", requestContent);
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        await response.ShouldHaveStatusCode(HttpStatusCode.OK);
 
         using var streamResponse = await response.Content.ReadAsStreamAsync();
         using var jsonDoc = await JsonDocument.ParseAsync(streamResponse);
@@ -89,7 +103,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
         using var response = await client.PutAsync($"/api/recipe/{id}", requestContent);
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        await response.ShouldHaveStatusCode(HttpStatusCode.OK);
 
         using var streamResponse = await response.Content.ReadAsStreamAsync();
         using var jsonDoc = await JsonDocument.ParseAsync(streamResponse);
@@ -101,7 +115,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     {
         using var response = await client.GetAsync($"/api/recipe/{id}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        await response.ShouldHaveStatusCode(HttpStatusCode.OK);
 
         using var streamResponse = await response.Content.ReadAsStreamAsync();
         using var jsonDoc = await JsonDocument.ParseAsync(streamResponse);
@@ -131,7 +145,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
 
     public class NewRecipe
     {
-        public List<RecipeIngredient> Ingredients { get; set; }
+        public List<RecipeIngredient> Ingredients { get; set; } = [];
 
         public string Name { get; set; }
     }
