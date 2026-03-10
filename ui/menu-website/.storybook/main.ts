@@ -10,6 +10,7 @@ const config: StorybookConfig = {
     '@storybook/addon-docs',
     '@storybook/addon-vitest',
     '@storybook/addon-a11y', // Accessibility testing
+    'msw-storybook-addon',
   ],
   framework: {
     name: '@storybook/vue3-vite',
