@@ -8,10 +8,7 @@ import pluginPlaywright from 'eslint-plugin-playwright';
 import pluginStorybook from 'eslint-plugin-storybook';
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 import prettierSkipFormatting from '@vue/eslint-config-prettier/skip-formatting';
-
-// Doesn't export a type definition file, so we need to use require.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pluginQuasar = require('@quasar/app-vite/eslint');
+import pluginQuasar from '@quasar/app-vite/eslint';
 
 export default defineConfigWithVueTs(
   /**
@@ -22,7 +19,7 @@ export default defineConfigWithVueTs(
    *
    * ESLint requires "ignores" key to be the only one in this object
    */
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '**/storybook-static/**']),
 
   pluginQuasar.configs.recommended(),
   js.configs.recommended,
