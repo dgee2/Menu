@@ -63,6 +63,7 @@
     "jiti": "^2.6.1",
     "jsdom": "^28.1.0",
     "msw-storybook-addon": "^2.0.6",
+    "msw": "^2.11.2",
     "npm-run-all2": "^8.0.4",
     "openapi-typescript": "^7.13.0",
     "prettier": "3.8.1",
