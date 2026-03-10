@@ -18,20 +18,18 @@ const config: StorybookConfig = {
     },
   },
   viteFinal: (config) => {
-    if (config.plugins === undefined) {
-      config.plugins = [];
-    }
-    // the vite builder for storybook needs to know how to resolve our import statements, so we use the vite-tsconfig-paths plugin for that
-    config.plugins.push(tsConfigPaths());
+    config.plugins = [
+      ...(config.plugins || []),
+      // the vite builder for storybook needs to know how to resolve our import statements, so we use the vite-tsconfig-paths plugin for that
+      tsConfigPaths(),
 
-    // we also need the vite quasar plugin to be able to embed our quasar based project (and it's componets) into an existing (this storybook) project
-    // see https://quasar.dev/start/vite-plugin/ for reference
-    config.plugins.push(
+      // we also need the vite quasar plugin to be able to embed our quasar based project (and it's componets) into an existing (this storybook) project
+      // see https://quasar.dev/start/vite-plugin/ for reference
       quasar({
         // required so that quasar is using our custom theme
         sassVariables: fileURLToPath(new URL('../src/css/quasar.variables.scss', import.meta.url)),
       }),
-    );
+    ];
 
     return config;
   },
