@@ -1,4 +1,4 @@
-﻿# AGENTS.md
+# AGENTS.md
 
 ## Architecture
 
@@ -75,7 +75,7 @@ Vue 3 SPA using **Quasar** component library, **Vite** bundler, and **pnpm** pac
 - **TanStack Vue Query** – server-state management with query invalidation (`src/services/recipe-service.ts`)
 - **openapi-fetch** + **openapi-typescript** – type-safe API client generated from the backend's OpenAPI spec
 - **Auth0** (`@auth0/auth0-vue`) – authentication; configured in `src/boot/auth0.ts`
-- **Storybook 9** – component stories co-located with components (e.g. `*.stories.ts`)
+- **Storybook 10** – component stories co-located with components (e.g. `*.stories.ts`)
 - **Vitest** (unit, jsdom) + **Playwright** (e2e in `e2e/`)
 
 ### API Client Pattern
