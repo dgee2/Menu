@@ -1,21 +1,21 @@
-import NewRecipeForm from './new-recipe-form.vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
+import ErrorNotFound from './ErrorNotFound.vue';
 
 const meta = {
-  title: 'Recipe/NewRecipeForm',
-  component: NewRecipeForm,
+  title: 'Pages/ErrorNotFound',
+  component: ErrorNotFound,
   tags: ['autodocs'],
-  args: {},
-} satisfies Meta<typeof NewRecipeForm>;
+} satisfies Meta<typeof ErrorNotFound>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByLabelText('Name')).toBeInTheDocument();
+    await expect(canvas.getByText('404')).toBeInTheDocument();
+    await expect(canvas.getByRole('link', { name: 'Go Home' })).toBeInTheDocument();
   },
 };
+

@@ -19,7 +19,13 @@ export default defineConfigWithVueTs(
    *
    * ESLint requires "ignores" key to be the only one in this object
    */
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '**/storybook-static/**']),
+  globalIgnores([
+    '**/dist/**',
+    '**/dist-ssr/**',
+    '**/coverage/**',
+    '**/storybook-static/**',
+    '**/public/mockServiceWorker.js',
+  ]),
 
   pluginQuasar.configs.recommended(),
   js.configs.recommended,

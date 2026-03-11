@@ -2,6 +2,9 @@ import { fileURLToPath, URL } from 'node:url';
 import { quasar } from '@quasar/vite-plugin';
 import type { StorybookConfig } from '@storybook/vue3-vite';
 import tsConfigPaths from 'vite-tsconfig-paths';
+import { dirname, resolve } from 'node:path';
+
+const currentDir = dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
@@ -19,6 +22,13 @@ const config: StorybookConfig = {
     },
   },
   viteFinal: (config) => {
+    config.resolve = config.resolve ?? {};
+    config.resolve.alias = {
+      ...(config.resolve.alias ?? {}),
+      '@auth0/auth0-vue': resolve(currentDir, 'mocks/auth0-vue.ts'),
+      '@storybook-mocks': resolve(currentDir, 'mocks'),
+    };
+
     config.plugins = [
       ...(config.plugins || []),
       // the vite builder for storybook needs to know how to resolve our import statements, so we use the vite-tsconfig-paths plugin for that
@@ -31,6 +41,11 @@ const config: StorybookConfig = {
         sassVariables: fileURLToPath(new URL('../src/css/quasar.variables.scss', import.meta.url)),
       }),
     ];
+
+    config.define = {
+      ...(config.define ?? {}),
+      'import.meta.env.VITE_MENU_API_URL': JSON.stringify('http://localhost:7777'),
+    };
 
     return config;
   },
