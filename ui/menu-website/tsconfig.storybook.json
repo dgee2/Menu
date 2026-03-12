@@ -1,7 +1,8 @@
 {
   "extends": "@tsconfig/node22/tsconfig.json",
-  "include": [".storybook/**/*.ts"],
+  "include": [".storybook/**/*.ts", ".storybook/**/*.js"],
   "compilerOptions": {
+    "allowJs": true,
     "tsBuildInfoFile": "./build/tsconfig.storybook.tsbuildinfo"
   }
 }
