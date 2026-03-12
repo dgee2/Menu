@@ -81,9 +81,7 @@ export default defineConfigWithVueTs(
         browser: 'readonly', // BEX related
       },
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ['.storybook/*.js'],
-        },
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },

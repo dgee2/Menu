@@ -5,7 +5,7 @@ import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
 import { createWebHashHistory, createRouter } from 'vue-router';
 import { defineComponent } from 'vue';
 import { initialize, mswLoader } from 'msw-storybook-addon';
-import { ingredientUnitsHandler } from './msw-handlers.js';
+import { ingredientUnitsHandler } from './msw-handlers';
 
 import '@quasar/extras/roboto-font/roboto-font.css';
 import '@quasar/extras/material-icons/material-icons.css';
