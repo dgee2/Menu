@@ -62,9 +62,10 @@ const preview: Preview = {
   loaders: [mswLoader],
   decorators: [
     () => ({
-      setup() {
+      async setup() {
         queryClient.clear();
-        void router.replace('/');
+        await router.replace('/');
+        await router.isReady();
       },
       template: '<story />',
     }),
