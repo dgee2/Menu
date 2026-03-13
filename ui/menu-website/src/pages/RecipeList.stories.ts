@@ -43,7 +43,8 @@ export const Empty: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorStory: Story = {
+  name: 'Error',
   parameters: {
     msw: {
       handlers: [recipesErrorHandler],
@@ -66,4 +67,3 @@ export const Loading: Story = {
     await expect(canvas.getByText('Loading recipes...')).toBeInTheDocument();
   },
 };
-
