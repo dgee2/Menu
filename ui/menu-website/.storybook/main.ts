@@ -24,7 +24,7 @@ const config: StorybookConfig = {
   viteFinal: (config) => {
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
-      ...(config.resolve.alias ?? {}),
+      ...config.resolve.alias,
       '@auth0/auth0-vue': resolve(currentDir, 'mocks/auth0-vue.ts'),
       '@storybook-mocks': resolve(currentDir, 'mocks'),
     };
@@ -43,7 +43,7 @@ const config: StorybookConfig = {
     ];
 
     config.define = {
-      ...(config.define ?? {}),
+      ...config.define,
       'import.meta.env.VITE_MENU_API_URL': JSON.stringify('http://localhost:7777'),
     };
 

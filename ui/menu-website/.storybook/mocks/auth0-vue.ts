@@ -14,10 +14,7 @@ export type { MockUser };
 const isAuthenticated = ref(false);
 const user = ref<MockUser | undefined>(undefined);
 
-export const setMockAuthState = (state: {
-  isAuthenticated?: boolean;
-  user?: MockUser | undefined;
-}) => {
+export const setMockAuthState = (state: { isAuthenticated?: boolean; user?: MockUser }) => {
   if (state.isAuthenticated !== undefined) {
     isAuthenticated.value = state.isAuthenticated;
   }
@@ -45,5 +42,3 @@ export const createAuth0 = () => ({
 });
 
 export const authGuard = () => true;
-
-
