@@ -47,7 +47,9 @@ setup((app) => {
     config: {},
   });
   app.use(VueQueryPlugin, { queryClient });
-  app.use(router);
+  if (!app.config.globalProperties.$router) {
+    app.use(router);
+  }
 });
 
 export const withPageLayout = () => ({
@@ -62,10 +64,9 @@ const preview: Preview = {
   loaders: [mswLoader],
   decorators: [
     () => ({
-      async setup() {
+      setup() {
         queryClient.clear();
-        await router.replace('/');
-        await router.isReady();
+        void router.replace('/');
       },
       template: '<story />',
     }),
