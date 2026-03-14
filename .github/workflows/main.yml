@@ -69,17 +69,26 @@ jobs:
           parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
           parameters__Auth0Audience: http://localhost:65273
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
         working-directory: ./ui/menu-website
 
-      - run: pnpm run generate-openapi
+      - name: Generate OpenAPI types
+        run: pnpm run generate-openapi
         working-directory: ./ui/menu-website
 
-      - run: pnpm run lint
+      - name: Lint frontend
+        run: pnpm run lint
         working-directory: ./ui/menu-website
 
-      - run: pnpm run build
+      - name: Build frontend
+        run: pnpm run build
         working-directory: ./ui/menu-website
 
-      - run: pnpm run test
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install
+        working-directory: ./ui/menu-website
+
+      - name: Run frontend tests
+        run: pnpm run test
         working-directory: ./ui/menu-website
