@@ -32,6 +32,9 @@ export default defineConfig({
       sassVariables: fileURLToPath(new URL('./src/css/quasar.variables.scss', import.meta.url)),
     }),
   ],
+  optimizeDeps: {
+    include: ['pinia', 'quasar/lang/en-GB'],
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

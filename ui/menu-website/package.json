@@ -16,6 +16,7 @@
     "lint-fix": "eslint . \"./src/**/*.{ts,js,cjs,mjs,vue}\" --fix",
     "test": "vitest --passWithNoTests",
     "test:e2e": "playwright test",
+    "test:storybook": "vitest --project=storybook --run",
     "type-check": "vue-tsc --build --noEmit",
     "generate-openapi": "openapi-typescript ../../open-api/menu-api.json --output ./src/generated/open-api/menu-api.ts",
     "storybook": "storybook dev -p 6006",
@@ -39,11 +40,11 @@
     "@playwright/test": "^1.58.2",
     "@quasar/app-vite": "^2.4.1",
     "@quasar/vite-plugin": "^1.10.0",
-    "@storybook/addon-a11y": "^10.2.17",
-    "@storybook/addon-docs": "^10.2.17",
-    "@storybook/addon-links": "^10.2.17",
-    "@storybook/addon-vitest": "^10.2.17",
-    "@storybook/vue3-vite": "^10.2.17",
+    "@storybook/addon-a11y": "^10.3.1",
+    "@storybook/addon-docs": "^10.3.1",
+    "@storybook/addon-links": "^10.3.1",
+    "@storybook/addon-vitest": "^10.3.1",
+    "@storybook/vue3-vite": "^10.3.1",
     "@tanstack/eslint-plugin-query": "^5.91.4",
     "@tsconfig/node22": "^22.0.5",
     "@types/jsdom": "^28.0.0",
@@ -57,27 +58,36 @@
     "cross-env": "^10.1.0",
     "eslint": "^10.0.3",
     "eslint-plugin-playwright": "^2.9.0",
-    "eslint-plugin-storybook": "^10.2.17",
+    "eslint-plugin-storybook": "^10.3.1",
     "eslint-plugin-vue": "~10.8.0",
     "globals": "^17.4.0",
     "jiti": "^2.6.1",
     "jsdom": "^28.1.0",
     "msw-storybook-addon": "^2.0.6",
+    "msw": "^2.11.2",
     "npm-run-all2": "^8.0.4",
     "openapi-typescript": "^7.13.0",
     "prettier": "3.8.1",
     "sass-embedded": "^1.97.3",
-    "storybook": "^10.2.17",
+    "storybook": "^10.3.1",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-vue-devtools": "^8.0.7",
     "vitest": "^4.0.18",
-    "vue-tsc": "^3.2.5"
+    "vue-tsc": "^3.2.5",
+    "playwright": "^1.58.2",
+    "@vitest/browser-playwright": "4.0.18",
+    "@vitest/coverage-v8": "4.0.18"
   },
   "engines": {
     "node": "^28 || ^26 || ^24 || ^22 || ^20 || ^18",
     "npm": ">= 6.13.4",
     "yarn": ">= 1.21.1"
   },
-  "packageManager": "pnpm@10.31.0+sha512.e3927388bfaa8078ceb79b748ffc1e8274e84d75163e67bc22e06c0d3aed43dd153151cbf11d7f8301ff4acb98c68bdc5cadf6989532801ffafe3b3e4a63c268"
+  "packageManager": "pnpm@10.31.0+sha512.e3927388bfaa8078ceb79b748ffc1e8274e84d75163e67bc22e06c0d3aed43dd153151cbf11d7f8301ff4acb98c68bdc5cadf6989532801ffafe3b3e4a63c268",
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
 }
