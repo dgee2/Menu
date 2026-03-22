@@ -8,9 +8,6 @@ const currentDir = dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
-  features: {
-    backgroundsStoryGlobals: true,
-  },
   addons: [
     '@storybook/addon-links',
     '@storybook/addon-docs',
