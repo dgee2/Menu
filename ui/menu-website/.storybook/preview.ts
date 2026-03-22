@@ -62,6 +62,9 @@ export const withPageLayout = () => ({
 
 const preview: Preview = {
   loaders: [mswLoader],
+  initialGlobals: {
+    backgrounds: { value: 'light' },
+  },
   decorators: [
     () => ({
       setup() {
@@ -80,11 +83,10 @@ const preview: Preview = {
     },
 
     backgrounds: {
-      default: 'light',
-      values: [
-        { name: 'light', value: '#ffffff' },
-        { name: 'dark', value: '#1d1d1d' },
-      ],
+      options: {
+        light: { name: 'Light', value: '#ffffff' },
+        dark: { name: 'Dark', value: '#1d1d1d' },
+      },
     },
 
     viewport: {
