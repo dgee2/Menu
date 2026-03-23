@@ -13,19 +13,22 @@ const meta = preview.meta({
   component: RecipeList,
   tags: ['autodocs'],
   decorators: [withPageLayout],
-  parameters: {
-    msw: {
-      handlers: {
-        recipes: recipesSuccessHandler,
-      },
-    },
-  },
 });
 
+const successParameters = {
+  msw: {
+    handlers: {
+      recipes: recipesSuccessHandler,
+    },
+  },
+};
+
 export const Success = meta.story({
+  parameters: successParameters,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('All Recipes')).toBeInTheDocument();
+    await expect(successParameters.msw.handlers.recipes).toBe(recipesSuccessHandler);
   },
 });
 
