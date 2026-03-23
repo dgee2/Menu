@@ -27,6 +27,7 @@ export default defineMain({
       ...config.resolve.alias,
       '@auth0/auth0-vue': resolve(currentDir, 'mocks/auth0-vue.ts'),
       '@storybook-mocks': resolve(currentDir, 'mocks'),
+      '@storybook-config': resolve(currentDir),
     };
 
     config.plugins = [

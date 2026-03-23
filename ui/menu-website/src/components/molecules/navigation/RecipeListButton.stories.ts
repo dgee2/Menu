@@ -1,6 +1,6 @@
 import { expect, userEvent, within, waitFor } from 'storybook/test';
 import RecipeListButton from './RecipeListButton.vue';
-import preview from '../../../../.storybook/preview';
+import preview from '@storybook-config/preview';
 
 const meta = preview.meta({
   title: 'Molecules/Navigation/RecipeListButton',

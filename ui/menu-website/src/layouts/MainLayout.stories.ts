@@ -1,7 +1,7 @@
-import preview from '../../.storybook/preview';
+import preview from '@storybook-config/preview';
 import { expect, within } from 'storybook/test';
 import MainLayout from './MainLayout.vue';
-import { resetMockAuthState, setMockAuthState } from '../../.storybook/mocks/auth0-vue';
+import { resetMockAuthState, setMockAuthState } from '@storybook-config/mocks/auth0-vue';
 
 const meta = preview.meta({
   title: 'Layouts/MainLayout',

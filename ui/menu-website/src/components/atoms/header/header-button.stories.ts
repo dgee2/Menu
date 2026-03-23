@@ -1,4 +1,4 @@
-import preview from '../../../../.storybook/preview';
+import preview from '@storybook-config/preview';
 import HeaderButton from '@/components/atoms/header/header-button.vue';
 import { expect, fn, userEvent, within } from 'storybook/test';
 

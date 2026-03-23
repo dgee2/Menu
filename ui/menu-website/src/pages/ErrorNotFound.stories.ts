@@ -1,4 +1,4 @@
-import preview from '../../.storybook/preview';
+import preview from '@storybook-config/preview';
 import { expect, within } from 'storybook/test';
 import ErrorNotFound from './ErrorNotFound.vue';
 

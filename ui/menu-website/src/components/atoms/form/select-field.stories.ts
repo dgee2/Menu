@@ -1,4 +1,4 @@
-import preview from '../../../../.storybook/preview';
+import preview from '@storybook-config/preview';
 import SearchableSelectField from './select-field.vue';
 import { expect, fn, within } from 'storybook/test';
 

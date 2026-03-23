@@ -1,4 +1,4 @@
-import preview from '../../../../../.storybook/preview';
+import preview from '@storybook-config/preview';
 import RecipeNameField from './recipe-name-field.vue';
 import { expect, fn, userEvent, within } from 'storybook/test';
 

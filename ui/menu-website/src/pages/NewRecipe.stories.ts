@@ -1,5 +1,5 @@
 import { expect, within } from 'storybook/test';
-import preview, { withPageLayout } from '../../.storybook/preview';
+import preview, { withPageLayout } from '@storybook-config/preview';
 import NewRecipe from './NewRecipe.vue';
 
 const meta = preview.meta({

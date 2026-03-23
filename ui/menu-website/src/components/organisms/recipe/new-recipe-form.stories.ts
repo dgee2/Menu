@@ -1,4 +1,4 @@
-import preview from '../../../../.storybook/preview';
+import preview from '@storybook-config/preview';
 import NewRecipeForm from './new-recipe-form.vue';
 import { expect, within } from 'storybook/test';
 

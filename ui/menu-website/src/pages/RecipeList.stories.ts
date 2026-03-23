@@ -1,12 +1,12 @@
 import { expect, within } from 'storybook/test';
-import preview, { withPageLayout } from '../../.storybook/preview';
+import preview, { withPageLayout } from '@storybook-config/preview';
 import RecipeList from './RecipeList.vue';
 import {
   recipesEmptyHandler,
   recipesErrorHandler,
   recipesLoadingHandler,
   recipesSuccessHandler,
-} from '../../.storybook/msw-handlers';
+} from '@storybook-config/msw-handlers';
 
 const meta = preview.meta({
   title: 'Pages/RecipeList',

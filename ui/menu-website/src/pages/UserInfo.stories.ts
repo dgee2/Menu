@@ -1,7 +1,7 @@
 import { expect, within } from 'storybook/test';
-import preview, { withPageLayout } from '../../.storybook/preview';
+import preview, { withPageLayout } from '@storybook-config/preview';
 import UserInfo from './UserInfo.vue';
-import { resetMockAuthState, setMockAuthState } from '../../.storybook/mocks/auth0-vue';
+import { resetMockAuthState, setMockAuthState } from '@storybook-config/mocks/auth0-vue';
 
 const meta = preview.meta({
   title: 'Pages/UserInfo',

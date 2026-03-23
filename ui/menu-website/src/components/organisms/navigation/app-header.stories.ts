@@ -1,8 +1,8 @@
-import preview from '../../../../.storybook/preview';
+import preview from '@storybook-config/preview';
 import { QLayout, QPageContainer } from 'quasar';
 import { expect, within } from 'storybook/test';
 import AppHeader from './app-header.vue';
-import { resetMockAuthState, setMockAuthState } from '../../../../.storybook/mocks/auth0-vue';
+import { resetMockAuthState, setMockAuthState } from '@storybook-config/mocks/auth0-vue';
 
 const meta = preview.meta({
   title: 'Organisms/Navigation/AppHeader',
