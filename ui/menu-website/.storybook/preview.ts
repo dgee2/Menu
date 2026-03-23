@@ -1,8 +1,10 @@
-import type { Preview } from '@storybook/vue3-vite';
-import { setup } from '@storybook/vue3-vite';
+import addonA11y from '@storybook/addon-a11y';
+import addonDocs from '@storybook/addon-docs';
+import addonLinks from '@storybook/addon-links';
+import { setup, definePreview } from '@storybook/vue3-vite';
 import { QLayout, QPageContainer, Quasar } from 'quasar';
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
-import { createWebHashHistory, createRouter } from 'vue-router';
+import { createMemoryHistory, createRouter } from 'vue-router';
 import { defineComponent } from 'vue';
 import { initialize, mswLoader } from 'msw-storybook-addon';
 import { ingredientUnitsHandler } from './msw-handlers';
@@ -33,7 +35,7 @@ const StoryRouteView = defineComponent({
 });
 
 export const router = createRouter({
-  history: createWebHashHistory(),
+  history: createMemoryHistory(),
   routes: [
     { path: '/', component: StoryRouteView },
     { path: '/recipes', component: StoryRouteView },
@@ -57,14 +59,17 @@ export const withPageLayout = () => ({
     QLayout,
     QPageContainer,
   },
-  template: '<q-layout view="lHh lpr lFf"><q-page-container><story /></q-page-container></q-layout>',
+  template:
+    '<q-layout view="lHh lpr lFf"><q-page-container><story /></q-page-container></q-layout>',
 });
 
-const preview: Preview = {
+export default definePreview({
   loaders: [mswLoader],
+
   initialGlobals: {
     backgrounds: { value: 'light' },
   },
+
   decorators: [
     () => ({
       setup() {
@@ -74,6 +79,7 @@ const preview: Preview = {
       template: '<story />',
     }),
   ],
+
   parameters: {
     controls: {
       matchers: {
@@ -90,7 +96,7 @@ const preview: Preview = {
     },
 
     viewport: {
-      viewports: {
+      options: {
         mobile: {
           name: 'Mobile',
           styles: { width: '360px', height: '640px' },
@@ -117,6 +123,6 @@ const preview: Preview = {
       test: 'todo',
     },
   },
-};
 
-export default preview;
+  addons: [addonLinks(), addonDocs(), addonA11y()],
+});

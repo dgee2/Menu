@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
+import preview from '../../../../.storybook/preview';
 import { QLayout, QPageContainer } from 'quasar';
 import { expect, within } from 'storybook/test';
 import AppHeader from './app-header.vue';
 import { resetMockAuthState, setMockAuthState } from '../../../../.storybook/mocks/auth0-vue';
 
-const meta = {
+const meta = preview.meta({
   title: 'Organisms/Navigation/AppHeader',
   component: AppHeader,
   tags: ['autodocs'],
@@ -13,12 +13,9 @@ const meta = {
     template:
       '<q-layout view="lHh lpr lFf"><app-header /><q-page-container><div /></q-page-container></q-layout>',
   }),
-} satisfies Meta<typeof AppHeader>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Anonymous: Story = {
+export const Anonymous = meta.story({
   beforeEach: () => {
     resetMockAuthState();
   },
@@ -26,9 +23,9 @@ export const Anonymous: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('button', { name: 'Login' })).toBeInTheDocument();
   },
-};
+});
 
-export const Authenticated: Story = {
+export const Authenticated = meta.story({
   beforeEach: () => {
     resetMockAuthState();
     setMockAuthState({
@@ -43,4 +40,4 @@ export const Authenticated: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('button', { name: 'Logout' })).toBeInTheDocument();
   },
-};
+});

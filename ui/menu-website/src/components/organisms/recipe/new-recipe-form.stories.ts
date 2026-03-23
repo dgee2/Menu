@@ -1,21 +1,18 @@
+import preview from '../../../../.storybook/preview';
 import NewRecipeForm from './new-recipe-form.vue';
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
 
-const meta = {
+const meta = preview.meta({
   title: 'Organisms/Recipe/NewRecipeForm',
   component: NewRecipeForm,
   tags: ['autodocs'],
   args: {},
-} satisfies Meta<typeof NewRecipeForm>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
+export const Default = meta.story({
   args: {},
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByLabelText('Name')).toBeInTheDocument();
   },
-};
+});

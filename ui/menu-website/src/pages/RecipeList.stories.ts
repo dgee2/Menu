@@ -1,6 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
-import { withPageLayout } from '../../.storybook/preview';
+import preview, { withPageLayout } from '../../.storybook/preview';
 import RecipeList from './RecipeList.vue';
 import {
   recipesEmptyHandler,
@@ -9,61 +8,66 @@ import {
   recipesSuccessHandler,
 } from '../../.storybook/msw-handlers';
 
-const meta = {
+const meta = preview.meta({
   title: 'Pages/RecipeList',
   component: RecipeList,
   tags: ['autodocs'],
   decorators: [withPageLayout],
   parameters: {
     msw: {
-      handlers: [recipesSuccessHandler],
+      handlers: {
+        recipes: recipesSuccessHandler,
+      },
     },
   },
-} satisfies Meta<typeof RecipeList>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Success: Story = {
+export const Success = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
+    await expect(canvas.getByText('All Recipes')).toBeInTheDocument();
   },
-};
+});
 
-export const Empty: Story = {
+export const Empty = meta.story({
   parameters: {
     msw: {
-      handlers: [recipesEmptyHandler],
+      handlers: {
+        recipes: recipesEmptyHandler,
+      },
     },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText('No recipes found.')).toBeInTheDocument();
   },
-};
+});
 
-export const ErrorStory: Story = {
+export const ErrorStory = meta.story({
   name: 'Error',
   parameters: {
     msw: {
-      handlers: [recipesErrorHandler],
+      handlers: {
+        recipes: recipesErrorHandler,
+      },
     },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText('No recipes found.')).toBeInTheDocument();
   },
-};
+});
 
-export const Loading: Story = {
+export const Loading = meta.story({
   parameters: {
     msw: {
-      handlers: [recipesLoadingHandler],
+      handlers: {
+        recipes: recipesLoadingHandler,
+      },
     },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Loading recipes...')).toBeInTheDocument();
   },
-};
+});

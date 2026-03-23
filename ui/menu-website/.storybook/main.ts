@@ -1,12 +1,12 @@
+import { defineMain } from '@storybook/vue3-vite/node';
 import { fileURLToPath, URL } from 'node:url';
 import { quasar } from '@quasar/vite-plugin';
-import type { StorybookConfig } from '@storybook/vue3-vite';
 import tsConfigPaths from 'vite-tsconfig-paths';
 import { dirname, resolve } from 'node:path';
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 
-const config: StorybookConfig = {
+export default defineMain({
   stories: ['../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
   addons: [
     '@storybook/addon-links',
@@ -53,5 +53,4 @@ const config: StorybookConfig = {
     check: true,
   },
   staticDirs: ['../public'], // Serve static assets from the public directory
-};
-export default config;
+});

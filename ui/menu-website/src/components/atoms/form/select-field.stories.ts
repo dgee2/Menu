@@ -1,8 +1,8 @@
+import preview from '../../../../.storybook/preview';
 import SearchableSelectField from './select-field.vue';
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, within } from 'storybook/test';
 
-const meta = {
+const meta = preview.meta({
   title: 'Atoms/Form/SelectField',
   tags: ['autodocs'],
   args: {
@@ -18,25 +18,22 @@ const meta = {
   },
 
   component: SearchableSelectField,
-} satisfies Meta<typeof SearchableSelectField>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
+export const Default = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('combobox', { name: 'Recipe Ingredient' })).toBeInTheDocument();
   },
-};
+});
 
-export const DefaultNoResultsText: Story = {
+export const DefaultNoResultsText = meta.story({
   args: {
     options: [],
   },
-};
+});
 
-export const CustomNoResultsText: Story = {
+export const CustomNoResultsText = meta.story({
   args: {
     noResultsText: 'No ingredients found',
     options: [],
@@ -45,9 +42,9 @@ export const CustomNoResultsText: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('combobox', { name: 'Recipe Ingredient' })).toBeInTheDocument();
   },
-};
+});
 
-export const Hint: Story = {
+export const Hint = meta.story({
   args: {
     hint: 'Select an ingredient for your recipe',
   },
@@ -55,17 +52,17 @@ export const Hint: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Select an ingredient for your recipe')).toBeInTheDocument();
   },
-};
+});
 
-export const Searchable: Story = {
+export const Searchable = meta.story({
   args: {
     searchable: true,
   },
-};
+});
 
-export const Clearable: Story = {
+export const Clearable = meta.story({
   args: {
     clearable: true,
     modelValue: { label: 'Eggs', value: 3 },
   },
-};
+});

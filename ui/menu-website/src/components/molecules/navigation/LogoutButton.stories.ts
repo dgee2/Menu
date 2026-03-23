@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
+import preview from '../../../../.storybook/preview';
 import { expect, userEvent, within } from 'storybook/test';
 import LogoutButton from './LogoutButton.vue';
 import { resetMockAuthState } from '../../../../.storybook/mocks/auth0-vue';
 
-const meta = {
+const meta = preview.meta({
   title: 'Molecules/Navigation/LogoutButton',
   component: LogoutButton,
   tags: ['autodocs'],
@@ -14,12 +14,9 @@ const meta = {
       template: '<logout-button />',
     };
   },
-} satisfies Meta<typeof LogoutButton>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
+export const Default = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button', { name: 'Logout' });
@@ -27,5 +24,4 @@ export const Default: Story = {
     await userEvent.click(button);
     await expect(button).toBeInTheDocument();
   },
-};
-
+});

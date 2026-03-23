@@ -1,20 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
-import { withPageLayout } from '../../.storybook/preview';
+import preview, { withPageLayout } from '../../.storybook/preview';
 import UserInfo from './UserInfo.vue';
 import { resetMockAuthState, setMockAuthState } from '../../.storybook/mocks/auth0-vue';
 
-const meta = {
+const meta = preview.meta({
   title: 'Pages/UserInfo',
   component: UserInfo,
   tags: ['autodocs'],
   decorators: [withPageLayout],
-} satisfies Meta<typeof UserInfo>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Authenticated: Story = {
+export const Authenticated = meta.story({
   render: () => {
     resetMockAuthState();
     setMockAuthState({
@@ -37,9 +33,9 @@ export const Authenticated: Story = {
     await expect(canvas.getAllByText(/jane@example.com/i)).toHaveLength(2);
     await expect(canvas.getByRole('img')).toBeInTheDocument();
   },
-};
+});
 
-export const Anonymous: Story = {
+export const Anonymous = meta.story({
   render: () => {
     resetMockAuthState();
     return {
@@ -47,6 +43,4 @@ export const Anonymous: Story = {
       template: '<user-info />',
     };
   },
-};
-
-
+});
