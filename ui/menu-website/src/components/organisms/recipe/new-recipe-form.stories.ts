@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
 
 const meta = {
-  title: 'Recipe/NewRecipeForm',
+  title: 'Organisms/Recipe/NewRecipeForm',
   component: NewRecipeForm,
   tags: ['autodocs'],
   args: {},

@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, within, waitFor } from 'storybook/test';
 import NewRecipeHeaderButton from './NewRecipeHeaderButton.vue';
-import { router } from '../../../.storybook/preview';
+import { router } from '../../../../.storybook/preview';
 
 const meta = {
-  title: 'Buttons/NewRecipeHeaderButton',
+  title: 'Molecules/Navigation/NewRecipeHeaderButton',
   component: NewRecipeHeaderButton,
   tags: ['autodocs'],
 } satisfies Meta<typeof NewRecipeHeaderButton>;
@@ -24,5 +24,4 @@ export const Default: Story = {
     });
   },
 };
-
 

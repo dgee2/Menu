@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, within } from 'storybook/test';
 import ProfileButton from './ProfileButton.vue';
-import { resetMockAuthState, setMockAuthState } from '../../../.storybook/mocks/auth0-vue';
+import { resetMockAuthState, setMockAuthState } from '../../../../.storybook/mocks/auth0-vue';
 
 const meta = {
-  title: 'Buttons/ProfileButton',
+  title: 'Molecules/Navigation/ProfileButton',
   component: ProfileButton,
   tags: ['autodocs'],
 } satisfies Meta<typeof ProfileButton>;
@@ -58,5 +58,4 @@ export const InitialsFallback: Story = {
     await expect(canvas.getByText('JD')).toBeInTheDocument();
   },
 };
-
 

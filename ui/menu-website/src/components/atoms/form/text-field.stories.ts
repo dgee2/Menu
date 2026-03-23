@@ -1,35 +1,37 @@
-import RecipeNameField from './recipe-name-field.vue';
+import TextField from './text-field.vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 const meta = {
-  title: 'Recipe/Fields/RecipeNameField',
-  component: RecipeNameField,
+  title: 'Atoms/Form/TextField',
+  component: TextField,
   tags: ['autodocs'],
   args: {
+    label: 'Text Field',
     'onUpdate:modelValue': fn(),
   },
-} satisfies Meta<typeof RecipeNameField>;
+} satisfies Meta<typeof TextField>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  args: {},
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    const input = canvas.getByRole('textbox', { name: 'Name' });
+    const input = canvas.getByRole('textbox', { name: 'Text Field' });
 
-    await userEvent.type(input, 'Lasagne');
+    await userEvent.type(input, 'hello');
     await expect(args['onUpdate:modelValue']).toHaveBeenCalled();
   },
 };
 
-export const PreFilledValue: Story = {
+export const Hint: Story = {
   args: {
-    modelValue: 'Chocolate Cake',
+    hint: 'This is a hint for the text field.',
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByDisplayValue('Chocolate Cake')).toBeInTheDocument();
+    await expect(canvas.getByText('This is a hint for the text field.')).toBeInTheDocument();
   },
 };
