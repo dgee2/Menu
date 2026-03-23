@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, within } from 'storybook/test';
 
 const meta = {
-  title: 'Generic/Form/SelectField',
+  title: 'Atoms/Form/SelectField',
   tags: ['autodocs'],
   args: {
     'onUpdate:modelValue': fn(),

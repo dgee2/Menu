@@ -1,9 +1,9 @@
-import HeaderButton from '@/components/generic/header/header-button.vue';
+import HeaderButton from '@/components/atoms/header/header-button.vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 const meta = {
-  title: 'Generic/HeaderButton',
+  title: 'Atoms/Header/HeaderButton',
   component: HeaderButton,
   tags: ['autodocs'],
   args: {

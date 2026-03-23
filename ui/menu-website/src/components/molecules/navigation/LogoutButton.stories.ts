@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, within } from 'storybook/test';
 import LogoutButton from './LogoutButton.vue';
-import { resetMockAuthState } from '../../../.storybook/mocks/auth0-vue';
+import { resetMockAuthState } from '../../../../.storybook/mocks/auth0-vue';
 
 const meta = {
-  title: 'Buttons/LogoutButton',
+  title: 'Molecules/Navigation/LogoutButton',
   component: LogoutButton,
   tags: ['autodocs'],
   render: () => {
@@ -28,5 +28,4 @@ export const Default: Story = {
     await expect(button).toBeInTheDocument();
   },
 };
-
 

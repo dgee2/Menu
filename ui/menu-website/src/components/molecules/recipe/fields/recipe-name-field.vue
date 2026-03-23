@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import TextField from '@/components/generic/form/text-field.vue';
+import TextField from '@/components/atoms/form/text-field.vue';
 
 const name = defineModel<string>();
 </script>

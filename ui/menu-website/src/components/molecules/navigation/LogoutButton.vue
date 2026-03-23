@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAuth } from '@/services/auth';
-import HeaderButton from '@/components/generic/header/header-button.vue';
+import HeaderButton from '@/components/atoms/header/header-button.vue';
 
 const { logout } = useAuth();
 </script>

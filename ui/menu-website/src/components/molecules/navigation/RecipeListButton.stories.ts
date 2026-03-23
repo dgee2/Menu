@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, within, waitFor } from 'storybook/test';
 import RecipeListButton from './RecipeListButton.vue';
-import { router } from '../../../.storybook/preview';
+import { router } from '../../../../.storybook/preview';
 
 const meta = {
-  title: 'Buttons/RecipeListButton',
+  title: 'Molecules/Navigation/RecipeListButton',
   component: RecipeListButton,
   tags: ['autodocs'],
 } satisfies Meta<typeof RecipeListButton>;
@@ -24,5 +24,4 @@ export const Default: Story = {
     });
   },
 };
-
 
