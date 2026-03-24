@@ -4,3 +4,5 @@ onlyBuiltDependencies:
   - esbuild
   - msw
   - vue-demi
+patchedDependencies:
+  '@storybook/addon-vitest@10.3.3': patches/@storybook__addon-vitest@10.3.3.patch
