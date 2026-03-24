@@ -20,6 +20,7 @@ initialize({
     url: '/mockServiceWorker.js',
   },
   onUnhandledRequest: 'bypass',
+  quiet: true,
 });
 
 export const queryClient = new QueryClient({
