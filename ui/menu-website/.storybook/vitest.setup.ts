@@ -1,5 +1,4 @@
 // Since Storybook 10.3, @storybook/addon-vitest provisions preview annotations automatically.
-// No need to call setProjectAnnotations here.
 import { configure } from 'storybook/test';
 
 // Increase the default async utility timeout (findByText etc.) for the browser test environment.
