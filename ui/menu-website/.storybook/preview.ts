@@ -45,6 +45,10 @@ export const router = createRouter({
 });
 
 setup((app) => {
+  // Guard against the setup callback being invoked multiple times on the same app instance.
+  // Quasar always installs $q; if it's already present, all plugins are already registered.
+  if (app.config.globalProperties.$q) return;
+
   app.use(Quasar, {
     config: {},
   });
