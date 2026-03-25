@@ -14,6 +14,6 @@ export const Default = meta.story({
     const button = canvas.getByRole('button');
 
     await userEvent.click(button);
-    await waitFor(() => expect(button).toBeInTheDocument());
+    await waitFor(() => expect(button).toHaveFocus());
   },
 });
