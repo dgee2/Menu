@@ -1,6 +1,6 @@
 import { expect, userEvent, within, waitFor } from 'storybook/test';
 import RecipeListButton from './RecipeListButton.vue';
-import preview from '@storybook-config/preview';
+import preview, { router } from '@storybook-config/preview';
 
 const meta = preview.meta({
   title: 'Molecules/Navigation/RecipeListButton',
@@ -14,6 +14,6 @@ export const Default = meta.story({
     const button = canvas.getByRole('button', { name: 'Recipes' });
 
     await userEvent.click(button);
-    await waitFor(() => expect(button).toBeInTheDocument());
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipes'));
   },
 });

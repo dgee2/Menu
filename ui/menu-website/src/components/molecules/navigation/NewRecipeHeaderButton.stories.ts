@@ -1,6 +1,6 @@
 import { expect, userEvent, within, waitFor } from 'storybook/test';
 import NewRecipeHeaderButton from './NewRecipeHeaderButton.vue';
-import preview from '@storybook-config/preview';
+import preview, { router } from '@storybook-config/preview';
 
 const meta = preview.meta({
   title: 'Molecules/Navigation/NewRecipeHeaderButton',
@@ -14,6 +14,6 @@ export const Default = meta.story({
     const button = canvas.getByRole('button');
 
     await userEvent.click(button);
-    await waitFor(() => expect(button).toHaveFocus());
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/new-recipe'));
   },
 });

@@ -1,5 +1,5 @@
-import preview from '@storybook-config/preview';
-import { expect, userEvent, within } from 'storybook/test';
+import preview, { router } from '@storybook-config/preview';
+import { expect, userEvent, within, waitFor } from 'storybook/test';
 import ProfileButton from './ProfileButton.vue';
 import { resetMockAuthState, setMockAuthState } from '@storybook-config/mocks/auth0-vue';
 
@@ -30,7 +30,7 @@ export const WithAvatar = meta.story({
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button');
     await userEvent.click(button);
-    await expect(button).toBeInTheDocument();
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/profile'));
   },
 });
 
