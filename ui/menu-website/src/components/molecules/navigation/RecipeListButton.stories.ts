@@ -14,6 +14,9 @@ export const Default = meta.story({
     const button = canvas.getByRole('button', { name: 'Recipes' });
 
     await userEvent.click(button);
-    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipes'));
+    await router.isReady();
+    await waitFor(() => {
+      expect(router.currentRoute.value.path).toBe('/recipes');
+    });
   },
 });
