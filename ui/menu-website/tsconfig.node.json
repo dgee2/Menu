@@ -12,6 +12,7 @@
   "compilerOptions": {
     "noEmit": true,
 
+    "lib": ["es2024"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "types": ["node"],
