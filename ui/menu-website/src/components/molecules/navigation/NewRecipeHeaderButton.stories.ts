@@ -1,6 +1,7 @@
 import { expect, userEvent, within, waitFor } from 'storybook/test';
 import NewRecipeHeaderButton from './NewRecipeHeaderButton.vue';
-import preview, { router } from '@storybook-config/preview';
+import preview from '@storybook-config/preview';
+import { router } from '@storybook-config/router';
 
 const meta = preview.meta({
   title: 'Molecules/Navigation/NewRecipeHeaderButton',

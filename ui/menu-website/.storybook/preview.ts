@@ -4,9 +4,8 @@ import addonLinks from '@storybook/addon-links';
 import { setup, definePreview } from '@storybook/vue3-vite';
 import { QLayout, QPageContainer, Quasar } from 'quasar';
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
-import { createMemoryHistory, createRouter } from 'vue-router';
-import { defineComponent } from 'vue';
 import { initialize, mswLoader } from 'msw-storybook-addon';
+import { router } from './router';
 import { ingredientUnitsHandler } from './msw-handlers';
 
 import '@quasar/extras/roboto-font/roboto-font.css';
@@ -31,19 +30,7 @@ export const queryClient = new QueryClient({
   },
 });
 
-const StoryRouteView = defineComponent({
-  template: '<div />',
-});
-
-export const router = createRouter({
-  history: createMemoryHistory(),
-  routes: [
-    { path: '/', component: StoryRouteView },
-    { path: '/recipes', component: StoryRouteView },
-    { path: '/new-recipe', component: StoryRouteView },
-    { path: '/profile', component: StoryRouteView },
-  ],
-});
+export { router } from './router';
 
 setup((app) => {
   // Guard against the setup callback being invoked multiple times on the same app instance.
@@ -131,3 +118,4 @@ export default definePreview({
 
   addons: [addonLinks(), addonDocs(), addonA11y()],
 });
+

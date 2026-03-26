@@ -1,4 +1,5 @@
-import preview, { router } from '@storybook-config/preview';
+import preview from '@storybook-config/preview';
+import { router } from '@storybook-config/router';
 import { expect, userEvent, within, waitFor } from 'storybook/test';
 import ProfileButton from './ProfileButton.vue';
 import { resetMockAuthState, setMockAuthState } from '@storybook-config/mocks/auth0-vue';
@@ -55,3 +56,4 @@ export const InitialsFallback = meta.story({
     await expect(canvas.getByText('JD')).toBeInTheDocument();
   },
 });
+
