@@ -1,6 +1,6 @@
 ﻿using AutoFixture;
 using AutoFixture.Kernel;
-using AutoFixture.Xunit2;
+using AutoFixture.Xunit3;
 using System.Collections;
 
 namespace MenuApi.Integration.Tests.Factory;

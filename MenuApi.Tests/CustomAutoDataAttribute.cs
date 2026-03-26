@@ -1,5 +1,5 @@
 ﻿using AutoFixture;
-using AutoFixture.Xunit2;
+using AutoFixture.Xunit3;
 
 namespace MenuApi.Tests;
 
