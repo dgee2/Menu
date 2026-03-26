@@ -19,15 +19,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Testing" Version="13.1.2" />		
+    <PackageReference Include="Aspire.Hosting.Testing" Version="13.2.0" />		
 		<PackageReference Include="AutoFixture.Xunit2" Version="4.18.1" />		
 		<PackageReference Include="AwesomeAssertions" Version="9.4.0" />		
 		<PackageReference Include="AwesomeAssertions.Analyzers" Version="9.0.8">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-    <PackageReference Include="coverlet.collector" Version="8.0.0" />
-    <PackageReference Include="GitHubActionsTestLogger" Version="3.0.1">
+    <PackageReference Include="coverlet.collector" Version="8.0.1" />
+    <PackageReference Include="GitHubActionsTestLogger" Version="3.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>		
