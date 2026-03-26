@@ -1,8 +1,8 @@
+import preview from '@storybook-config/preview';
 import HeaderButton from '@/components/atoms/header/header-button.vue';
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-const meta = {
+const meta = preview.meta({
   title: 'Atoms/Header/HeaderButton',
   component: HeaderButton,
   tags: ['autodocs'],
@@ -10,12 +10,9 @@ const meta = {
     label: 'Button',
     onClick: fn(),
   },
-} satisfies Meta<typeof HeaderButton>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
+export const Default = meta.story({
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button', { name: 'Button' });
@@ -23,9 +20,9 @@ export const Default: Story = {
     await userEvent.click(button);
     await expect(args.onClick).toHaveBeenCalledTimes(1);
   },
-};
+});
 
-export const ChangeLabel: Story = {
+export const ChangeLabel = meta.story({
   args: {
     label: 'Click Me',
   },
@@ -36,4 +33,4 @@ export const ChangeLabel: Story = {
     await userEvent.click(button);
     await expect(args.onClick).toHaveBeenCalledTimes(1);
   },
-};
+});

@@ -1,18 +1,15 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
+import preview from '@storybook-config/preview';
 import { expect, within } from 'storybook/test';
 import MainShellTemplate from './main-shell-template.vue';
-import { resetMockAuthState } from '../../../.storybook/mocks/auth0-vue';
+import { resetMockAuthState } from '@storybook-config/mocks/auth0-vue';
 
-const meta = {
+const meta = preview.meta({
   title: 'Templates/MainShellTemplate',
   component: MainShellTemplate,
   tags: ['autodocs'],
-} satisfies Meta<typeof MainShellTemplate>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
+export const Default = meta.story({
   render: () => {
     resetMockAuthState();
     return {
@@ -24,4 +21,4 @@ export const Default: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Page Content')).toBeInTheDocument();
   },
-};
+});

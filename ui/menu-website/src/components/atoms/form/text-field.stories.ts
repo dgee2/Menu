@@ -1,8 +1,8 @@
+import preview from '@storybook-config/preview';
 import TextField from './text-field.vue';
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-const meta = {
+const meta = preview.meta({
   title: 'Atoms/Form/TextField',
   component: TextField,
   tags: ['autodocs'],
@@ -10,12 +10,9 @@ const meta = {
     label: 'Text Field',
     'onUpdate:modelValue': fn(),
   },
-} satisfies Meta<typeof TextField>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
+export const Default = meta.story({
   args: {},
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
@@ -24,9 +21,9 @@ export const Default: Story = {
     await userEvent.type(input, 'hello');
     await expect(args['onUpdate:modelValue']).toHaveBeenCalled();
   },
-};
+});
 
-export const Hint: Story = {
+export const Hint = meta.story({
   args: {
     hint: 'This is a hint for the text field.',
   },
@@ -34,4 +31,4 @@ export const Hint: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('This is a hint for the text field.')).toBeInTheDocument();
   },
-};
+});

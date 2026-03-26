@@ -1,18 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import preview from '@storybook-config/preview';
+import { router } from '@storybook-config/router';
+import { expect, userEvent, within, waitFor } from 'storybook/test';
 import ProfileButton from './ProfileButton.vue';
-import { resetMockAuthState, setMockAuthState } from '../../../../.storybook/mocks/auth0-vue';
+import { resetMockAuthState, setMockAuthState } from '@storybook-config/mocks/auth0-vue';
 
-const meta = {
+const meta = preview.meta({
   title: 'Molecules/Navigation/ProfileButton',
   component: ProfileButton,
   tags: ['autodocs'],
-} satisfies Meta<typeof ProfileButton>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const WithAvatar: Story = {
+export const WithAvatar = meta.story({
   render: () => {
     resetMockAuthState();
     setMockAuthState({
@@ -33,11 +31,11 @@ export const WithAvatar: Story = {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button');
     await userEvent.click(button);
-    await expect(button).toBeInTheDocument();
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/profile'));
   },
-};
+});
 
-export const InitialsFallback: Story = {
+export const InitialsFallback = meta.story({
   render: () => {
     resetMockAuthState();
     setMockAuthState({
@@ -57,5 +55,5 @@ export const InitialsFallback: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('JD')).toBeInTheDocument();
   },
-};
+});
 

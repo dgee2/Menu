@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
+import preview from '@storybook-config/preview';
 import { expect, userEvent, within } from 'storybook/test';
 import LoginButton from './LoginButton.vue';
-import { resetMockAuthState } from '../../../../.storybook/mocks/auth0-vue';
+import { resetMockAuthState } from '@storybook-config/mocks/auth0-vue';
 
-const meta = {
+const meta = preview.meta({
   title: 'Molecules/Navigation/LoginButton',
   component: LoginButton,
   tags: ['autodocs'],
@@ -14,12 +14,9 @@ const meta = {
       template: '<login-button />',
     };
   },
-} satisfies Meta<typeof LoginButton>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
+export const Default = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button', { name: 'Login' });
@@ -27,5 +24,4 @@ export const Default: Story = {
     await userEvent.click(button);
     await expect(button).toBeInTheDocument();
   },
-};
-
+});

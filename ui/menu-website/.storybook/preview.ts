@@ -1,10 +1,11 @@
-import type { Preview } from '@storybook/vue3-vite';
-import { setup } from '@storybook/vue3-vite';
+import addonA11y from '@storybook/addon-a11y';
+import addonDocs from '@storybook/addon-docs';
+import addonLinks from '@storybook/addon-links';
+import { setup, definePreview } from '@storybook/vue3-vite';
 import { QLayout, QPageContainer, Quasar } from 'quasar';
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
-import { createWebHashHistory, createRouter } from 'vue-router';
-import { defineComponent } from 'vue';
 import { initialize, mswLoader } from 'msw-storybook-addon';
+import { router } from './router';
 import { ingredientUnitsHandler } from './msw-handlers';
 
 import '@quasar/extras/roboto-font/roboto-font.css';
@@ -18,6 +19,7 @@ initialize({
     url: '/mockServiceWorker.js',
   },
   onUnhandledRequest: 'bypass',
+  quiet: true,
 });
 
 export const queryClient = new QueryClient({
@@ -28,21 +30,13 @@ export const queryClient = new QueryClient({
   },
 });
 
-const StoryRouteView = defineComponent({
-  template: '<div />',
-});
-
-export const router = createRouter({
-  history: createWebHashHistory(),
-  routes: [
-    { path: '/', component: StoryRouteView },
-    { path: '/recipes', component: StoryRouteView },
-    { path: '/new-recipe', component: StoryRouteView },
-    { path: '/profile', component: StoryRouteView },
-  ],
-});
+export { router } from './router';
 
 setup((app) => {
+  // Guard against the setup callback being invoked multiple times on the same app instance.
+  // Quasar always installs $q; if it's already present, all plugins are already registered.
+  if (app.config.globalProperties.$q) return;
+
   app.use(Quasar, {
     config: {},
   });
@@ -57,14 +51,17 @@ export const withPageLayout = () => ({
     QLayout,
     QPageContainer,
   },
-  template: '<q-layout view="lHh lpr lFf"><q-page-container><story /></q-page-container></q-layout>',
+  template:
+    '<q-layout view="lHh lpr lFf"><q-page-container><story /></q-page-container></q-layout>',
 });
 
-const preview: Preview = {
+export default definePreview({
   loaders: [mswLoader],
+
   initialGlobals: {
     backgrounds: { value: 'light' },
   },
+
   decorators: [
     () => ({
       setup() {
@@ -74,6 +71,7 @@ const preview: Preview = {
       template: '<story />',
     }),
   ],
+
   parameters: {
     controls: {
       matchers: {
@@ -90,7 +88,7 @@ const preview: Preview = {
     },
 
     viewport: {
-      viewports: {
+      options: {
         mobile: {
           name: 'Mobile',
           styles: { width: '360px', height: '640px' },
@@ -117,6 +115,7 @@ const preview: Preview = {
       test: 'todo',
     },
   },
-};
 
-export default preview;
+  addons: [addonLinks(), addonDocs(), addonA11y()],
+});
+

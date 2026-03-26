@@ -1,18 +1,15 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
+import preview from '@storybook-config/preview';
 import { expect, within } from 'storybook/test';
 import MainLayout from './MainLayout.vue';
-import { resetMockAuthState, setMockAuthState } from '../../.storybook/mocks/auth0-vue';
+import { resetMockAuthState, setMockAuthState } from '@storybook-config/mocks/auth0-vue';
 
-const meta = {
+const meta = preview.meta({
   title: 'Layouts/MainLayout',
   component: MainLayout,
   tags: ['autodocs'],
-} satisfies Meta<typeof MainLayout>;
+});
 
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Anonymous: Story = {
+export const Anonymous = meta.story({
   render: () => {
     resetMockAuthState();
     return {
@@ -24,9 +21,9 @@ export const Anonymous: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('button', { name: 'Login' })).toBeInTheDocument();
   },
-};
+});
 
-export const Authenticated: Story = {
+export const Authenticated = meta.story({
   render: () => {
     resetMockAuthState();
     setMockAuthState({
@@ -46,6 +43,4 @@ export const Authenticated: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('button', { name: 'Logout' })).toBeInTheDocument();
   },
-};
-
-
+});

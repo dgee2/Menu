@@ -1,7 +1,6 @@
-import * as a11yAddonAnnotations from '@storybook/addon-a11y/preview';
-import { setProjectAnnotations } from '@storybook/vue3-vite';
-import * as projectAnnotations from './preview';
+// Since Storybook 10.3, @storybook/addon-vitest provisions preview annotations automatically.
+import { configure } from 'storybook/test';
 
-// This is an important step to apply the right configuration when testing your stories.
-// More info at: https://storybook.js.org/docs/api/portable-stories/portable-stories-vitest#setprojectannotations
-setProjectAnnotations([a11yAddonAnnotations, projectAnnotations]);
+// Increase the default async utility timeout (findByText etc.) for the browser test environment.
+// The default 1000ms can be too short on Windows with Playwright.
+configure({ asyncUtilTimeout: 5000 });
