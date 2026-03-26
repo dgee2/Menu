@@ -7,20 +7,20 @@ const RECIPE_LIST_QUERY_KEY = 'recipe-list';
 const INGREDIENT_UNIT_QUERY_KEY = 'ingredient-unit-list';
 
 export const useRecipeService = () => {
-  const api = useRecipeApi();
+  const { getRecipes, getRecipe, getIngredientUnits, postRecipe, putRecipe } = useRecipeApi();
   const queryClient = useQueryClient();
 
-  const useRecipes = () => useQuery({ queryKey: [RECIPE_LIST_QUERY_KEY], queryFn: api.getRecipes });
+  const useRecipes = () => useQuery({ queryKey: [RECIPE_LIST_QUERY_KEY], queryFn: getRecipes });
 
   const useRecipe = (recipeId: MaybeRef<string>) =>
     useQuery({
-      queryKey: [RECIPE_QUERY_KEY, recipeId],
-      queryFn: () => api.getRecipe(toValue(recipeId)),
+      queryKey: [RECIPE_QUERY_KEY, recipeId, getRecipe],
+      queryFn: () => getRecipe(toValue(recipeId)),
     });
 
   const useCreateRecipe = () => {
     return useMutation({
-      mutationFn: api.postRecipe,
+      mutationFn: postRecipe,
       onSuccess: async (data) => {
         // Invalidate and refetch
         await Promise.allSettled([
@@ -34,7 +34,7 @@ export const useRecipeService = () => {
   const useUpdateRecipe = () => {
     return useMutation({
       mutationFn: ({ recipeId, recipe }: { recipeId: string; recipe: NewRecipe }) =>
-        api.putRecipe(recipeId, recipe),
+        putRecipe(recipeId, recipe),
       onSuccess: async (data) => {
         // Invalidate and refetch
         await Promise.allSettled([
@@ -46,7 +46,7 @@ export const useRecipeService = () => {
   };
 
   const useIngredientUnits = () =>
-    useQuery({ queryKey: [INGREDIENT_UNIT_QUERY_KEY], queryFn: api.getIngredientUnits });
+    useQuery({ queryKey: [INGREDIENT_UNIT_QUERY_KEY], queryFn: getIngredientUnits });
 
   return {
     useRecipes,
