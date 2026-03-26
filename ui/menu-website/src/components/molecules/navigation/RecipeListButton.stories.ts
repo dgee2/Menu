@@ -15,8 +15,7 @@ export const Default = meta.story({
 
     await userEvent.click(button);
     await router.isReady();
-    await waitFor(() => {
-      expect(router.currentRoute.value.path).toBe('/recipes');
-    });
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipes'));
   },
 });
+
