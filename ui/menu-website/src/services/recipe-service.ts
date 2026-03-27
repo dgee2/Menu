@@ -13,9 +13,8 @@ export const useRecipeService = () => {
   const useRecipes = () => useQuery({ queryKey: [RECIPE_LIST_QUERY_KEY], queryFn: getRecipes });
 
   const useRecipe = (recipeId: MaybeRef<string>) =>
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- getRecipe is a stable function reference
     useQuery({
-      queryKey: [RECIPE_QUERY_KEY, recipeId],
+      queryKey: [RECIPE_QUERY_KEY, toValue(recipeId)],
       queryFn: () => getRecipe(toValue(recipeId)),
     });
 
