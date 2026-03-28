@@ -1,5 +1,6 @@
 ﻿﻿using MenuApi.Repositories;
 using MenuApi.Services;
+using MenuApi.Validation;
 using MenuApi.ViewModel;
 
 namespace MenuApi.Recipes;
@@ -12,11 +13,16 @@ public static class IngredientApi
 
         group.WithTags("Ingredients");
 
-        group.MapGet("/", GetIngredientsAsync);
+        group.MapGet("/", GetIngredientsAsync)
+            .Produces<IEnumerable<ViewModel.Ingredient>>(StatusCodes.Status200OK);
 
-        group.MapGet("/unit", GetIngredientUnitsAsync);
+        group.MapGet("/unit", GetIngredientUnitsAsync)
+            .Produces<IEnumerable<ViewModel.IngredientUnit>>(StatusCodes.Status200OK);
 
-        group.MapPost("/", CreateIngredientAsync);
+        group.MapPost("/", CreateIngredientAsync)
+            .AddEndpointFilter<ValidationFilter<NewIngredient>>()
+            .Produces<ViewModel.Ingredient>(StatusCodes.Status200OK)
+            .ProducesValidationProblem();
 
         return group;
     }
