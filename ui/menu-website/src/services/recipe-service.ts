@@ -2,51 +2,49 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { type NewRecipe, useRecipeApi } from '@/services/recipe-api';
 import { toValue, type MaybeRef } from 'vue';
 
-const RECIPE_QUERY_KEY = 'recipe';
-const RECIPE_LIST_QUERY_KEY = 'recipe-list';
-const INGREDIENT_UNIT_QUERY_KEY = 'ingredient-unit-list';
+const RECIPE_QUERY_KEY = 'recipe' as const;
+const RECIPE_LIST_QUERY_KEY = 'recipe-list' as const;
+const INGREDIENT_UNIT_QUERY_KEY = 'ingredient-unit-list' as const;
 
 export const useRecipeService = () => {
-  const api = useRecipeApi();
+  const { getRecipes, getRecipe, getIngredientUnits, postRecipe, putRecipe } = useRecipeApi();
   const queryClient = useQueryClient();
+  const recipeListQueryKey = [RECIPE_LIST_QUERY_KEY] as const;
+  const recipeDetailQueryKey = (recipeId: string) => [RECIPE_QUERY_KEY, String(recipeId)] as const;
 
-  const useRecipes = () => useQuery({ queryKey: [RECIPE_LIST_QUERY_KEY], queryFn: api.getRecipes });
+  const invalidateRecipeQueries = async (recipeId: string) => {
+    await Promise.allSettled([
+      queryClient.invalidateQueries({ queryKey: recipeListQueryKey }),
+      queryClient.invalidateQueries({ queryKey: recipeDetailQueryKey(recipeId) }),
+    ]);
+  };
+
+  const useRecipes = () => useQuery({ queryKey: recipeListQueryKey, queryFn: getRecipes });
 
   const useRecipe = (recipeId: MaybeRef<string>) =>
     useQuery({
-      queryKey: [RECIPE_QUERY_KEY, recipeId],
-      queryFn: () => api.getRecipe(toValue(recipeId)),
+      queryKey: [RECIPE_QUERY_KEY, recipeId, getRecipe] as const,
+      queryFn: () => getRecipe(toValue(recipeId)),
+      enabled: () => !!toValue(recipeId),
     });
 
   const useCreateRecipe = () => {
     return useMutation({
-      mutationFn: api.postRecipe,
-      onSuccess: async (data) => {
-        // Invalidate and refetch
-        await Promise.allSettled([
-          queryClient.invalidateQueries({ queryKey: [RECIPE_LIST_QUERY_KEY] }),
-          queryClient.invalidateQueries({ queryKey: [RECIPE_QUERY_KEY, data.id] }),
-        ]);
-      },
+      mutationFn: postRecipe,
+      onSuccess: async (data) => invalidateRecipeQueries(data.id.toString()),
     });
   };
 
   const useUpdateRecipe = () => {
     return useMutation({
       mutationFn: ({ recipeId, recipe }: { recipeId: string; recipe: NewRecipe }) =>
-        api.putRecipe(recipeId, recipe),
-      onSuccess: async (data) => {
-        // Invalidate and refetch
-        await Promise.allSettled([
-          queryClient.invalidateQueries({ queryKey: [RECIPE_LIST_QUERY_KEY] }),
-          queryClient.invalidateQueries({ queryKey: [RECIPE_QUERY_KEY, data.id] }),
-        ]);
-      },
+        putRecipe(recipeId, recipe),
+      onSuccess: async (data) => invalidateRecipeQueries(data.id.toString()),
     });
   };
 
   const useIngredientUnits = () =>
-    useQuery({ queryKey: [INGREDIENT_UNIT_QUERY_KEY], queryFn: api.getIngredientUnits });
+    useQuery({ queryKey: [INGREDIENT_UNIT_QUERY_KEY], queryFn: getIngredientUnits });
 
   return {
     useRecipes,

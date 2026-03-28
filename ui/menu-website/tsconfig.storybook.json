@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.node.json",
-  "include": [".storybook/**/*.ts"],
+  "include": ["env.d.ts", ".storybook/**/*.ts"],
   "compilerOptions": {
     "tsBuildInfoFile": "./build/tsconfig.storybook.tsbuildinfo"
   }

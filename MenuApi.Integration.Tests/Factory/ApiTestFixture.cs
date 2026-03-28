@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using Xunit;
-using Xunit.Abstractions;
 
 
 namespace MenuApi.Integration.Tests.Factory;
@@ -14,13 +13,7 @@ public class ApiTestFixture : IAsyncLifetime
 {
     public DistributedApplication app { get; private set; }
     private IDistributedApplicationTestingBuilder appHost;
-    private readonly IMessageSink messageSink;
     private AuthenticationHeaderValue cachedAuthHeader;
-
-    public ApiTestFixture(IMessageSink messageSink)
-    {
-        this.messageSink = messageSink;
-    }
 
     public async Task<HttpClient> GetHttpClient()
     {
@@ -32,7 +25,7 @@ public class ApiTestFixture : IAsyncLifetime
         return httpClient;
     }
 
-    async Task IAsyncLifetime.InitializeAsync()
+    async ValueTask IAsyncLifetime.InitializeAsync()
     {
         appHost = await DistributedApplicationTestingBuilder
             .CreateAsync<Projects.Menu_AppHost>();
@@ -44,7 +37,7 @@ public class ApiTestFixture : IAsyncLifetime
 
         appHost.Services.AddLogging(builder =>
         {
-            builder.AddXUnit(messageSink);
+            builder.AddXUnit();
             builder.SetMinimumLevel(LogLevel.Information);
         });
 
@@ -68,7 +61,7 @@ public class ApiTestFixture : IAsyncLifetime
             )
             .WaitAsync(TimeSpan.FromSeconds(30));
     }
-    async Task IAsyncLifetime.DisposeAsync()
+    async ValueTask IAsyncDisposable.DisposeAsync()
     {
         await app.StopAsync();
         await app.DisposeAsync();

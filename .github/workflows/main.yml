@@ -37,10 +37,10 @@ jobs:
       - name: Enable pnpm with corepack
         run: corepack enable pnpm
 
-      - name: Setup dotnet 9.x
+      - name: Setup dotnet 10.x
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: "10.0.x"
 
       - name: Install .NET Aspire workload
         run: dotnet workload install aspire
@@ -55,14 +55,12 @@ jobs:
         run: dotnet dev-certs https --clean
 
       - name: trust ssl cert
-        run: dotnet dev-certs https --trust
+        run: |
+          dotnet dev-certs https --trust || true
+          echo "SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:${SSL_CERT_DIR:-/usr/lib/ssl/certs}" >> "$GITHUB_ENV"
 
       - name: Test with the dotnet CLI
-        run: >
-          dotnet test
-          --configuration Release
-          --logger "GitHubActions;summary.includeSkippedTests=true"
-          -- RunConfiguration.CollectSourceInformation=true
+        run: dotnet test --configuration Release
         env:
           parameters__Auth0TestClientId: ${{ vars.AUTH0_CLIENT_ID }}
           parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
