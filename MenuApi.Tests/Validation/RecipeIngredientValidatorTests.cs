@@ -38,7 +38,7 @@ public class RecipeIngredientValidatorTests
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor(x => x.Name.Value);
+        result.ShouldHaveValidationErrorFor("Name");
     }
 
     [Theory]
@@ -55,7 +55,7 @@ public class RecipeIngredientValidatorTests
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor(x => x.Amount.Value);
+        result.ShouldHaveValidationErrorFor("Amount");
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public class RecipeIngredientValidatorTests
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor(x => x.Amount.Value);
+        result.ShouldHaveValidationErrorFor("Amount");
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public class RecipeIngredientValidatorTests
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor(x => x.Amount.Value);
+        result.ShouldHaveValidationErrorFor("Amount");
     }
 
     [Theory]
@@ -102,7 +102,7 @@ public class RecipeIngredientValidatorTests
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor(x => x.Name.Value);
+        result.ShouldHaveValidationErrorFor("Name");
     }
 
     [Fact]
@@ -117,6 +117,6 @@ public class RecipeIngredientValidatorTests
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor(x => x.Unit.Value);
+        result.ShouldHaveValidationErrorFor("Unit");
     }
 }

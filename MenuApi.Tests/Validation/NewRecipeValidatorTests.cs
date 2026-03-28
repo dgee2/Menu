@@ -42,7 +42,7 @@ public class NewRecipeValidatorTests
 
         var result = validator.TestValidate(recipe);
 
-        result.ShouldHaveValidationErrorFor(x => x.Name.Value);
+        result.ShouldHaveValidationErrorFor("Name");
     }
 
     [Fact]
@@ -72,6 +72,6 @@ public class NewRecipeValidatorTests
 
         var result = validator.TestValidate(recipe);
 
-        result.ShouldHaveValidationErrorFor(x => x.Name.Value);
+        result.ShouldHaveValidationErrorFor("Name");
     }
 }

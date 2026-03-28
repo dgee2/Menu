@@ -35,7 +35,7 @@ public class NewIngredientValidatorTests
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor(x => x.Name.Value);
+        result.ShouldHaveValidationErrorFor("Name");
     }
 
     [Fact]
@@ -79,6 +79,6 @@ public class NewIngredientValidatorTests
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor(x => x.Name.Value);
+        result.ShouldHaveValidationErrorFor("Name");
     }
 }

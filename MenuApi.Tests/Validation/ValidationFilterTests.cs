@@ -1,5 +1,4 @@
 #nullable enable
-#nullable enable
 
 using AwesomeAssertions;
 using FakeItEasy;

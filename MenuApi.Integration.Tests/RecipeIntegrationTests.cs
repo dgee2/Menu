@@ -10,6 +10,8 @@ namespace MenuApi.Integration.Tests;
 [Collection("API Host Collection")]
 public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
 {
+    private const string Grams = "Grams";
+
     readonly JsonSerializerOptions jsonOptions;
     private readonly ApiTestFixture fixture;
 
@@ -41,7 +43,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
-        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100 }];
+        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
         var (_, name) = await PostRecipeAsync(client, recipe);
 
         name.Should().Be(recipe.Name);
@@ -53,8 +55,8 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
         await PostIngredientAsync(client, ingredientName2);
-        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100 }];
-        updatedRecipe.Ingredients = [new RecipeIngredient { Name = ingredientName2, Unit = "Grams", Amount = 200 }];
+        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
+        updatedRecipe.Ingredients = [new RecipeIngredient { Name = ingredientName2, Unit = Grams, Amount = 200 }];
        
         var (id, _) = await PostRecipeAsync(client, recipe);
 
@@ -68,7 +70,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
-        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100 }];
+        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
      
         var (id, _) = await PostRecipeAsync(client, recipe);
         var (getId, name) = await GetRecipeAsync(client, id);
@@ -82,7 +84,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
-        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100 }];
+        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
 
         var (id, _) = await PostRecipeAsync(client, recipe);
 

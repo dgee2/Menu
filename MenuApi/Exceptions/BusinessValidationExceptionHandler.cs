@@ -14,6 +14,7 @@ public class BusinessValidationExceptionHandler : IExceptionHandler
             return false;
 
         httpContext.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+        httpContext.Response.ContentType = "application/problem+json";
 
         await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
         {

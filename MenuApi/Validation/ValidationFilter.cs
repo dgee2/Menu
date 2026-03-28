@@ -22,7 +22,7 @@ public class ValidationFilter<T> : IEndpointFilter
 
         try
         {
-            var result = await validator.ValidateAsync(argument);
+            var result = await validator.ValidateAsync(argument, context.HttpContext.RequestAborted);
             if (!result.IsValid)
             {
                 return Results.ValidationProblem(

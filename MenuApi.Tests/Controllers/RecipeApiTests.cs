@@ -9,8 +9,6 @@ using MenuApi.ViewModel;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Xunit;
 
-#nullable enable
-
 namespace MenuApi.Tests.Controllers;
 
 public class RecipeApiTests

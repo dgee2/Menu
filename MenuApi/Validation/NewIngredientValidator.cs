@@ -9,12 +9,12 @@ public class NewIngredientValidator : AbstractValidator<NewIngredient>
     {
         RuleFor(x => x.Name.Value)
             .NotEmpty()
-            .WithName("Name")
+            .OverridePropertyName("Name")
             .WithMessage("'Name' must not be empty.");
 
         RuleFor(x => x.Name.Value)
             .MaximumLength(50)
-            .WithName("Name")
+            .OverridePropertyName("Name")
             .WithMessage("'Name' must be 50 characters or fewer.");
 
         RuleFor(x => x.UnitIds)

@@ -13,12 +13,15 @@ public static class RecipeApi
 
         group.WithTags("Recipes");
 
-        group.MapGet("/", GetRecipesAsync);
+        group.MapGet("/", GetRecipesAsync)
+            .Produces<IEnumerable<Recipe>>(StatusCodes.Status200OK);
 
         group.MapGet("/{recipeId}", GetRecipeAsync)
+            .Produces<FullRecipe>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        group.MapGet("/{recipeId}/ingredient", GetRecipeIngredientsAsync);
+        group.MapGet("/{recipeId}/ingredient", GetRecipeIngredientsAsync)
+            .Produces<IEnumerable<RecipeIngredient>>(StatusCodes.Status200OK);
 
         group.MapPost("/", CreateRecipeAsync)
             .AddEndpointFilter<ValidationFilter<NewRecipe>>()

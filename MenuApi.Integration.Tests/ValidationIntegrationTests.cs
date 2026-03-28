@@ -10,6 +10,10 @@ namespace MenuApi.Integration.Tests;
 [Collection("API Host Collection")]
 public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
 {
+    private const string ApplicationJson = "application/json";
+    private const string ApiRecipeRoute = "/api/recipe";
+    private const string Grams = "Grams";
+
     private readonly JsonSerializerOptions jsonOptions;
     private readonly ApiTestFixture fixture;
 
@@ -23,8 +27,8 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
     public async Task CreateRecipe_MissingProperties_Returns400()
     {
         using var client = await fixture.GetHttpClient();
-        var content = new StringContent("{}", Encoding.UTF8, "application/json");
-        using var response = await client.PostAsync("/api/recipe", content);
+        var content = new StringContent("{}", Encoding.UTF8, ApplicationJson);
+        using var response = await client.PostAsync(ApiRecipeRoute, content);
         await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
     }
 
@@ -33,8 +37,8 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
     {
         using var client = await fixture.GetHttpClient();
         var body = new NewRecipe { Name = "", Ingredients = [] };
-        var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
-        using var response = await client.PostAsync("/api/recipe", content);
+        var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, ApplicationJson);
+        using var response = await client.PostAsync(ApiRecipeRoute, content);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
 
@@ -44,7 +48,7 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
 
         root.GetProperty("status").GetInt32().Should().Be(400);
         root.GetProperty("title").GetString().Should().Be("One or more validation errors occurred.");
-        root.TryGetProperty("errors", out var errors).Should().BeTrue();
+        root.TryGetProperty("errors", out _).Should().BeTrue();
     }
 
     [Fact]
@@ -54,10 +58,10 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
         var body = new NewRecipe
         {
             Name = "Test Recipe",
-            Ingredients = [new RecipeIngredient { Name = "NonExistentIngredient", Unit = "Grams", Amount = 100 }]
+            Ingredients = [new RecipeIngredient { Name = "NonExistentIngredient", Unit = Grams, Amount = 100 }]
         };
-        var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
-        using var response = await client.PostAsync("/api/recipe", content);
+        var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, ApplicationJson);
+        using var response = await client.PostAsync(ApiRecipeRoute, content);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
 
@@ -84,7 +88,7 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
     {
         using var client = await fixture.GetHttpClient();
         var body = new NewIngredient { Name = "", UnitIds = [1] };
-        var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
+        var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, ApplicationJson);
         using var response = await client.PostAsync("/api/ingredient", content);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
@@ -95,7 +99,7 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
     {
         using var client = await fixture.GetHttpClient();
         var body = new NewIngredient { Name = "SomeIngredient", UnitIds = [] };
-        var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
+        var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, ApplicationJson);
         using var response = await client.PostAsync("/api/ingredient", content);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
@@ -108,17 +112,17 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
 
         await PostIngredientAsync(client, ingredientName);
 
-        var createBody = new NewRecipe { Name = recipeName, Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100 }] };
-        var createContent = new StringContent(JsonSerializer.Serialize(createBody, jsonOptions), Encoding.UTF8, "application/json");
-        using var createResponse = await client.PostAsync("/api/recipe", createContent);
+        var createBody = new NewRecipe { Name = recipeName, Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }] };
+        var createContent = new StringContent(JsonSerializer.Serialize(createBody, jsonOptions), Encoding.UTF8, ApplicationJson);
+        using var createResponse = await client.PostAsync(ApiRecipeRoute, createContent);
         await createResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
 
         using var createStream = await createResponse.Content.ReadAsStreamAsync();
         using var createDoc = await JsonDocument.ParseAsync(createStream);
         var recipeId = createDoc.RootElement.GetProperty("id").GetInt32();
 
-        var updateBody = new NewRecipe { Name = "", Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100 }] };
-        var updateContent = new StringContent(JsonSerializer.Serialize(updateBody, jsonOptions), Encoding.UTF8, "application/json");
+        var updateBody = new NewRecipe { Name = "", Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }] };
+        var updateContent = new StringContent(JsonSerializer.Serialize(updateBody, jsonOptions), Encoding.UTF8, ApplicationJson);
         using var updateResponse = await client.PutAsync($"/api/recipe/{recipeId}", updateContent);
 
         await updateResponse.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
@@ -131,9 +135,9 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
 
         await PostIngredientAsync(client, ingredientName);
 
-        var createBody = new NewRecipe { Name = recipeName, Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100 }] };
-        var createContent = new StringContent(JsonSerializer.Serialize(createBody, jsonOptions), Encoding.UTF8, "application/json");
-        using var createResponse = await client.PostAsync("/api/recipe", createContent);
+        var createBody = new NewRecipe { Name = recipeName, Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }] };
+        var createContent = new StringContent(JsonSerializer.Serialize(createBody, jsonOptions), Encoding.UTF8, ApplicationJson);
+        using var createResponse = await client.PostAsync(ApiRecipeRoute, createContent);
         await createResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
 
         using var createStream = await createResponse.Content.ReadAsStreamAsync();
@@ -143,9 +147,9 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
         var updateBody = new NewRecipe
         {
             Name = recipeName,
-            Ingredients = [new RecipeIngredient { Name = "NonExistentIngredient", Unit = "Grams", Amount = 100 }]
+            Ingredients = [new RecipeIngredient { Name = "NonExistentIngredient", Unit = Grams, Amount = 100 }]
         };
-        var updateContent = new StringContent(JsonSerializer.Serialize(updateBody, jsonOptions), Encoding.UTF8, "application/json");
+        var updateContent = new StringContent(JsonSerializer.Serialize(updateBody, jsonOptions), Encoding.UTF8, ApplicationJson);
         using var updateResponse = await client.PutAsync($"/api/recipe/{recipeId}", updateContent);
 
         await updateResponse.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
@@ -154,7 +158,7 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
     private async Task PostIngredientAsync(HttpClient client, string name)
     {
         var body = new NewIngredient { Name = name, UnitIds = [4] }; // Grams
-        var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
+        var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, ApplicationJson);
         using var response = await client.PostAsync("/api/ingredient", content);
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
     }

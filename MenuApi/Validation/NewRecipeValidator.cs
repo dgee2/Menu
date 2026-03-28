@@ -9,12 +9,12 @@ public class NewRecipeValidator : AbstractValidator<NewRecipe>
     {
         RuleFor(x => x.Name.Value)
             .NotEmpty()
-            .WithName("Name")
+            .OverridePropertyName("Name")
             .WithMessage("'Name' must not be empty.");
 
         RuleFor(x => x.Name.Value)
             .MaximumLength(500)
-            .WithName("Name")
+            .OverridePropertyName("Name")
             .WithMessage("'Name' must be 500 characters or fewer.");
 
         RuleFor(x => x.Ingredients)
