@@ -1,6 +1,8 @@
 using Menu.ApiServiceDefaults;
+using FluentValidation;
 using MenuDB;
 using MenuApi;
+using MenuApi.Exceptions;
 using MenuApi.Recipes;
 using MenuApi.Repositories;
 using MenuApi.Services;
@@ -20,6 +22,10 @@ builder.Services.AddTransient<IIngredientService, IngredientService>();
 
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
+
+builder.Services.AddExceptionHandler<BusinessValidationExceptionHandler>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.AddSqlServerDbContext<MenuDbContext>("menu");
 
