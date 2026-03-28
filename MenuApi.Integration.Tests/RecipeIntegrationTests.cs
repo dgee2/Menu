@@ -37,18 +37,24 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     }
 
     [Theory, ShortStringAutoData]
-    public async Task Create_Recipe(NewRecipe recipe)
+    public async Task Create_Recipe(NewRecipe recipe, string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
+        await PostIngredientAsync(client, ingredientName);
+        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100 }];
         var (_, name) = await PostRecipeAsync(client, recipe);
 
         name.Should().Be(recipe.Name);
     }
 
     [Theory, ShortStringAutoData]
-    public async Task Create_and_Update_Recipe(NewRecipe recipe, NewRecipe updatedRecipe)
+    public async Task Create_and_Update_Recipe(NewRecipe recipe, NewRecipe updatedRecipe, string ingredientName, string ingredientName2)
     {
         using var client = await fixture.GetHttpClient();
+        await PostIngredientAsync(client, ingredientName);
+        await PostIngredientAsync(client, ingredientName2);
+        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100 }];
+        updatedRecipe.Ingredients = [new RecipeIngredient { Name = ingredientName2, Unit = "Grams", Amount = 200 }];
        
         var (id, _) = await PostRecipeAsync(client, recipe);
 
@@ -58,9 +64,11 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     }
 
     [Theory, ShortStringAutoData]
-    public async Task Create_And_Get_Recipe(NewRecipe recipe)
+    public async Task Create_And_Get_Recipe(NewRecipe recipe, string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
+        await PostIngredientAsync(client, ingredientName);
+        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100 }];
      
         var (id, _) = await PostRecipeAsync(client, recipe);
         var (getId, name) = await GetRecipeAsync(client, id);
@@ -70,9 +78,11 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     }
 
     [Theory, ShortStringAutoData]
-    public async Task Create_Recipe_And_Get_Ingredients_Returns_Empty_List(NewRecipe recipe)
+    public async Task Create_Recipe_And_Get_Ingredients(NewRecipe recipe, string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
+        await PostIngredientAsync(client, ingredientName);
+        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100 }];
 
         var (id, _) = await PostRecipeAsync(client, recipe);
 
@@ -82,7 +92,16 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         var data = await response.Content.ReadAsStringAsync();
         var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(data, jsonOptions);
         ingredients.Should().NotBeNull();
-        ingredients.Should().BeEmpty();
+        ingredients.Should().HaveCount(1);
+        ingredients![0].Name.Should().Be(ingredientName);
+    }
+
+    private static async Task PostIngredientAsync(HttpClient client, string name)
+    {
+        var body = new { name, unitIds = new[] { 4 } }; // Grams
+        var content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+        using var response = await client.PostAsync("/api/ingredient", content);
+        await response.ShouldHaveStatusCode(HttpStatusCode.OK);
     }
 
     private static async Task<(int Id, string Name)> PostRecipeAsync(HttpClient client, NewRecipe recipe)
