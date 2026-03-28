@@ -1,4 +1,5 @@
 ﻿using MenuApi.Services;
+using MenuApi.Validation;
 using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
 
@@ -14,13 +15,22 @@ public static class RecipeApi
 
         group.MapGet("/", GetRecipesAsync);
 
-        group.MapGet("/{recipeId}", GetRecipeAsync);
+        group.MapGet("/{recipeId}", GetRecipeAsync)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapGet("/{recipeId}/ingredient", GetRecipeIngredientsAsync);
 
-        group.MapPost("/", CreateRecipeAsync);
+        group.MapPost("/", CreateRecipeAsync)
+            .AddEndpointFilter<ValidationFilter<NewRecipe>>()
+            .Produces<FullRecipe>(StatusCodes.Status200OK)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
-        group.MapPut("{recipeId}", UpdateRecipeAsync);
+        group.MapPut("{recipeId}", UpdateRecipeAsync)
+            .AddEndpointFilter<ValidationFilter<NewRecipe>>()
+            .Produces<FullRecipe>(StatusCodes.Status200OK)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         return group;
     }
@@ -30,9 +40,14 @@ public static class RecipeApi
         return await recipeService.GetRecipesAsync();
     }
 
-    public static async Task<FullRecipe?> GetRecipeAsync(IRecipeService recipeService, RecipeId recipeId)
+    public static async Task<IResult> GetRecipeAsync(IRecipeService recipeService, RecipeId recipeId)
     {
-        return await recipeService.GetRecipeAsync(recipeId);
+        var recipe = await recipeService.GetRecipeAsync(recipeId);
+        return recipe is not null
+            ? Results.Ok(recipe)
+            : Results.Problem(
+                detail: $"Recipe with ID {recipeId} was not found.",
+                statusCode: StatusCodes.Status404NotFound);
     }
 
     public static async Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(IRecipeService recipeService, RecipeId recipeId)

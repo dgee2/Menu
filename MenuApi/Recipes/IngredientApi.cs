@@ -1,5 +1,6 @@
 ﻿﻿using MenuApi.Repositories;
 using MenuApi.Services;
+using MenuApi.Validation;
 using MenuApi.ViewModel;
 
 namespace MenuApi.Recipes;
@@ -16,7 +17,10 @@ public static class IngredientApi
 
         group.MapGet("/unit", GetIngredientUnitsAsync);
 
-        group.MapPost("/", CreateIngredientAsync);
+        group.MapPost("/", CreateIngredientAsync)
+            .AddEndpointFilter<ValidationFilter<NewIngredient>>()
+            .Produces<ViewModel.Ingredient>(StatusCodes.Status200OK)
+            .ProducesValidationProblem();
 
         return group;
     }
