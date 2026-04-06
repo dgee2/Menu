@@ -24,13 +24,13 @@
   },
   "dependencies": {
     "@auth0/auth0-vue": "^2.5.0",
-    "@quasar/extras": "^1.17.0",
+    "@quasar/extras": "^1.18.0",
     "@tanstack/vue-query": "^5.95.2",
     "@tanstack/vue-query-devtools": "^6.1.10",
     "autoprefixer": "^10.4.27",
     "openapi-fetch": "^0.17.0",
     "pinia": "^3.0.4",
-    "quasar": "^2.19.2",
+    "quasar": "^2.19.3",
     "vite-tsconfig-paths": "^6.1.1",
     "vue": "^3.5.31",
     "vue-router": "^5.0.4"
@@ -38,7 +38,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.58.2",
-    "@quasar/app-vite": "^2.5.4",
+    "@quasar/app-vite": "^2.6.0",
     "@quasar/vite-plugin": "^1.11.0",
     "@storybook/addon-a11y": "^10.3.3",
     "@storybook/addon-docs": "^10.3.3",
