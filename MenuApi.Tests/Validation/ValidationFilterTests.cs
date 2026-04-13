@@ -9,6 +9,7 @@ using MenuApi.ViewModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.DependencyInjection;
+using Vogen;
 using Xunit;
 
 namespace MenuApi.Tests.Validation;
@@ -105,6 +106,36 @@ public class ValidationFilterTests
     public async Task UninitializedVogenStruct_Returns400()
     {
         // Simulates when FluentValidation throws accessing uninitialized Vogen structs
+        var httpContext = new DefaultHttpContext();
+        var services = new ServiceCollection();
+        var throwingValidator = A.Fake<IValidator<NewRecipe>>();
+        A.CallTo(() => throwingValidator.ValidateAsync(A<NewRecipe>._, A<CancellationToken>._))
+            .ThrowsAsync(new ValueObjectValidationException("Use of uninitialized Value Object."));
+        services.AddScoped<IValidator<NewRecipe>>(_ => throwingValidator);
+        httpContext.RequestServices = services.BuildServiceProvider();
+
+        var recipe = new NewRecipe
+        {
+            Name = RecipeName.From("test"),
+            Ingredients = []
+        };
+        var context = A.Fake<EndpointFilterInvocationContext>();
+        A.CallTo(() => context.HttpContext).Returns(httpContext);
+        A.CallTo(() => context.Arguments).Returns(new List<object?> { recipe });
+
+        EndpointFilterDelegate next = _ => ValueTask.FromResult<object?>(null);
+        var filter = new ValidationFilter<NewRecipe>();
+
+        var result = await filter.InvokeAsync(context, next);
+
+        var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
+        problemResult.StatusCode.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task UninitializedVogenStruct_MessageFallback_Returns400()
+    {
+        // Verifies fallback path: non-Vogen exception with the Vogen message still returns 400
         var httpContext = new DefaultHttpContext();
         var services = new ServiceCollection();
         var throwingValidator = A.Fake<IValidator<NewRecipe>>();

@@ -7,15 +7,22 @@ public class NewIngredientValidator : AbstractValidator<NewIngredient>
 {
     public NewIngredientValidator()
     {
-        RuleFor(x => x.Name.Value)
-            .NotEmpty()
+        RuleFor(x => x.Name)
+            .Must(name => name.IsInitialized())
             .OverridePropertyName("Name")
             .WithMessage("'Name' must not be empty.");
 
         RuleFor(x => x.Name.Value)
+            .NotEmpty()
+            .OverridePropertyName("Name")
+            .WithMessage("'Name' must not be empty.")
+            .When(x => x.Name.IsInitialized());
+
+        RuleFor(x => x.Name.Value)
             .MaximumLength(50)
             .OverridePropertyName("Name")
-            .WithMessage("'Name' must be 50 characters or fewer.");
+            .WithMessage("'Name' must be 50 characters or fewer.")
+            .When(x => x.Name.IsInitialized());
 
         RuleFor(x => x.UnitIds)
             .NotNull()

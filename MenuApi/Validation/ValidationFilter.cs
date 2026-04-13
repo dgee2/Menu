@@ -1,4 +1,5 @@
 using FluentValidation;
+using Vogen;
 
 namespace MenuApi.Validation;
 
@@ -48,6 +49,6 @@ public class ValidationFilter<T> : IEndpointFilter
     }
 
     private static bool IsVogenValueObjectException(Exception ex) =>
-        ex.Message.Contains("uninitialized Value Object", StringComparison.OrdinalIgnoreCase) ||
-        ex.GetType().Name.Contains("ValueObjectValidation", StringComparison.Ordinal);
+        ex is ValueObjectValidationException ||
+        ex.Message.Contains("uninitialized Value Object", StringComparison.OrdinalIgnoreCase);
 }

@@ -27,6 +27,57 @@ public class RecipeIngredientValidatorTests
     }
 
     [Fact]
+    public void UninitializedName_Fails()
+    {
+#pragma warning disable VOG009
+        var ingredient = new RecipeIngredient
+        {
+            Name = default,
+            Unit = IngredientUnitName.From("Grams"),
+            Amount = IngredientAmount.From(100m)
+        };
+#pragma warning restore VOG009
+
+        var result = validator.TestValidate(ingredient);
+
+        result.ShouldHaveValidationErrorFor("Name");
+    }
+
+    [Fact]
+    public void UninitializedUnit_Fails()
+    {
+#pragma warning disable VOG009
+        var ingredient = new RecipeIngredient
+        {
+            Name = IngredientName.From("Flour"),
+            Unit = default,
+            Amount = IngredientAmount.From(100m)
+        };
+#pragma warning restore VOG009
+
+        var result = validator.TestValidate(ingredient);
+
+        result.ShouldHaveValidationErrorFor("Unit");
+    }
+
+    [Fact]
+    public void UninitializedAmount_Fails()
+    {
+#pragma warning disable VOG009
+        var ingredient = new RecipeIngredient
+        {
+            Name = IngredientName.From("Flour"),
+            Unit = IngredientUnitName.From("Grams"),
+            Amount = default
+        };
+#pragma warning restore VOG009
+
+        var result = validator.TestValidate(ingredient);
+
+        result.ShouldHaveValidationErrorFor("Amount");
+    }
+
+    [Fact]
     public void NameTooLong_Fails()
     {
         var ingredient = new RecipeIngredient

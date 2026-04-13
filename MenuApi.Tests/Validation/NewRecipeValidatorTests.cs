@@ -59,6 +59,22 @@ public class NewRecipeValidatorTests
         result.ShouldHaveValidationErrorFor(x => x.Ingredients);
     }
 
+    [Fact]
+    public void UninitializedName_Fails()
+    {
+#pragma warning disable VOG009
+        var recipe = new NewRecipe
+        {
+            Name = default,
+            Ingredients = [CreateValidIngredient()]
+        };
+#pragma warning restore VOG009
+
+        var result = validator.TestValidate(recipe);
+
+        result.ShouldHaveValidationErrorFor("Name");
+    }
+
     [Theory]
     [InlineData(" ")]
     [InlineData("  \t  ")]

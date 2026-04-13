@@ -25,6 +25,22 @@ public class NewIngredientValidatorTests
     }
 
     [Fact]
+    public void UninitializedName_Fails()
+    {
+#pragma warning disable VOG009
+        var ingredient = new NewIngredient
+        {
+            Name = default,
+            UnitIds = [1, 2]
+        };
+#pragma warning restore VOG009
+
+        var result = validator.TestValidate(ingredient);
+
+        result.ShouldHaveValidationErrorFor("Name");
+    }
+
+    [Fact]
     public void NameTooLong_Fails()
     {
         var ingredient = new NewIngredient

@@ -113,31 +113,32 @@ This is the standard ASP.NET Core validation problem details format produced by 
 
 ## Vogen Value Object Validation
 
-Add `Validate` methods to value objects so they reject invalid values at creation time:
+> **Decision:** Vogen `Validate` methods are **not** added to value objects.
 
-| Value Object | Underlying Type | Validation Rule |
-|---|---|---|
-| `RecipeName` | `string` | Must not be null/empty/whitespace |
-| `IngredientName` | `string` | Must not be null/empty/whitespace |
-| `IngredientAmount` | `decimal` | Must be greater than 0 |
-| `IngredientUnitName` | `string` | Must not be null/empty/whitespace |
-| `IngredientUnitAbbreviation` | `string` | No additional validation (nullable) |
-| `IngredientUnitType` | `string` | Must not be null/empty/whitespace |
-| `RecipeId` | `int` | Must be greater than 0 |
-| `IngredientId` | `int` | Must be greater than 0 |
+Adding `Validate` methods to Vogen value objects (e.g. rejecting empty strings in `RecipeName`) was considered but deliberately avoided. The reason: Vogen's `Validate` runs during deserialization — if validation fails, the JSON deserializer throws before the request reaches FluentValidation. This means:
 
-Vogen supports a static `Validate` method on each value object:
+- The API returns a generic deserialization error instead of a structured RFC 9457 validation response
+- Clients lose the field-specific error messages that FluentValidation provides (e.g. `"Name": ["'Name' must not be empty."]`)
+- Multiple validation errors cannot be reported in a single response
+
+**Actual approach:** Validators use Vogen's generated `IsInitialized()` method to detect uninitialized (missing) value objects and produce field-specific errors before accessing `.Value`:
 
 ```csharp
-[ValueObject<string>]
-public readonly partial struct RecipeName
-{
-    private static Validation Validate(string value) =>
-        string.IsNullOrWhiteSpace(value)
-            ? Validation.Invalid("Recipe name must not be empty.")
-            : Validation.Ok;
-}
+// Check presence first — produces "Name" error if missing
+RuleFor(x => x.Name)
+    .Must(name => name.IsInitialized())
+    .OverridePropertyName("Name")
+    .WithMessage("'Name' must not be empty.");
+
+// Only validate .Value when initialized — avoids Vogen throw
+RuleFor(x => x.Name.Value)
+    .MaximumLength(500)
+    .OverridePropertyName("Name")
+    .WithMessage("'Name' must be 500 characters or fewer.")
+    .When(x => x.Name.IsInitialized());
 ```
+
+The `ValidationFilter` retains a fallback `catch` for `Vogen.ValueObjectValidationException` to handle any remaining edge cases where an uninitialized value object is accessed outside the guarded rules.
 
 ## Endpoint Filter Implementation
 
