@@ -169,19 +169,34 @@ public class ValidationFilter<T> : IEndpointFilter
                     ["Body"] = ["Request body is required."]
                 });
 
-        var result = await validator.ValidateAsync(argument);
-        if (!result.IsValid)
+        try
+        {
+            var result = await validator.ValidateAsync(argument, context.HttpContext.RequestAborted);
+            if (!result.IsValid)
+            {
+                return Results.ValidationProblem(
+                    result.Errors
+                        .GroupBy(e => e.PropertyName)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Select(e => e.ErrorMessage).ToArray()));
+            }
+        }
+        catch (Exception ex) when (IsVogenValueObjectException(ex))
         {
             return Results.ValidationProblem(
-                result.Errors
-                    .GroupBy(e => e.PropertyName)
-                    .ToDictionary(
-                        g => g.Key,
-                        g => g.Select(e => e.ErrorMessage).ToArray()));
+                new Dictionary<string, string[]>
+                {
+                    ["Body"] = ["Request body contains invalid or missing fields."]
+                });
         }
 
         return await next(context);
     }
+
+    private static bool IsVogenValueObjectException(Exception ex) =>
+        ex is ValueObjectValidationException ||
+        ex.Message.Contains("uninitialized Value Object", StringComparison.OrdinalIgnoreCase);
 }
 ```
 

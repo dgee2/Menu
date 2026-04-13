@@ -44,7 +44,7 @@ public class RecipeIngredientValidator : AbstractValidator<RecipeIngredient>
         RuleFor(x => x.Amount)
             .Must(amount => amount.IsInitialized())
             .OverridePropertyName("Amount")
-            .WithMessage("'Amount' must be greater than '0'.");
+            .WithMessage("'Amount' must not be empty.");
 
         RuleFor(x => x.Amount.Value)
             .GreaterThan(0)
