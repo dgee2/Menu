@@ -1,4 +1,5 @@
 using FluentValidation;
+using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
 
 namespace MenuApi.Validation;
@@ -7,22 +8,9 @@ public class NewRecipeValidator : AbstractValidator<NewRecipe>
 {
     public NewRecipeValidator()
     {
-        RuleFor(x => x.Name)
-            .Must(name => name.IsInitialized())
-            .OverridePropertyName("Name")
-            .WithMessage("'Name' must not be empty.");
-
-        RuleFor(x => x.Name.Value)
-            .NotEmpty()
-            .OverridePropertyName("Name")
-            .WithMessage("'Name' must not be empty.")
-            .When(x => x.Name.IsInitialized());
-
-        RuleFor(x => x.Name.Value)
-            .MaximumLength(500)
-            .OverridePropertyName("Name")
-            .WithMessage("'Name' must be 500 characters or fewer.")
-            .When(x => x.Name.IsInitialized());
+        Include(VogenValidationRules.StringRules<NewRecipe, RecipeName>(
+            x => x.Name, x => x.Name.Value,
+            x => x.Name.IsInitialized(), "Name", 500));
 
         RuleFor(x => x.Ingredients)
             .NotNull()

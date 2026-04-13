@@ -109,17 +109,7 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
     public async Task UpdateRecipe_EmptyName_Returns400(string recipeName, string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
-
-        await PostIngredientAsync(client, ingredientName);
-
-        var createBody = new NewRecipe { Name = recipeName, Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }] };
-        var createContent = new StringContent(JsonSerializer.Serialize(createBody, jsonOptions), Encoding.UTF8, ApplicationJson);
-        using var createResponse = await client.PostAsync(ApiRecipeRoute, createContent);
-        await createResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
-
-        using var createStream = await createResponse.Content.ReadAsStreamAsync();
-        using var createDoc = await JsonDocument.ParseAsync(createStream);
-        var recipeId = createDoc.RootElement.GetProperty("id").GetInt32();
+        var recipeId = await CreateRecipeAsync(client, recipeName, ingredientName);
 
         var updateBody = new NewRecipe { Name = "", Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }] };
         var updateContent = new StringContent(JsonSerializer.Serialize(updateBody, jsonOptions), Encoding.UTF8, ApplicationJson);
@@ -132,17 +122,7 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
     public async Task UpdateRecipe_NonExistentIngredient_Returns422(string recipeName, string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
-
-        await PostIngredientAsync(client, ingredientName);
-
-        var createBody = new NewRecipe { Name = recipeName, Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }] };
-        var createContent = new StringContent(JsonSerializer.Serialize(createBody, jsonOptions), Encoding.UTF8, ApplicationJson);
-        using var createResponse = await client.PostAsync(ApiRecipeRoute, createContent);
-        await createResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
-
-        using var createStream = await createResponse.Content.ReadAsStreamAsync();
-        using var createDoc = await JsonDocument.ParseAsync(createStream);
-        var recipeId = createDoc.RootElement.GetProperty("id").GetInt32();
+        var recipeId = await CreateRecipeAsync(client, recipeName, ingredientName);
 
         var updateBody = new NewRecipe
         {
@@ -153,6 +133,20 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
         using var updateResponse = await client.PutAsync($"/api/recipe/{recipeId}", updateContent);
 
         await updateResponse.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
+    }
+
+    private async Task<int> CreateRecipeAsync(HttpClient client, string recipeName, string ingredientName)
+    {
+        await PostIngredientAsync(client, ingredientName);
+
+        var createBody = new NewRecipe { Name = recipeName, Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }] };
+        var createContent = new StringContent(JsonSerializer.Serialize(createBody, jsonOptions), Encoding.UTF8, ApplicationJson);
+        using var createResponse = await client.PostAsync(ApiRecipeRoute, createContent);
+        await createResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
+
+        using var createStream = await createResponse.Content.ReadAsStreamAsync();
+        using var createDoc = await JsonDocument.ParseAsync(createStream);
+        return createDoc.RootElement.GetProperty("id").GetInt32();
     }
 
     private async Task PostIngredientAsync(HttpClient client, string name)
