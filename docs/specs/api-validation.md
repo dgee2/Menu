@@ -313,13 +313,13 @@ MenuApi/
 │   ├── BusinessValidationException.cs   # Custom exception for 422 responses
 │   └── BusinessValidationExceptionHandler.cs  # IExceptionHandler → 422
 ├── ValueObjects/
-│   ├── RecipeName.cs                    # Add Validate method
-│   ├── RecipeId.cs                      # Add Validate method
-│   ├── IngredientName.cs                # Add Validate method
-│   ├── IngredientId.cs                  # Add Validate method
-│   ├── IngredientAmount.cs              # Add Validate method
-│   ├── IngredientUnitName.cs            # Add Validate method
-│   └── IngredientUnitType.cs            # Add Validate method
+│   ├── RecipeName.cs                    # No Validate method changes
+│   ├── RecipeId.cs                      # No Validate method changes
+│   ├── IngredientName.cs                # No Validate method changes
+│   ├── IngredientId.cs                  # No Validate method changes
+│   ├── IngredientAmount.cs              # No Validate method changes
+│   ├── IngredientUnitName.cs            # No Validate method changes
+│   └── IngredientUnitType.cs            # No Validate method changes
 ├── Recipes/
 │   ├── RecipeApi.cs                     # Add filters, 404 handling, .Produces()
 │   └── IngredientApi.cs                 # Add filters, .Produces()
