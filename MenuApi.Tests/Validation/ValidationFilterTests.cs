@@ -163,6 +163,23 @@ public class ValidationFilterTests
     }
 
     [Fact]
+    public async Task MissingValidator_ThrowsInvalidOperationException()
+    {
+        var httpContext = new DefaultHttpContext();
+        httpContext.RequestServices = new ServiceCollection().BuildServiceProvider();
+
+        var context = A.Fake<EndpointFilterInvocationContext>();
+        A.CallTo(() => context.HttpContext).Returns(httpContext);
+
+        EndpointFilterDelegate next = _ => ValueTask.FromResult<object?>(null);
+        var filter = new ValidationFilter<NewRecipe>();
+
+        Func<Task> act = async () => await filter.InvokeAsync(context, next);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
     public async Task NonVogenException_Propagates()
     {
         var httpContext = new DefaultHttpContext();

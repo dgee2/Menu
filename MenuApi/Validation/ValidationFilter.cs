@@ -9,11 +9,9 @@ public class ValidationFilter<T> : IEndpointFilter
         EndpointFilterInvocationContext context,
         EndpointFilterDelegate next)
     {
-        var validator = context.HttpContext.RequestServices.GetService<IValidator<T>>();
-        if (validator is null)
-            return await next(context);
+        var validator = context.HttpContext.RequestServices.GetRequiredService<IValidator<T>>();
 
-        var argument = context.Arguments.OfType<T>().FirstOrDefault();
+        var argument= context.Arguments.OfType<T>().FirstOrDefault();
         if (argument is null)
             return Results.ValidationProblem(
                 new Dictionary<string, string[]>

@@ -145,7 +145,7 @@ The `ValidationFilter` retains a fallback `catch` for `Vogen.ValueObjectValidati
 Create a generic, reusable `ValidationFilter<T>` that:
 
 1. Extracts the `T` argument from the endpoint invocation context
-2. Resolves `IValidator<T>` from DI
+2. Resolves `IValidator<T>` from DI (throws if not registered — a missing validator is a misconfiguration)
 3. Runs validation
 4. Returns `Results.ValidationProblem(errors)` (400) if validation fails
 5. Calls `next(context)` if validation passes
@@ -157,11 +157,9 @@ public class ValidationFilter<T> : IEndpointFilter
         EndpointFilterInvocationContext context,
         EndpointFilterDelegate next)
     {
-        var validator = context.HttpContext.RequestServices.GetService<IValidator<T>>();
-        if (validator is null)
-            return await next(context);
+        var validator = context.HttpContext.RequestServices.GetRequiredService<IValidator<T>>();
 
-        var argument = context.Arguments.OfType<T>().FirstOrDefault();
+        var argument= context.Arguments.OfType<T>().FirstOrDefault();
         if (argument is null)
             return Results.ValidationProblem(
                 new Dictionary<string, string[]>
