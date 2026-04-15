@@ -14,12 +14,15 @@ on:
 
 # Based from https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-net
 jobs:
-  dependabot:
+  dependency-review:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    
+
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Dependency Review
-        if: github.event_name == 'pull_request'
         uses: actions/dependency-review-action@v4
 
   build:
