@@ -36,7 +36,7 @@
 		</PackageReference>
 		<PackageReference Include="FakeItEasy" Version="9.0.1" />
 		<PackageReference Include="GitHubActionsTestLogger" Version="3.0.2" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.6" />
 		<PackageReference Include="Microsoft.Testing.Platform" Version="2.1.0" />
 		<PackageReference Include="xunit.v3.mtp-v2" Version="3.2.2" />
 	</ItemGroup>
