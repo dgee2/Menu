@@ -108,7 +108,16 @@ jobs:
         with:
           name: openapi-spec
           path: .
-          merge-multiple: true
+
+      - name: Place OpenAPI document
+        run: |
+          mkdir -p open-api
+          spec_path="$(find . -maxdepth 3 -name menu-api.json | head -n 1)"
+          if [ -z "$spec_path" ]; then
+            echo "menu-api.json not found in downloaded artifact" >&2
+            exit 1
+          fi
+          cp "$spec_path" open-api/menu-api.json
 
       - name: Enable pnpm with corepack
         run: corepack enable pnpm
