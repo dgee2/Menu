@@ -32,7 +32,19 @@ Then, from `ui/menu-website`, regenerate the frontend client if you need it expl
 pnpm generate-openapi
 ```
 
-`pnpm dev`, `pnpm aspire`, `pnpm type-check`, `pnpm build`, `pnpm test`, `pnpm test:e2e`, `pnpm test:storybook`, `pnpm storybook`, and `pnpm build-storybook` regenerate `src/generated/open-api/menu-api.ts` for you, but they still require `../../open-api/menu-api.json` from the backend build to exist first.
+These frontend commands regenerate `src/generated/open-api/menu-api.ts` for you:
+
+- `pnpm dev`
+- `pnpm aspire`
+- `pnpm type-check`
+- `pnpm build`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm test:storybook`
+- `pnpm storybook`
+- `pnpm build-storybook`
+
+They still require `../../open-api/menu-api.json` from the backend build to exist first.
 
 ### Compile and Hot-Reload for Development
 
