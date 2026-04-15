@@ -27,22 +27,42 @@ jobs:
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
 
-  build:
+  openapi:
+    name: Generate OpenAPI document
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Enable pnpm with corepack
-        run: corepack enable pnpm
-
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v6
+      - name: Setup dotnet 10.x
+        uses: actions/setup-dotnet@v5
         with:
-          node-version: 22.x
-          cache: 'pnpm'
-          cache-dependency-path: ui/menu-website/pnpm-lock.yaml
+          dotnet-version: "10.0.x"
+
+      - name: Install .NET Aspire workload
+        run: dotnet workload install aspire
+
+      - name: Restore
+        run: dotnet restore MenuApi/MenuApi.csproj
+
+      - name: Build API (generate OpenAPI)
+        run: dotnet build MenuApi/MenuApi.csproj --configuration Release --no-restore
+
+      - name: Upload OpenAPI document
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: open-api/menu-api.json
+          if-no-files-found: error
+
+  backend:
+    name: Backend build and tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Setup dotnet 10.x
         uses: actions/setup-dotnet@v5
@@ -73,6 +93,31 @@ jobs:
           parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
           parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
           parameters__Auth0Audience: http://localhost:65273
+
+  frontend:
+    name: Frontend validation
+    runs-on: ubuntu-latest
+    needs: openapi
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download OpenAPI document
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+          path: .
+
+      - name: Enable pnpm with corepack
+        run: corepack enable pnpm
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'pnpm'
+          cache-dependency-path: ui/menu-website/pnpm-lock.yaml
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
