@@ -44,7 +44,8 @@ public class RecipeApiTests
     [Theory, CustomAutoData]
     public async Task GetRecipeAsync_NotFound_Returns404(RecipeId recipeId)
     {
-        A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns((FullRecipe?)null);
+        FullRecipe? recipe = null;
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
         var result = await RecipeApi.GetRecipeAsync(recipeService, recipeId);
 
@@ -85,3 +86,4 @@ public class RecipeApiTests
         result.Should().Be(recipe);
     }
 }
+
