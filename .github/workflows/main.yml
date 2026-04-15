@@ -12,6 +12,9 @@ on:
   pull_request:
     branches: ["dev", "master", "main"]
 
+permissions:
+  contents: read
+
 # Based from https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-net
 jobs:
   dependency-review:
@@ -27,9 +30,12 @@ jobs:
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
 
-  openapi:
-    name: Generate OpenAPI document
+  backend-build:
+    name: Backend build (OpenAPI artifact)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
 
     steps:
       - name: Checkout
@@ -44,10 +50,10 @@ jobs:
         run: dotnet workload install aspire
 
       - name: Restore
-        run: dotnet restore MenuApi/MenuApi.csproj
+        run: dotnet restore MenuApi.sln
 
-      - name: Build API (generate OpenAPI)
-        run: dotnet build MenuApi/MenuApi.csproj --configuration Release --no-restore
+      - name: Build solution (generate OpenAPI)
+        run: dotnet build MenuApi.sln --configuration Release --no-restore
 
       - name: Upload OpenAPI document
         uses: actions/upload-artifact@v4
@@ -56,9 +62,36 @@ jobs:
           path: open-api/menu-api.json
           if-no-files-found: error
 
-  backend:
-    name: Backend build and tests
+      - name: Upload backend build outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build-output
+          path: |
+            Menu.ApiServiceDefaults/bin/Release/
+            Menu.ApiServiceDefaults/obj/Release/
+            Menu.AppHost/bin/Release/
+            Menu.AppHost/obj/Release/
+            Menu.MigrationService/bin/Release/
+            Menu.MigrationService/obj/Release/
+            Menu.ServiceDefaults/bin/Release/
+            Menu.ServiceDefaults/obj/Release/
+            MenuApi/bin/Release/
+            MenuApi/obj/Release/
+            MenuApi.Tests/bin/Release/
+            MenuApi.Tests/obj/Release/
+            MenuApi.Integration.Tests/bin/Release/
+            MenuApi.Integration.Tests/obj/Release/
+            MenuDB/bin/Release/
+            MenuDB/obj/Release/
+          if-no-files-found: error
+
+  backend-tests:
+    name: Backend tests
     runs-on: ubuntu-latest
+    needs: backend-build
+    permissions:
+      contents: read
+      actions: read
 
     steps:
       - name: Checkout
@@ -72,11 +105,12 @@ jobs:
       - name: Install .NET Aspire workload
         run: dotnet workload install aspire
 
-      - name: Install dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
+      - name: Download backend build outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build-output
+          path: .
+          merge-multiple: true
 
       - name: clean ssl cert
         run: dotnet dev-certs https --clean
@@ -87,7 +121,7 @@ jobs:
           echo "SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:${SSL_CERT_DIR:-/usr/lib/ssl/certs}" >> "$GITHUB_ENV"
 
       - name: Test with the dotnet CLI
-        run: dotnet test --configuration Release --no-build --no-restore
+        run: dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build --no-restore
         env:
           parameters__Auth0TestClientId: ${{ vars.AUTH0_CLIENT_ID }}
           parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
@@ -97,7 +131,10 @@ jobs:
   frontend:
     name: Frontend validation
     runs-on: ubuntu-latest
-    needs: openapi
+    needs: backend-build
+    permissions:
+      contents: read
+      actions: read
 
     steps:
       - name: Checkout
@@ -108,6 +145,7 @@ jobs:
         with:
           name: openapi-spec
           path: open-api
+          merge-multiple: true
 
       - name: Enable pnpm with corepack
         run: corepack enable pnpm
