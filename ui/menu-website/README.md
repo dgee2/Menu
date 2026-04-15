@@ -20,6 +20,20 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 pnpm install
 ```
 
+The frontend OpenAPI client under `src/generated/open-api/` is a generated build artifact and is not committed. On a clean checkout, first generate the backend OpenAPI document from the repository root:
+
+```sh
+dotnet build MenuApi/MenuApi.csproj
+```
+
+Then, from `ui/menu-website`, regenerate the frontend client if you need it explicitly:
+
+```sh
+pnpm generate-openapi
+```
+
+`pnpm dev`, `pnpm aspire`, `pnpm type-check`, `pnpm build`, `pnpm test`, `pnpm test:e2e`, `pnpm test:storybook`, `pnpm storybook`, and `pnpm build-storybook` regenerate `src/generated/open-api/menu-api.ts` for you, but they still require `../../open-api/menu-api.json` from the backend build to exist first.
+
 ### Compile and Hot-Reload for Development
 
 ```sh
@@ -62,3 +76,5 @@ pnpm test:e2e --debug
 ```sh
 pnpm lint
 ```
+
+`pnpm lint` does not regenerate the OpenAPI client because it does not depend on `src/generated/open-api/menu-api.ts`.
