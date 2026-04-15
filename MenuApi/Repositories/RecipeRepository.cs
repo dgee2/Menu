@@ -2,6 +2,7 @@
 using MenuDB;
 using MenuDB.Data;
 using MenuApi.DBModel;
+using MenuApi.Exceptions;
 using MenuApi.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
@@ -87,9 +88,9 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         foreach (var item in incoming)
         {
             if (!ingredientLookup.TryGetValue(item.IngredientName.Value, out var ingredientId))
-                throw new InvalidOperationException($"Ingredient '{item.IngredientName.Value}' does not exist.");
+                throw new BusinessValidationException($"Ingredient '{item.IngredientName.Value}' does not exist.");
             if (!unitLookup.TryGetValue(item.UnitName.Value, out var unitId))
-                throw new InvalidOperationException($"Unit '{item.UnitName.Value}' does not exist.");
+                throw new BusinessValidationException($"Unit '{item.UnitName.Value}' does not exist.");
 
             var existingRow = existing.FirstOrDefault(e => e.IngredientId == ingredientId && e.UnitId == unitId);
             if (existingRow is not null)

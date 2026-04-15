@@ -1,9 +1,12 @@
-﻿using AwesomeAssertions;
+﻿#nullable enable
+
+using AwesomeAssertions;
 using FakeItEasy;
 using MenuApi.Recipes;
 using MenuApi.Services;
 using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Xunit;
 
 namespace MenuApi.Tests.Controllers;
@@ -34,7 +37,20 @@ public class RecipeApiTests
 
         var result = await RecipeApi.GetRecipeAsync(recipeService, recipeId);
 
-        result.Should().Be(recipe);
+        var okResult = result.Should().BeOfType<Ok<FullRecipe>>().Subject;
+        okResult.Value.Should().Be(recipe);
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipeAsync_NotFound_Returns404(RecipeId recipeId)
+    {
+        FullRecipe? recipe = null;
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
+
+        var result = await RecipeApi.GetRecipeAsync(recipeService, recipeId);
+
+        var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
+        problemResult.StatusCode.Should().Be(404);
     }
 
     [Theory, CustomAutoData]
@@ -70,3 +86,4 @@ public class RecipeApiTests
         result.Should().Be(recipe);
     }
 }
+
