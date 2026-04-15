@@ -108,6 +108,7 @@ jobs:
         with:
           name: openapi-spec
           path: .
+          merge-multiple: true
 
       - name: Enable pnpm with corepack
         run: corepack enable pnpm
