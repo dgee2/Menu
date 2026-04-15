@@ -101,14 +101,14 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
     private static async Task PostIngredientAsync(HttpClient client, string name)
     {
         var body = new { name, unitIds = new[] { 4 } }; // Grams
-        var content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+        using var content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
         using var response = await client.PostAsync("/api/ingredient", content);
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
     }
 
     private static async Task<(int Id, string Name)> PostRecipeAsync(HttpClient client, NewRecipe recipe)
     {
-        var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
+        using var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
         using var response = await client.PostAsync("/api/recipe", requestContent);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
@@ -121,7 +121,7 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
 
     private static async Task<(int Id, string Name)> PutRecipeAsync(HttpClient client, int id, NewRecipe recipe)
     {
-        var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
+        using var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
         using var response = await client.PutAsync($"/api/recipe/{id}", requestContent);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
@@ -180,3 +180,4 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         public decimal Amount { get; set; }
     }
 }
+
