@@ -32,7 +32,7 @@
     "pinia": "^3.0.4",
     "quasar": "^2.19.2",
     "vite-tsconfig-paths": "^6.1.1",
-    "vue": "^3.5.31",
+    "vue": "^3.5.32",
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
@@ -48,7 +48,7 @@
     "@tanstack/eslint-plugin-query": "^5.95.2",
     "@tsconfig/node22": "^22.0.5",
     "@types/node": "^25.5.0",
-    "@vitejs/plugin-vue": "^6.0.5",
+    "@vitejs/plugin-vue": "^6.0.6",
     "@vitest/browser-playwright": "4.1.2",
     "@vitest/coverage-v8": "4.1.2",
     "@vitest/eslint-plugin": "^1.6.13",
