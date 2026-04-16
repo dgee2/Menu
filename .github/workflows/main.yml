@@ -12,6 +12,9 @@ on:
   pull_request:
     branches: ["dev", "master", "main"]
 
+permissions:
+  contents: read
+
 # Based from https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-net
 jobs:
   dependency-review:
@@ -27,12 +30,125 @@ jobs:
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
 
-  build:
+  backend-build:
+    name: Backend build (OpenAPI artifact)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Setup dotnet 10.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install .NET Aspire workload
+        run: dotnet workload install aspire
+
+      - name: Restore
+        run: dotnet restore MenuApi.sln
+
+      - name: Build solution (generate OpenAPI)
+        run: dotnet build MenuApi.sln --configuration Release --no-restore
+
+      - name: Upload OpenAPI document
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: open-api/menu-api.json
+          if-no-files-found: error
+
+      - name: Upload backend build outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build-output
+          path: |
+            Menu.ApiServiceDefaults/bin/Release/
+            Menu.ApiServiceDefaults/obj/Release/
+            Menu.AppHost/bin/Release/
+            Menu.AppHost/obj/Release/
+            Menu.MigrationService/bin/Release/
+            Menu.MigrationService/obj/Release/
+            Menu.ServiceDefaults/bin/Release/
+            Menu.ServiceDefaults/obj/Release/
+            MenuApi/bin/Release/
+            MenuApi/obj/Release/
+            MenuApi.Tests/bin/Release/
+            MenuApi.Tests/obj/Release/
+            MenuApi.Integration.Tests/bin/Release/
+            MenuApi.Integration.Tests/obj/Release/
+            MenuDB/bin/Release/
+            MenuDB/obj/Release/
+          if-no-files-found: error
+
+  backend-tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    needs: backend-build
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup dotnet 10.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install .NET Aspire workload
+        run: dotnet workload install aspire
+
+      - name: Download backend build outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build-output
+          path: .
+          merge-multiple: true
+
+      - name: clean ssl cert
+        run: dotnet dev-certs https --clean
+
+      - name: trust ssl cert
+        run: |
+          dotnet dev-certs https --trust || true
+          echo "SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:${SSL_CERT_DIR:-/usr/lib/ssl/certs}" >> "$GITHUB_ENV"
+
+      - name: Restore test project
+        run: dotnet restore MenuApi.Tests/MenuApi.Tests.csproj
+
+      - name: Test with the dotnet CLI
+        run: dotnet test MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+        env:
+          parameters__Auth0TestClientId: ${{ vars.AUTH0_CLIENT_ID }}
+          parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
+          parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
+          parameters__Auth0Audience: http://localhost:65273
+
+  frontend:
+    name: Frontend validation
+    runs-on: ubuntu-latest
+    needs: backend-build
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download OpenAPI document
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+          path: open-api
+          merge-multiple: true
 
       - name: Enable pnpm with corepack
         run: corepack enable pnpm
@@ -43,36 +159,6 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
           cache-dependency-path: ui/menu-website/pnpm-lock.yaml
-
-      - name: Setup dotnet 10.x
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "10.0.x"
-
-      - name: Install .NET Aspire workload
-        run: dotnet workload install aspire
-
-      - name: Install dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
-      - name: clean ssl cert
-        run: dotnet dev-certs https --clean
-
-      - name: trust ssl cert
-        run: |
-          dotnet dev-certs https --trust || true
-          echo "SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:${SSL_CERT_DIR:-/usr/lib/ssl/certs}" >> "$GITHUB_ENV"
-
-      - name: Test with the dotnet CLI
-        run: dotnet test --configuration Release --no-build --no-restore
-        env:
-          parameters__Auth0TestClientId: ${{ vars.AUTH0_CLIENT_ID }}
-          parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
-          parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
-          parameters__Auth0Audience: http://localhost:65273
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
