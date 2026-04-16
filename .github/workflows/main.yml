@@ -120,8 +120,11 @@ jobs:
           dotnet dev-certs https --trust || true
           echo "SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:${SSL_CERT_DIR:-/usr/lib/ssl/certs}" >> "$GITHUB_ENV"
 
+      - name: Restore test project
+        run: dotnet restore MenuApi.Tests/MenuApi.Tests.csproj
+
       - name: Test with the dotnet CLI
-        run: dotnet test MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build --no-restore
+        run: dotnet test MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
         env:
           parameters__Auth0TestClientId: ${{ vars.AUTH0_CLIENT_ID }}
           parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
