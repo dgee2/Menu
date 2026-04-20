@@ -12,6 +12,9 @@ on:
   pull_request:
     branches: ["dev", "master", "main"]
 
+permissions:
+  contents: read
+
 # Based from https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-net
 jobs:
   dependency-review:
@@ -27,22 +30,16 @@ jobs:
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
 
-  build:
+  backend-build:
+    name: Create OpenAPI spec
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
-      - name: Enable pnpm with corepack
-        run: corepack enable pnpm
-
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22.x
-          cache: 'pnpm'
-          cache-dependency-path: ui/menu-website/pnpm-lock.yaml
 
       - name: Setup dotnet 10.x
         uses: actions/setup-dotnet@v5
@@ -52,11 +49,72 @@ jobs:
       - name: Install .NET Aspire workload
         run: dotnet workload install aspire
 
-      - name: Install dependencies
-        run: dotnet restore
+      - name: Restore
+        run: dotnet restore MenuApi.sln
 
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
+      - name: Build solution (generate OpenAPI)
+        run: dotnet build MenuApi.sln --configuration Release --no-restore
+
+      - name: Upload OpenAPI document
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: open-api/menu-api.json
+          if-no-files-found: error
+
+  backend-tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup dotnet 10.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install .NET Aspire workload
+        run: dotnet workload install aspire
+
+      - name: Restore
+        run: dotnet restore MenuApi.sln
+
+      - name: Build solution (generate OpenAPI)
+        run: dotnet build MenuApi.sln --configuration Release --no-restore
+
+      - name: Test with the dotnet CLI
+        run: dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+
+
+  backend-integration-tests:
+    name: Backend integration tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup dotnet 10.x
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install .NET Aspire workload
+        run: dotnet workload install aspire
+
+      - name: Restore
+        run: dotnet restore MenuApi.sln
+
+      - name: Build solution (generate OpenAPI)
+        run: dotnet build MenuApi.sln --configuration Release --no-restore
 
       - name: clean ssl cert
         run: dotnet dev-certs https --clean
@@ -67,12 +125,41 @@ jobs:
           echo "SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:${SSL_CERT_DIR:-/usr/lib/ssl/certs}" >> "$GITHUB_ENV"
 
       - name: Test with the dotnet CLI
-        run: dotnet test --configuration Release --no-build --no-restore
+        run: dotnet test --project MenuApi.Integration.Tests/MenuApi.Integration.Tests.csproj --configuration Release --no-build
         env:
           parameters__Auth0TestClientId: ${{ vars.AUTH0_CLIENT_ID }}
           parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
           parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
           parameters__Auth0Audience: http://localhost:65273
+
+  frontend:
+    name: Frontend validation
+    runs-on: ubuntu-latest
+    needs: backend-build
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download OpenAPI document
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+          path: open-api
+          merge-multiple: true
+
+      - name: Enable pnpm with corepack
+        run: corepack enable pnpm
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'pnpm'
+          cache-dependency-path: ui/menu-website/pnpm-lock.yaml
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
