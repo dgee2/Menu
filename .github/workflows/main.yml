@@ -123,6 +123,9 @@ jobs:
       - name: Restore test project
         run: dotnet restore MenuApi.Tests/MenuApi.Tests.csproj
 
+- name: Fix executable permissions
+  run: chmod +x MenuApi.Tests/bin/Release/net10.0/MenuApi.Tests
+
       - name: Test with the dotnet CLI
         run: dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
         env:
