@@ -158,13 +158,13 @@ jobs:
           echo "SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:${SSL_CERT_DIR:-/usr/lib/ssl/certs}" >> "$GITHUB_ENV"
 
       - name: Restore test project
-        run: dotnet restore MenuApi.Tests/MenuApi.Integration.Tests.csproj
+        run: dotnet restore MenuApi.Integration.Tests/MenuApi.Integration.Tests.csproj
 
       - name: Fix executable permissions
-        run: chmod +x MenuApi.Tests/bin/Release/net10.0/MenuApi.Integration.Tests
+        run: chmod +x MenuApi.Integration.Tests/bin/Release/net10.0/MenuApi.Integration.Tests
 
       - name: Test with the dotnet CLI
-        run: dotnet test --project MenuApi.Tests/MenuApi.Integration.Tests.csproj --configuration Release --no-build
+        run: dotnet test --project MenuApi.Integration.Tests/MenuApi.Integration.Tests.csproj --configuration Release --no-build
         env:
           parameters__Auth0TestClientId: ${{ vars.AUTH0_CLIENT_ID }}
           parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
