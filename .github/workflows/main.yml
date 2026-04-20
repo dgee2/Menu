@@ -31,14 +31,17 @@ jobs:
 
       - name: Check for file changes
         if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v3.0.2
         id: filter
         with:
           filters: |
             backend:
-              - '**.cs'
-              - '**.csproj'
-              - '**.sln'
+              - 'Menu.*/**'
+              - 'MenuApi/**'
+              - 'MenuApi.Tests/**'
+              - 'MenuApi.Integration.Tests/**'
+              - 'MenuDB/**'
+              - '*.sln'
               - 'global.json'
               - 'aspire.config.json'
               - '.github/workflows/main.yml'

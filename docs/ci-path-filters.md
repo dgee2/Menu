@@ -12,11 +12,14 @@ The workflow uses the [dorny/paths-filter](https://github.com/dorny/paths-filter
 
 #### Backend Jobs
 
-Backend jobs (`backend-build`, `backend-tests`, `backend-integration-tests`) run when any of these files change:
+Backend jobs (`backend-build`, `backend-tests`, `backend-integration-tests`) run when any of these paths change:
 
-- `**.cs` - All C# source files
-- `**.csproj` - All project files
-- `**.sln` - Solution files
+- `Menu.*/**` - All Menu service projects (Menu.AppHost, Menu.ServiceDefaults, Menu.ApiServiceDefaults, Menu.MigrationService)
+- `MenuApi/**` - API project files
+- `MenuApi.Tests/**` - Unit test project files
+- `MenuApi.Integration.Tests/**` - Integration test project files
+- `MenuDB/**` - Database project files
+- `*.sln` - Solution files
 - `global.json` - .NET SDK version configuration
 - `aspire.config.json` - Aspire orchestration configuration
 - `.github/workflows/main.yml` - The workflow file itself
