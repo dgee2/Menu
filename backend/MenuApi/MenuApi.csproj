@@ -58,7 +58,7 @@
 	</ItemGroup>
 
 	<PropertyGroup>
-		<OpenApiDocumentsDirectory>../open-api</OpenApiDocumentsDirectory>
+		<OpenApiDocumentsDirectory>../../open-api</OpenApiDocumentsDirectory>
 		<OpenApiGenerateDocumentsOptions>--file-name menu-api</OpenApiGenerateDocumentsOptions>
 	</PropertyGroup>
 </Project>

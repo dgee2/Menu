@@ -37,14 +37,7 @@ jobs:
         with:
           filters: |
             backend:
-              - 'Menu.*/**'
-              - 'MenuApi/**'
-              - 'MenuApi.Tests/**'
-              - 'MenuApi.Integration.Tests/**'
-              - 'MenuDB/**'
-              - '*.sln'
-              - 'global.json'
-              - 'aspire.config.json'
+              - 'backend/**'
               - '.github/workflows/main.yml'
             frontend:
               - 'ui/**'
@@ -89,9 +82,11 @@ jobs:
 
       - name: Restore
         run: dotnet restore MenuApi.sln
+        working-directory: ./backend
 
       - name: Build solution (generate OpenAPI)
         run: dotnet build MenuApi.sln --configuration Release --no-restore
+        working-directory: ./backend
 
       - name: Upload OpenAPI document
         uses: actions/upload-artifact@v4
@@ -125,12 +120,15 @@ jobs:
 
       - name: Restore
         run: dotnet restore MenuApi.sln
+        working-directory: ./backend
 
       - name: Build solution (generate OpenAPI)
         run: dotnet build MenuApi.sln --configuration Release --no-restore
+        working-directory: ./backend
 
       - name: Test with the dotnet CLI
         run: dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+        working-directory: ./backend
 
 
   backend-integration-tests:
@@ -158,9 +156,11 @@ jobs:
 
       - name: Restore
         run: dotnet restore MenuApi.sln
+        working-directory: ./backend
 
       - name: Build solution (generate OpenAPI)
         run: dotnet build MenuApi.sln --configuration Release --no-restore
+        working-directory: ./backend
 
       - name: clean ssl cert
         run: dotnet dev-certs https --clean
@@ -172,6 +172,7 @@ jobs:
 
       - name: Test with the dotnet CLI
         run: dotnet test --project MenuApi.Integration.Tests/MenuApi.Integration.Tests.csproj --configuration Release --no-build
+        working-directory: ./backend
         env:
           parameters__Auth0TestClientId: ${{ vars.AUTH0_CLIENT_ID }}
           parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}

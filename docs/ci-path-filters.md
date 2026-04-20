@@ -14,14 +14,7 @@ The workflow uses the [dorny/paths-filter](https://github.com/dorny/paths-filter
 
 Backend jobs (`backend-build`, `backend-tests`, `backend-integration-tests`) run when any of these paths change:
 
-- `Menu.*/**` - All Menu service projects (Menu.AppHost, Menu.ServiceDefaults, Menu.ApiServiceDefaults, Menu.MigrationService)
-- `MenuApi/**` - API project files
-- `MenuApi.Tests/**` - Unit test project files
-- `MenuApi.Integration.Tests/**` - Integration test project files
-- `MenuDB/**` - Database project files
-- `*.sln` - Solution files
-- `global.json` - .NET SDK version configuration
-- `aspire.config.json` - Aspire orchestration configuration
+- `backend/**` - All backend projects, solution files, and backend-specific configuration grouped under the `backend/` directory
 - `.github/workflows/main.yml` - The workflow file itself
 
 #### Frontend Job
@@ -51,7 +44,7 @@ The frontend job (`frontend`) runs when any of these files change:
 
 ## Cross-Stack Scenarios
 
-### Scenario: Backend-only changes (e.g., only `.cs` files)
+### Scenario: Backend-only changes (e.g., only files under `backend/`)
 
 - ✅ Backend jobs run
 - ❌ Frontend job is skipped
@@ -126,7 +119,7 @@ Path filters improve CI throughput by:
 
 The implementation includes several guardrails to prevent missing validation:
 
-1. **Conservative patterns**: Includes critical config files (global.json, aspire.config.json)
+1. **Conservative structure**: Backend projects and backend-only config files live under `backend/`, so one path captures solution, project, and analyzer changes together
 2. **Workflow file triggers both**: Changes to the workflow file trigger all jobs
 3. **Always run on push**: All jobs run on pushes to main/master branches
 4. **Dependency review still runs**: The dependency-review job always runs on PRs regardless of changed files

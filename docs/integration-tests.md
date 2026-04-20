@@ -100,7 +100,7 @@ The Aspire host starts a SQL Server container. Docker Desktop (or a compatible c
 The test project requires Auth0 credentials to obtain access tokens. Set them via user secrets:
 
 ```bash
-cd MenuApi.Integration.Tests
+cd backend/MenuApi.Integration.Tests
 dotnet user-secrets set "Parameters:Auth0TestClientId" "<your-client-id>"
 dotnet user-secrets set "Parameters:Auth0TestClientSecret" "<your-client-secret>"
 dotnet user-secrets set "Parameters:Auth0Audience" "<your-audience>"
@@ -117,7 +117,7 @@ The solution targets `net9.0`. Ensure the .NET 9 SDK is installed.
 
 ## How to Run the Tests
 
-From the solution root:
+From the backend solution root (`C:\git\Menu\backend\`):
 
 ```bash
 dotnet test MenuApi.Integration.Tests
@@ -139,7 +139,7 @@ Follow these steps when adding integration tests for a new or existing endpoint.
 
 ### 1. Create the Test Class
 
-Add a new `.cs` file in the `MenuApi.Integration.Tests` project root. Apply the collection attribute and inject the fixture:
+Add a new `.cs` file in `backend/MenuApi.Integration.Tests`. Apply the collection attribute and inject the fixture:
 
 ```csharp
 using AwesomeAssertions;
