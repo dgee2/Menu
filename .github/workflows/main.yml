@@ -31,7 +31,7 @@ jobs:
         uses: actions/dependency-review-action@v4
 
   backend-build:
-    name: Backend build (OpenAPI artifact)
+    name: Create OpenAPI spec
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -62,33 +62,9 @@ jobs:
           path: open-api/menu-api.json
           if-no-files-found: error
 
-      - name: Upload backend build outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-build-output
-          path: |
-            Menu.ApiServiceDefaults/bin/Release/
-            Menu.ApiServiceDefaults/obj/Release/
-            Menu.AppHost/bin/Release/
-            Menu.AppHost/obj/Release/
-            Menu.MigrationService/bin/Release/
-            Menu.MigrationService/obj/Release/
-            Menu.ServiceDefaults/bin/Release/
-            Menu.ServiceDefaults/obj/Release/
-            MenuApi/bin/Release/
-            MenuApi/obj/Release/
-            MenuApi.Tests/bin/Release/
-            MenuApi.Tests/obj/Release/
-            MenuApi.Integration.Tests/bin/Release/
-            MenuApi.Integration.Tests/obj/Release/
-            MenuDB/bin/Release/
-            MenuDB/obj/Release/
-          if-no-files-found: error
-
   backend-tests:
     name: Backend tests
     runs-on: ubuntu-latest
-    needs: backend-build
     permissions:
       contents: read
       actions: read
@@ -105,18 +81,11 @@ jobs:
       - name: Install .NET Aspire workload
         run: dotnet workload install aspire
 
-      - name: Download backend build outputs
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-build-output
-          path: .
-          merge-multiple: true
+      - name: Restore
+        run: dotnet restore MenuApi.sln
 
-      - name: Restore test project
-        run: dotnet restore MenuApi.Tests/MenuApi.Tests.csproj
-
-      - name: Fix executable permissions
-        run: chmod +x MenuApi.Tests/bin/Release/net10.0/MenuApi.Tests
+      - name: Build solution (generate OpenAPI)
+        run: dotnet build MenuApi.sln --configuration Release --no-restore
 
       - name: Test with the dotnet CLI
         run: dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
@@ -125,7 +94,6 @@ jobs:
   backend-integration-tests:
     name: Backend integration tests
     runs-on: ubuntu-latest
-    needs: backend-build
     permissions:
       contents: read
       actions: read
@@ -142,12 +110,11 @@ jobs:
       - name: Install .NET Aspire workload
         run: dotnet workload install aspire
 
-      - name: Download backend build outputs
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-build-output
-          path: .
-          merge-multiple: true
+      - name: Restore
+        run: dotnet restore MenuApi.sln
+
+      - name: Build solution (generate OpenAPI)
+        run: dotnet build MenuApi.sln --configuration Release --no-restore
 
       - name: clean ssl cert
         run: dotnet dev-certs https --clean
@@ -156,15 +123,6 @@ jobs:
         run: |
           dotnet dev-certs https --trust || true
           echo "SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:${SSL_CERT_DIR:-/usr/lib/ssl/certs}" >> "$GITHUB_ENV"
-
-      - name: Restore test project
-        run: dotnet restore MenuApi.Integration.Tests/MenuApi.Integration.Tests.csproj
-
-      - name: Fix executable permissions
-        run: |
-          chmod +x MenuApi.Integration.Tests/bin/Release/net10.0/MenuApi.Integration.Tests
-          chmod +x Menu.MigrationService/bin/Release/net10.0/Menu.MigrationService
-          chmod +x Menu.AppHost/bin/Release/net10.0/Menu.AppHost
 
       - name: Test with the dotnet CLI
         run: dotnet test --project MenuApi.Integration.Tests/MenuApi.Integration.Tests.csproj --configuration Release --no-build
