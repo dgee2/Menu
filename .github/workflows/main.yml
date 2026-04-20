@@ -228,8 +228,23 @@ jobs:
         run: pnpm run build
         working-directory: ./ui/menu-website
 
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: |
+          PLAYWRIGHT_VERSION=$(node -p "require('playwright/package.json').version")
+          echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> "$GITHUB_OUTPUT"
+        working-directory: ./ui/menu-website
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.PLAYWRIGHT_VERSION }}
+
       - name: Install Playwright browsers
-        run: pnpm exec playwright install
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps
         working-directory: ./ui/menu-website
 
       - name: Run frontend tests
