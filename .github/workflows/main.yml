@@ -158,7 +158,7 @@ jobs:
           echo "SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:${SSL_CERT_DIR:-/usr/lib/ssl/certs}" >> "$GITHUB_ENV"
 
       - name: Restore test project
-        run: dotnet restore MenuApi.Tests/MenuApi.Tests.csproj
+        run: dotnet restore MenuApi.Tests/MenuApi.Integration.Tests.csproj
 
       - name: Fix executable permissions
         run: chmod +x MenuApi.Tests/bin/Release/net10.0/MenuApi.Integration.Tests
