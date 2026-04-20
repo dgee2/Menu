@@ -180,9 +180,8 @@ jobs:
       - name: Get installed Playwright version
         id: playwright-version
         run: |
-          PLAYWRIGHT_VERSION=$(pnpm list @playwright/test --depth=0 --json | \
-            jq -r '.[0].devDependencies["@playwright/test"].version')
-          echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $GITHUB_OUTPUT
+          PLAYWRIGHT_VERSION=$(node -p "require('playwright/package.json').version")
+          echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> "$GITHUB_OUTPUT"
         working-directory: ./ui/menu-website
 
       - name: Cache Playwright browsers
