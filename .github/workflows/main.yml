@@ -161,7 +161,10 @@ jobs:
         run: dotnet restore MenuApi.Integration.Tests/MenuApi.Integration.Tests.csproj
 
       - name: Fix executable permissions
-        run: chmod +x MenuApi.Integration.Tests/bin/Release/net10.0/MenuApi.Integration.Tests
+        run:
+          chmod +x MenuApi.Integration.Tests/bin/Release/net10.0/MenuApi.Integration.Tests
+          chmod +x Menu.MigrationService/bin/Release/net10.0/Menu.MigrationService
+          chmod +x Menu.AppHost/bin/Release/net10.0/Menu.AppHost
 
       - name: Test with the dotnet CLI
         run: dotnet test --project MenuApi.Integration.Tests/MenuApi.Integration.Tests.csproj --configuration Release --no-build
