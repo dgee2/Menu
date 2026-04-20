@@ -37,7 +37,7 @@ The frontend job (`frontend`) runs when any of these files change:
 ### Pull Requests
 
 - **Changes detected**: Only jobs matching the changed files run
-- **No changes detected**: Jobs are skipped
+- **No changes detected**: Backend/frontend build and test jobs are skipped when no relevant files change
 - **Workflow file changes**: Both frontend and backend jobs run (conservative approach)
 
 ### Push Events (main/master branches)
@@ -55,7 +55,7 @@ The frontend job (`frontend`) runs when any of these files change:
 
 - ✅ Backend jobs run
 - ❌ Frontend job is skipped
-- The frontend uses the existing OpenAPI spec from the repository
+- The checked-in OpenAPI spec in the repository remains unchanged
 
 ### Scenario: Frontend-only changes (e.g., only `ui/` files)
 
@@ -120,7 +120,7 @@ Path filters improve CI throughput by:
 
 - **Frontend-only PR**: Saves ~5-7 minutes (skips 3 backend jobs)
 - **Backend-only PR**: Saves ~2-3 minutes (skips 1 frontend job)
-- **Documentation-only PR**: Saves ~7-10 minutes (skips all build/test jobs, only runs dependency-review)
+- **Documentation-only PR**: Saves ~7-10 minutes (skips all build/test jobs, runs only `changes` and `dependency-review`)
 
 ## Guardrails
 
@@ -145,7 +145,7 @@ To test the path filters work correctly:
    - Verify all jobs run
 
 4. Create a PR with only documentation changes (e.g., modify a `.md` file)
-   - Verify only dependency-review runs
+   - Verify the `changes` job runs, `dependency-review` runs, and backend/frontend jobs are skipped
 
 ## Troubleshooting
 

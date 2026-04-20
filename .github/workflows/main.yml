@@ -27,6 +27,7 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend || 'true' }}
     steps:
       - name: Checkout
+        if: github.event_name == 'pull_request'
         uses: actions/checkout@v6
 
       - name: Check for file changes
