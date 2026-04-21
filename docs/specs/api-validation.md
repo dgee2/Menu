@@ -301,7 +301,7 @@ group.MapPost("/", CreateRecipeAsync)
 New/modified files:
 
 ```
-MenuApi/
+backend/MenuApi/
 ├── Validation/
 │   ├── ValidationFilter.cs              # Generic endpoint filter
 │   ├── NewRecipeValidator.cs            # FluentValidation rules for NewRecipe

@@ -1,6 +1,6 @@
 # Database Migrations
 
-This project uses **Entity Framework Core** with SQL Server to manage the database schema for `MenuDbContext`. Migrations are stored under `MenuDB/Migrations/` and are applied automatically at startup when running inside .NET Aspire.
+This project uses **Entity Framework Core** with SQL Server to manage the database schema for `MenuDbContext`. Migrations are stored under `backend/MenuDB/Migrations/` and are applied automatically at startup when running inside .NET Aspire.
 
 ---
 
@@ -30,9 +30,9 @@ dotnet ef --version
 
 ## Creating a New Migration
 
-All `dotnet ef` commands must be run from the **solution root** (`C:\git\Menu\`) and target the `MenuDB` project, which contains `MenuDbContext` and `MenuDbContextFactory`. `MenuApi` is used as the startup project to provide the runtime host.
+All `dotnet ef` commands must be run from the **backend solution root** (`C:\git\Menu\backend\`) and target the `MenuDB` project, which contains `MenuDbContext` and `MenuDbContextFactory`. `MenuApi` is used as the startup project to provide the runtime host.
 
-After modifying any entity in `MenuDB/Data/` or the model configuration in `MenuDB/MenuDbContext.cs`, create a new migration:
+After modifying any entity in `backend/MenuDB/Data/` or the model configuration in `backend/MenuDB/MenuDbContext.cs`, create a new migration:
 
 ```bash
 dotnet ef migrations add <MigrationName> --project MenuDB --startup-project MenuApi
@@ -83,7 +83,7 @@ Migrations are applied by the dedicated **`Menu.MigrationService`** worker, not 
 2. `Menu.MigrationService` runs — applies all pending migrations, then exits
 3. `MenuApi` starts — guaranteed to find the schema already up to date
 
-This is enforced in `Menu.AppHost/Program.cs`:
+This is enforced in `backend/Menu.AppHost/Program.cs`:
 
 ```csharp
 var menuDb = sql.AddDatabase("menu");

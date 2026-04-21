@@ -17,6 +17,33 @@ permissions:
 
 # Based from https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-net
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend || 'true' }}
+      frontend: ${{ steps.filter.outputs.frontend || 'true' }}
+    steps:
+      - name: Checkout
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v6
+
+      - name: Check for file changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v3.0.2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/main.yml'
+            frontend:
+              - 'ui/**'
+              - 'open-api/**'
+              - '.github/workflows/main.yml'
+
   dependency-review:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -32,6 +59,10 @@ jobs:
 
   backend-build:
     name: Create OpenAPI spec
+    needs: changes
+    if: |
+      github.event_name != 'pull_request' ||
+      needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -51,9 +82,11 @@ jobs:
 
       - name: Restore
         run: dotnet restore MenuApi.sln
+        working-directory: ./backend
 
       - name: Build solution (generate OpenAPI)
         run: dotnet build MenuApi.sln --configuration Release --no-restore
+        working-directory: ./backend
 
       - name: Upload OpenAPI document
         uses: actions/upload-artifact@v4
@@ -64,6 +97,10 @@ jobs:
 
   backend-tests:
     name: Backend tests
+    needs: changes
+    if: |
+      github.event_name != 'pull_request' ||
+      needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -83,16 +120,23 @@ jobs:
 
       - name: Restore
         run: dotnet restore MenuApi.sln
+        working-directory: ./backend
 
       - name: Build solution (generate OpenAPI)
         run: dotnet build MenuApi.sln --configuration Release --no-restore
+        working-directory: ./backend
 
       - name: Test with the dotnet CLI
         run: dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+        working-directory: ./backend
 
 
   backend-integration-tests:
     name: Backend integration tests
+    needs: changes
+    if: |
+      github.event_name != 'pull_request' ||
+      needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -112,9 +156,11 @@ jobs:
 
       - name: Restore
         run: dotnet restore MenuApi.sln
+        working-directory: ./backend
 
       - name: Build solution (generate OpenAPI)
         run: dotnet build MenuApi.sln --configuration Release --no-restore
+        working-directory: ./backend
 
       - name: clean ssl cert
         run: dotnet dev-certs https --clean
@@ -126,6 +172,7 @@ jobs:
 
       - name: Test with the dotnet CLI
         run: dotnet test --project MenuApi.Integration.Tests/MenuApi.Integration.Tests.csproj --configuration Release --no-build
+        working-directory: ./backend
         env:
           parameters__Auth0TestClientId: ${{ vars.AUTH0_CLIENT_ID }}
           parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
@@ -135,7 +182,11 @@ jobs:
   frontend:
     name: Frontend validation
     runs-on: ubuntu-latest
-    needs: backend-build
+    needs: [changes, backend-build]
+    if: |
+      !cancelled() &&
+      (github.event_name != 'pull_request' || needs.changes.outputs.frontend == 'true') &&
+      (needs.backend-build.result == 'success' || needs.backend-build.result == 'skipped')
     permissions:
       contents: read
       actions: read
@@ -145,6 +196,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download OpenAPI document
+        if: needs.backend-build.result == 'success'
         uses: actions/download-artifact@v4
         with:
           name: openapi-spec

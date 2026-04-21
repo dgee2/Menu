@@ -2,10 +2,10 @@
 
 ## Architecture
 
-.NET Aspire distributed app (net10.0) for recipe/menu management. `Menu.AppHost` orchestrates all services:
+.NET Aspire distributed app (net10.0) for recipe/menu management. Backend projects live under `backend/`, and `backend/Menu.AppHost` orchestrates all services:
 
-- **MenuApi** – Minimal API (Auth0 JWT-secured). Endpoints defined via `MapGroup` extensions in `MenuApi/Recipes/`.
-- **MenuDB** – EF Core `MenuDbContext` + entity definitions (`MenuDB/Data/`) + migrations (`MenuDB/Migrations/`).
+- **MenuApi** – Minimal API (Auth0 JWT-secured). Endpoints defined via `MapGroup` extensions in `backend/MenuApi/Recipes/`.
+- **MenuDB** – EF Core `MenuDbContext` + entity definitions (`backend/MenuDB/Data/`) + migrations (`backend/MenuDB/Migrations/`).
 - **Menu.MigrationService** – BackgroundService that applies EF migrations on startup, then exits. The API (`MenuApi`) waits for this to complete before starting (`WaitForCompletion`).
 - **Redis** – `AddRedis("cache")` resource for caching.
 - **Menu.ServiceDefaults / Menu.ApiServiceDefaults** – Shared Aspire service defaults (OpenTelemetry, health checks, Swagger).
@@ -17,15 +17,15 @@ Three distinct model layers — never mix them:
 
 | Layer | Namespace / Location | Purpose |
 |---|---|---|
-| **EF Entities** | `MenuDB/Data/` (e.g. `RecipeEntity`) | Database rows; configured in `MenuDbContext.OnModelCreating` |
-| **DB Models** | `MenuApi/DBModel/` (e.g. `DBModel.Recipe`) | Intermediate records using Vogen value objects; returned by repositories |
-| **ViewModels** | `MenuApi/ViewModel/` (e.g. `ViewModel.Recipe`, `NewRecipe`, `FullRecipe`) | API request/response DTOs |
+| **EF Entities** | `backend/MenuDB/Data/` (e.g. `RecipeEntity`) | Database rows; configured in `MenuDbContext.OnModelCreating` |
+| **DB Models** | `backend/MenuApi/DBModel/` (e.g. `DBModel.Recipe`) | Intermediate records using Vogen value objects; returned by repositories |
+| **ViewModels** | `backend/MenuApi/ViewModel/` (e.g. `ViewModel.Recipe`, `NewRecipe`, `FullRecipe`) | API request/response DTOs |
 
-Mapping between layers uses **Riok.Mapperly** (source-generated, zero-reflection) in `MenuApi/MappingProfiles/ViewModelMapper.cs`. When adding properties, update the `[MapProperty]` attributes there.
+Mapping between layers uses **Riok.Mapperly** (source-generated, zero-reflection) in `backend/MenuApi/MappingProfiles/ViewModelMapper.cs`. When adding properties, update the `[MapProperty]` attributes there.
 
 ## Vogen Value Objects
 
-Primitive types are wrapped with [Vogen](https://github.com/SteveDunn/Vogen) (`MenuApi/ValueObjects/`). Example: `RecipeId`, `RecipeName`, `IngredientAmount`. Assembly-wide defaults in `VogenDefaults.cs` enable EF Core value converters and Swagger mapping. When creating a new value object:
+Primitive types are wrapped with [Vogen](https://github.com/SteveDunn/Vogen) (`backend/MenuApi/ValueObjects/`). Example: `RecipeId`, `RecipeName`, `IngredientAmount`. Assembly-wide defaults in `VogenDefaults.cs` enable EF Core value converters and Swagger mapping. When creating a new value object:
 
 ```csharp
 [ValueObject<int>]
@@ -38,9 +38,10 @@ Repositories must use `.Value` to unwrap and `TypeName.From(x)` to wrap.
 
 ```bash
 # Run the full stack (API + SQL container + migrations + UI)
+cd backend
 dotnet run --project Menu.AppHost
 
-# EF migrations (always from solution root)
+# EF migrations (always from the backend solution root)
 dotnet ef migrations add <Name> --project MenuDB --startup-project MenuApi
 dotnet ef migrations remove --project MenuDB --startup-project MenuApi
 
@@ -60,7 +61,7 @@ dotnet test MenuApi.Integration.Tests
 ## Code Style
 
 - `TreatWarningsAsErrors` is enabled in Debug and Release for all projects.
-- StyleCop is configured via `MenuApi/stylecop.json`.
+- StyleCop is configured via `backend/MenuApi/stylecop.json`.
 - `ConfigureAwait(false)` is used on all async calls in service/repository layers.
 - `Program.cs` exposes a `public partial class Program` for integration test `WebApplicationFactory` compatibility.
 
@@ -138,10 +139,10 @@ pnpm storybook            # Storybook dev server (port 6006)
 
 ## Adding a New API Endpoint
 
-1. Add ViewModel DTOs in `MenuApi/ViewModel/`.
-2. Add DB model records in `MenuApi/DBModel/` (if new data shapes are needed).
-3. Add/update Mapperly mappings in `MenuApi/MappingProfiles/ViewModelMapper.cs`.
-4. Add repository method (interface in `MenuApi/Repositories/I*Repository.cs`, impl in `*Repository.cs`).
-5. Add service method (interface + impl in `MenuApi/Services/`).
-6. Add the endpoint in the relevant `MenuApi/Recipes/*Api.cs` file using the `MapGroup` pattern.
-7. Register new DI services in `MenuApi/Program.cs`.
+1. Add ViewModel DTOs in `backend/MenuApi/ViewModel/`.
+2. Add DB model records in `backend/MenuApi/DBModel/` (if new data shapes are needed).
+3. Add/update Mapperly mappings in `backend/MenuApi/MappingProfiles/ViewModelMapper.cs`.
+4. Add repository method (interface in `backend/MenuApi/Repositories/I*Repository.cs`, impl in `*Repository.cs`).
+5. Add service method (interface + impl in `backend/MenuApi/Services/`).
+6. Add the endpoint in the relevant `backend/MenuApi/Recipes/*Api.cs` file using the `MapGroup` pattern.
+7. Register new DI services in `backend/MenuApi/Program.cs`.
