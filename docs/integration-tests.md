@@ -109,9 +109,9 @@ dotnet user-secrets set "Parameters:Auth0Domain" "<your-domain>"
 
 The user secrets ID for the integration test project is `ea3aa4c7-9b32-4485-a5b2-fb1cb0def863`.
 
-### 3. .NET 9 SDK
+### 3. .NET 10 SDK
 
-The solution targets `net9.0`. Ensure the .NET 9 SDK is installed.
+The solution targets `net10.0`. Ensure the .NET 10 SDK is installed.
 
 ---
 
