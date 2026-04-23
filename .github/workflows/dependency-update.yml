@@ -1,0 +1,184 @@
+name: Dependency updates
+run-name: Dependency updates (${{ github.event_name == 'workflow_dispatch' && inputs['target-group'] || 'all groups' }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      target-group:
+        description: Dependency update group to process
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - simple-dotnet
+          - simple-node
+          - github-actions
+          - aspire
+          - storybook
+  schedule:
+    # Run weekly on Friday at 09:00 UTC so dependency PRs stay predictable and reviewable.
+    - cron: '0 9 * * 5'
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-update:
+    name: ${{ matrix.name }}
+    if: github.event_name != 'workflow_dispatch' || inputs['target-group'] == 'all' || inputs['target-group'] == matrix.group
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    concurrency:
+      group: dependency-update-${{ matrix.group }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - group: simple-dotnet
+            name: Simple .NET / NuGet updates
+            ecosystem: .NET / NuGet
+            update_classification: simple version bump
+            branch: copilot/dependency-update/simple-dotnet
+            scope_rules: |
+              Update only simple .NET / NuGet dependencies.
+              Keep Aspire dependencies out of this PR because they have their own dedicated tool-driven update flow.
+              Exclude any update that requires running a tool or changing application or test code.
+              If every pending .NET update needs tooling or code changes, do not open a PR.
+            validation_commands: |
+              cd /home/runner/work/Menu/Menu/backend
+              dotnet restore MenuApi.sln
+              dotnet build MenuApi.sln --configuration Release --no-restore
+              dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+          - group: simple-node
+            name: Simple Node / npm / pnpm updates
+            ecosystem: Node / npm / pnpm
+            update_classification: simple version bump
+            branch: copilot/dependency-update/simple-node
+            scope_rules: |
+              Update only simple Node / npm / pnpm dependencies.
+              Keep Storybook dependencies out of this PR because they have their own dedicated tool-driven update flow.
+              Exclude any update that requires running a dedicated upgrade tool or changing application or test code.
+              Keep all remaining simple Node dependency updates together in one PR.
+              If every pending Node update needs tooling or code changes, do not open a PR.
+            validation_commands: |
+              cd /home/runner/work/Menu/Menu/ui/menu-website
+              corepack enable pnpm
+              pnpm install --frozen-lockfile
+              pnpm run generate-openapi
+              pnpm run lint
+              pnpm run build
+              pnpm exec playwright install --with-deps
+              pnpm run test
+          - group: github-actions
+            name: GitHub Actions updates
+            ecosystem: GitHub Actions
+            update_classification: simple version bump
+            branch: copilot/dependency-update/github-actions
+            scope_rules: |
+              Update only GitHub Actions dependencies in workflow files.
+              Never mix workflow dependency updates with .NET / NuGet or Node / npm / pnpm updates.
+              If an action update needs non-trivial workflow changes, isolate it to that single dependency update.
+            validation_commands: |
+              ruby -e "require 'yaml'; Dir['/home/runner/work/Menu/Menu/.github/workflows/*.yml'].each { |path| YAML.load_file(path, aliases: true) }"
+              cd /home/runner/work/Menu/Menu/backend
+              dotnet restore MenuApi.sln
+              dotnet build MenuApi.sln --configuration Release --no-restore
+              dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+              cd /home/runner/work/Menu/Menu/ui/menu-website
+              corepack enable pnpm
+              pnpm install --frozen-lockfile
+              pnpm run generate-openapi
+              pnpm run lint
+              pnpm run build
+              pnpm exec playwright install --with-deps
+              pnpm run test
+          - group: aspire
+            name: Aspire dependency updates
+            ecosystem: .NET / NuGet
+            update_classification: tool-driven update
+            branch: copilot/dependency-update/aspire
+            scope_rules: |
+              Update only the Aspire-related packages matched by the dedicated `aspire` group in `.github/dependabot.yml`.
+              Run any required upgrade tooling for this update in this PR.
+              If source or test code changes are needed, keep the PR limited to the single Aspire dependency that requires them.
+            validation_commands: |
+              cd /home/runner/work/Menu/Menu/backend
+              dotnet restore MenuApi.sln
+              dotnet build MenuApi.sln --configuration Release --no-restore
+              dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+          - group: storybook
+            name: Storybook dependency updates
+            ecosystem: Node / npm / pnpm
+            update_classification: tool-driven update
+            branch: copilot/dependency-update/storybook
+            scope_rules: |
+              Update only the Storybook-related packages matched by the dedicated `storybook` group in `.github/dependabot.yml`.
+              Run any required Storybook upgrade tooling for this update in this PR.
+              If source or test code changes are needed, keep the PR limited to the single Storybook dependency that requires them.
+            validation_commands: |
+              cd /home/runner/work/Menu/Menu/ui/menu-website
+              corepack enable pnpm
+              pnpm install --frozen-lockfile
+              pnpm run generate-openapi
+              pnpm run lint
+              pnpm run build
+              pnpm exec playwright install --with-deps
+              pnpm run test
+              pnpm run build-storybook
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Create or update dependency PR with Copilot
+        uses: github/copilot-coding-agent@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: ${{ matrix.branch }}
+          prompt: |
+            Update dependencies for the `${{ matrix.name }}` scope in the `dgee2/Menu` repository.
+
+            Use `.github/dependabot.yml` as the authoritative definition of dependency ecosystems and the existing dedicated `aspire` and `storybook` groups.
+
+            Scope for this run:
+            - Ecosystem: `${{ matrix.ecosystem }}`
+            - Required PR classification: `${{ matrix.update_classification }}`
+            - Branch: `${{ matrix.branch }}`
+
+            Scope rules:
+            ${{ matrix.scope_rules }}
+
+            Additional requirements:
+            - Keep PRs small, reviewable, and predictable.
+            - Simple version bumps for this scope should stay grouped together in one PR.
+            - Any update that requires code changes must be isolated to its own PR and classified as `an update requiring code changes`.
+            - Never mix .NET / NuGet, Node / npm / pnpm, and GitHub Actions updates in the same PR.
+            - Reuse an existing open PR for this same scope if one already exists; otherwise create a new PR.
+            - If there are no pending updates in scope, do not open or update a PR.
+            - Target the `main` branch.
+
+            Before you create or finalize the pull request, run these validation commands and make sure they all succeed:
+            ```bash
+            ${{ matrix.validation_commands }}
+            ```
+
+            If validation fails after any necessary in-scope fixes, do not create or finalize the pull request and fail this workflow run instead.
+
+            The pull request description must explicitly include:
+            - Why these dependencies were grouped together
+            - Whether this is a `simple version bump`, `tool-driven update`, or `an update requiring code changes`
+            - Any best-practice change introduced or suggested by the update
+            - An explicit decision for each best-practice change: `implement now` or `do not implement now`
+            - The reasoning for each decision
+            - The validation commands you ran and whether they passed
+
+            If no best-practice change was introduced or suggested, say that explicitly and state `do not implement now` because no new best-practice action is required.
