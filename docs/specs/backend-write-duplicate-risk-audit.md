@@ -115,19 +115,24 @@ This audit inventories every backend write endpoint under `backend/MenuApi/Recip
 
 ## Endpoint-by-Endpoint Duplicate Policy
 
-> **Note:** These are **target / intended** behaviours. HTTP status codes align with the existing contract established in `api-validation.md`: `400 Bad Request` for payload-level validation failures (`Results.ValidationProblem()`), and `422 Unprocessable Entity` for business-rule violations (`BusinessValidationException`). `POST /api/ingredient` does not yet advertise `.ProducesProblem(422)` and would need it added when the reject case is implemented.
+> **Note:** These are **target / intended** behaviours. Three distinct HTTP status codes are used depending on *why* the request is rejected:
+> - `400 Bad Request` — the *request payload itself* is internally inconsistent (`Results.ValidationProblem()`)
+> - `409 Conflict` — the request is well-formed but conflicts with the current state of an *existing resource* (a new `ConflictException` / dedicated `IExceptionHandler` will be required; endpoints must add `.ProducesProblem(409)`)
+> - `422 Unprocessable Entity` — retained for semantic processing failures such as referencing a non-existent ingredient (`BusinessValidationException`)
+>
+> `POST /api/ingredient` does not yet advertise `.ProducesProblem(409)` or `.ProducesProblem(422)` and would need both added when the reject cases are implemented.
 
 | Endpoint | Duplicate scenario | Classification | Policy | HTTP response | Notes |
 |---|---|---|---|---|---|
 | `POST /api/ingredient` | `Ingredient.Name` matches an existing ingredient and the effective `UnitIds` set is the same after deduplication | Canonical / reference row | **Reuse existing row** | `200 OK` | Return the existing ingredient instead of inserting a second `Ingredient` row. |
-| `POST /api/ingredient` | `Ingredient.Name` matches an existing ingredient but the effective `UnitIds` set differs | Canonical / reference row | **Reject** | `422 Unprocessable Entity` | `BusinessValidationException` pattern — the request is trying to redefine an existing canonical ingredient. |
+| `POST /api/ingredient` | `Ingredient.Name` matches an existing ingredient but the effective `UnitIds` set differs | Canonical / reference row | **Reject** | `409 Conflict` | The request is well-formed but conflicts with the current canonical definition stored on the server. |
 | `POST /api/ingredient` | Duplicate `UnitIds` within one request body | Set-like child / junction row | **Ignore duplicate input** | `200 OK` | Silently collapse repeated unit IDs before building `IngredientUnit` rows. |
-| `POST /api/recipe` | `Recipe.Name` matches an existing recipe | Business-significant duplicate | **Reject** | `422 Unprocessable Entity` | `BusinessValidationException` pattern — do not reuse another recipe and do not create a second same-name recipe. Existing `.ProducesProblem(422)` already covers this. |
+| `POST /api/recipe` | `Recipe.Name` matches an existing recipe | Business-significant duplicate | **Reject** | `409 Conflict` | The request is well-formed but a recipe with that name already exists on the server. Existing `.ProducesProblem(422)` will need to be changed to `.ProducesProblem(409)`. |
 | `POST /api/recipe` | Repeated `(IngredientName, UnitName)` pair with the same `Amount` in one request body | Set-like child / junction row | **Ignore duplicate input** | `200 OK` | Silently collapse the exact duplicate before upserting `RecipeIngredient` rows. |
-| `POST /api/recipe` | Repeated `(IngredientName, UnitName)` pair with a different `Amount` in one request body | Set-like child / junction row | **Reject** | `400 Bad Request` | `Results.ValidationProblem()` pattern — the client supplied two conflicting values for one logical recipe ingredient. |
-| `PUT /api/recipe/{recipeId}` | New recipe name matches a different existing recipe | Business-significant duplicate | **Reject** | `422 Unprocessable Entity` | `BusinessValidationException` pattern — do not merge or reuse the other recipe. Existing `.ProducesProblem(422)` already covers this. |
+| `POST /api/recipe` | Repeated `(IngredientName, UnitName)` pair with a different `Amount` in one request body | Set-like child / junction row | **Reject** | `400 Bad Request` | `Results.ValidationProblem()` pattern — the payload is internally inconsistent with no conflict against server state. |
+| `PUT /api/recipe/{recipeId}` | New recipe name matches a different existing recipe | Business-significant duplicate | **Reject** | `409 Conflict` | The request is well-formed but the target name already belongs to a different recipe on the server. Existing `.ProducesProblem(422)` will need to be changed to `.ProducesProblem(409)`. |
 | `PUT /api/recipe/{recipeId}` | Repeated `(IngredientName, UnitName)` pair with the same `Amount` in one request body | Set-like child / junction row | **Ignore duplicate input** | `200 OK` | Silently collapse the exact duplicate before applying the update. |
-| `PUT /api/recipe/{recipeId}` | Repeated `(IngredientName, UnitName)` pair with a different `Amount` in one request body | Set-like child / junction row | **Reject** | `400 Bad Request` | `Results.ValidationProblem()` pattern — the update payload is internally inconsistent. |
+| `PUT /api/recipe/{recipeId}` | Repeated `(IngredientName, UnitName)` pair with a different `Amount` in one request body | Set-like child / junction row | **Reject** | `400 Bad Request` | `Results.ValidationProblem()` pattern — the payload is internally inconsistent with no conflict against server state. |
 
 ## Decision Record: Silent vs Explicit Handling
 
@@ -136,7 +141,8 @@ This audit inventories every backend write endpoint under `backend/MenuApi/Recip
 3. **Canonical row redefinition must be explicit.** When a request reuses an ingredient name but changes the associated unit set, the server should reject the request rather than implicitly mutating or widening the existing canonical ingredient.
 4. **Business-significant duplicates must stay client-visible.** Recipe creation and recipe rename operations should reject same-name collisions because a recipe is an end-user aggregate, not shared reference data.
 5. **Conflicting duplicates inside one payload are validation failures, not candidates for silent normalization.** Two entries for the same logical `RecipeIngredient` with different amounts represent ambiguous intent and should be reported back to the client.
-6. **Concurrency remains out of scope.** These policies describe single-request duplicate handling only; races between concurrent writers are intentionally deferred to follow-up work.
+6. **HTTP status code selection follows resource-state semantics.** `409 Conflict` is used when a well-formed request conflicts with the *current state of an existing server resource* (duplicate recipe name, canonical ingredient redefinition). `400 Bad Request` is used when the *payload itself* is internally inconsistent (two conflicting amounts for the same recipe ingredient) — no existing resource state is involved. `422 Unprocessable Entity` is reserved for semantic failures that reference missing data (e.g., an ingredient that does not exist).
+7. **Concurrency remains out of scope.** These policies describe single-request duplicate handling only; races between concurrent writers are intentionally deferred to follow-up work.
 
 ## Summary
 
