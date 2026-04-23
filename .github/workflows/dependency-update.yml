@@ -70,6 +70,8 @@ jobs:
         with:
           node-version: '22.x'
 
+      - name: Enable pnpm via Corepack
+        run: corepack enable pnpm
       - name: Create or update dependency PRs with Copilot
         uses: github/copilot-coding-agent@v1
         with:
