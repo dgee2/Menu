@@ -27,7 +27,7 @@
     "@quasar/extras": "^1.17.0",
     "@tanstack/vue-query": "^5.95.2",
     "@tanstack/vue-query-devtools": "^6.1.10",
-    "autoprefixer": "^10.4.27",
+    "autoprefixer": "^10.5.0",
     "openapi-fetch": "^0.17.0",
     "pinia": "^3.0.4",
     "quasar": "^2.19.2",
