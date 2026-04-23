@@ -91,6 +91,8 @@ This audit inventories every backend write endpoint under `backend/MenuApi/Recip
 
 ## Duplicate-Handling Policy Buckets
 
+> **Note:** The sections below describe **target / intended** behaviour, not the current runtime behaviour described above. The current write paths do not yet implement these policies.
+
 ### Set-like child / junction rows
 
 - Applies to join rows whose identity is fully described by their parent key plus referenced child key(s)
@@ -113,17 +115,19 @@ This audit inventories every backend write endpoint under `backend/MenuApi/Recip
 
 ## Endpoint-by-Endpoint Duplicate Policy
 
-| Endpoint | Duplicate scenario | Classification | Policy | Client-visible behaviour |
-|---|---|---|---|---|
-| `POST /api/ingredient` | `Ingredient.Name` matches an existing ingredient and the effective `UnitIds` set is the same after deduplication | Canonical / reference row | **Reuse existing row** | Return the existing ingredient instead of inserting a second `Ingredient` row. |
-| `POST /api/ingredient` | `Ingredient.Name` matches an existing ingredient but the effective `UnitIds` set differs | Canonical / reference row | **Reject** | Return a conflict/validation response because the request is trying to redefine an existing canonical ingredient. |
-| `POST /api/ingredient` | Duplicate `UnitIds` within one request body | Set-like child / junction row | **Ignore duplicate input** | Silently collapse repeated unit IDs before building `IngredientUnit` rows. |
-| `POST /api/recipe` | `Recipe.Name` matches an existing recipe | Business-significant duplicate | **Reject** | Return a conflict/validation response; do not reuse another recipe and do not create a second same-name recipe. |
-| `POST /api/recipe` | Repeated `(IngredientName, UnitName)` pair with the same `Amount` in one request body | Set-like child / junction row | **Ignore duplicate input** | Silently collapse the exact duplicate before upserting `RecipeIngredient` rows. |
-| `POST /api/recipe` | Repeated `(IngredientName, UnitName)` pair with a different `Amount` in one request body | Set-like child / junction row | **Reject** | Return validation because the client supplied two conflicting values for one logical recipe ingredient. |
-| `PUT /api/recipe/{recipeId}` | New recipe name matches a different existing recipe | Business-significant duplicate | **Reject** | Return a conflict/validation response; do not merge or reuse the other recipe. |
-| `PUT /api/recipe/{recipeId}` | Repeated `(IngredientName, UnitName)` pair with the same `Amount` in one request body | Set-like child / junction row | **Ignore duplicate input** | Silently collapse the exact duplicate before applying the update. |
-| `PUT /api/recipe/{recipeId}` | Repeated `(IngredientName, UnitName)` pair with a different `Amount` in one request body | Set-like child / junction row | **Reject** | Return validation because the update payload is internally inconsistent. |
+> **Note:** These are **target / intended** behaviours. HTTP status codes align with the existing contract established in `api-validation.md`: `400 Bad Request` for payload-level validation failures (`Results.ValidationProblem()`), and `422 Unprocessable Entity` for business-rule violations (`BusinessValidationException`). `POST /api/ingredient` does not yet advertise `.ProducesProblem(422)` and would need it added when the reject case is implemented.
+
+| Endpoint | Duplicate scenario | Classification | Policy | HTTP response | Notes |
+|---|---|---|---|---|---|
+| `POST /api/ingredient` | `Ingredient.Name` matches an existing ingredient and the effective `UnitIds` set is the same after deduplication | Canonical / reference row | **Reuse existing row** | `200 OK` | Return the existing ingredient instead of inserting a second `Ingredient` row. |
+| `POST /api/ingredient` | `Ingredient.Name` matches an existing ingredient but the effective `UnitIds` set differs | Canonical / reference row | **Reject** | `422 Unprocessable Entity` | `BusinessValidationException` pattern — the request is trying to redefine an existing canonical ingredient. |
+| `POST /api/ingredient` | Duplicate `UnitIds` within one request body | Set-like child / junction row | **Ignore duplicate input** | `200 OK` | Silently collapse repeated unit IDs before building `IngredientUnit` rows. |
+| `POST /api/recipe` | `Recipe.Name` matches an existing recipe | Business-significant duplicate | **Reject** | `422 Unprocessable Entity` | `BusinessValidationException` pattern — do not reuse another recipe and do not create a second same-name recipe. Existing `.ProducesProblem(422)` already covers this. |
+| `POST /api/recipe` | Repeated `(IngredientName, UnitName)` pair with the same `Amount` in one request body | Set-like child / junction row | **Ignore duplicate input** | `200 OK` | Silently collapse the exact duplicate before upserting `RecipeIngredient` rows. |
+| `POST /api/recipe` | Repeated `(IngredientName, UnitName)` pair with a different `Amount` in one request body | Set-like child / junction row | **Reject** | `400 Bad Request` | `Results.ValidationProblem()` pattern — the client supplied two conflicting values for one logical recipe ingredient. |
+| `PUT /api/recipe/{recipeId}` | New recipe name matches a different existing recipe | Business-significant duplicate | **Reject** | `422 Unprocessable Entity` | `BusinessValidationException` pattern — do not merge or reuse the other recipe. Existing `.ProducesProblem(422)` already covers this. |
+| `PUT /api/recipe/{recipeId}` | Repeated `(IngredientName, UnitName)` pair with the same `Amount` in one request body | Set-like child / junction row | **Ignore duplicate input** | `200 OK` | Silently collapse the exact duplicate before applying the update. |
+| `PUT /api/recipe/{recipeId}` | Repeated `(IngredientName, UnitName)` pair with a different `Amount` in one request body | Set-like child / junction row | **Reject** | `400 Bad Request` | `Results.ValidationProblem()` pattern — the update payload is internally inconsistent. |
 
 ## Decision Record: Silent vs Explicit Handling
 
