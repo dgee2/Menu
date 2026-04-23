@@ -99,7 +99,7 @@ jobs:
             - **Each code-changing update**: One PR per individual dependency requiring code changes.
               Branch: `${{ matrix.branch_prefix }}/code-change-<package-name>`
 
-            All PRs must target the `main` branch. Reuse an existing open PR for the same branch if one already exists.
+            All PRs must target the `${{ github.event.repository.default_branch }}` branch. Reuse an existing open PR for the same branch if one already exists.
 
             ## Step 3 — Validate before creating or finalising each PR
 
