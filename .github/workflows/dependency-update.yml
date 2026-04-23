@@ -117,6 +117,10 @@ jobs:
 
             **For Node / npm / pnpm PRs:**
             ```bash
+            cd "$GITHUB_WORKSPACE/backend"
+            dotnet workload install aspire
+            dotnet restore MenuApi.sln
+            dotnet build MenuApi.sln --configuration Release --no-restore
             cd "$GITHUB_WORKSPACE/ui/menu-website"
             corepack enable pnpm
             pnpm install --frozen-lockfile
