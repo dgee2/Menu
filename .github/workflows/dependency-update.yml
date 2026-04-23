@@ -1,0 +1,151 @@
+name: Dependency updates
+run-name: Dependency updates (${{ github.event_name == 'workflow_dispatch' && inputs['target-group'] || 'all groups' }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      target-group:
+        description: Dependency update group to process
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - dotnet
+          - node
+          - github-actions
+  schedule:
+    # Run weekly on Friday at 09:00 UTC so dependency PRs stay predictable and reviewable.
+    - cron: '0 9 * * 5'
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-update:
+    name: ${{ matrix.name }}
+    if: github.event_name != 'workflow_dispatch' || inputs['target-group'] == 'all' || inputs['target-group'] == matrix.group
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    concurrency:
+      group: dependency-update-${{ matrix.group }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - group: dotnet
+            name: .NET / NuGet updates
+            ecosystem: .NET / NuGet
+            branch_prefix: copilot/dependency-update/dotnet
+          - group: node
+            name: Node / npm / pnpm updates
+            ecosystem: Node / npm / pnpm
+            branch_prefix: copilot/dependency-update/node
+          - group: github-actions
+            name: GitHub Actions updates
+            ecosystem: GitHub Actions
+            branch_prefix: copilot/dependency-update/github-actions
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install Aspire workload
+        run: dotnet workload install aspire
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.x'
+
+      - name: Enable pnpm via Corepack
+        run: corepack enable pnpm
+      - name: Create or update dependency PRs with Copilot
+        uses: github/copilot-coding-agent@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base: ${{ github.event.repository.default_branch }}
+          branch: ${{ matrix.branch_prefix }}
+          prompt: |
+            You are responsible for all pending `${{ matrix.ecosystem }}` dependency updates in the `${{ github.repository }}` repository.
+
+            ## Step 1 — Categorise pending updates
+
+            Read `.github/dependabot.yml` to understand the defined dependency groups and their ecosystems.
+            Categorise every pending `${{ matrix.ecosystem }}` dependency update into one of these types:
+
+            - **Simple version bump**: Only version numbers change in project/lock files; no tooling needs to run and no application or test code needs to change.
+            - **Tool-driven update**: The package belongs to a named dependency group in `.github/dependabot.yml` whose packages typically require running an upgrade tool. For example, the `aspire` NuGet group (packages matching `*aspire*`) may require running `dotnet workload update aspire` or similar tooling; the `storybook` npm group (packages matching `*storybook*`) may require running the Storybook upgrade CLI. Any dependency group with a similar pattern — where a dedicated upgrade tool must be run — also falls into this category.
+            - **Code-changing update**: The update requires changing application or test source code beyond version number edits, regardless of whether it belongs to a named group.
+
+            ## Step 2 — Create pull requests
+
+            Create one pull request per category **that has at least one pending update**. Every pending update must result in a PR — do not skip any:
+
+            - **Simple version bumps**: Group all simple bumps for this ecosystem into one PR.
+              Branch: `${{ matrix.branch_prefix }}/simple`
+            - **Each tool-driven group**: One PR per named dependency group that requires tooling. Run the required upgrade tooling as part of preparing this PR.
+              Branch: `${{ matrix.branch_prefix }}/tool-<group-name>` (e.g., `${{ matrix.branch_prefix }}/tool-aspire`)
+            - **Each code-changing update**: One PR per individual dependency requiring code changes.
+              Branch: `${{ matrix.branch_prefix }}/code-change-<package-name>`
+
+            All PRs must target the `${{ github.event.repository.default_branch }}` branch. Reuse an existing open PR for the same branch if one already exists.
+
+            ## Step 3 — Validate before creating or finalising each PR
+
+            Before creating or finalising each PR, confirm the build and tests pass by running the relevant commands.
+            The CI workflow (`.github/workflows/main.yml`) will also run the full suite once the PR is raised, providing the authoritative gate — your validation here is a pre-check to catch issues before the PR is created.
+
+            **For .NET / NuGet PRs:**
+            ```bash
+            cd "$GITHUB_WORKSPACE/backend"
+            dotnet workload install aspire
+            dotnet restore MenuApi.sln
+            dotnet build MenuApi.sln --configuration Release --no-restore
+            dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+            ```
+
+            **For Node / npm / pnpm PRs:**
+            ```bash
+            cd "$GITHUB_WORKSPACE/backend"
+            dotnet workload install aspire
+            dotnet restore MenuApi.sln
+            dotnet build MenuApi.sln --configuration Release --no-restore
+            cd "$GITHUB_WORKSPACE/ui/menu-website"
+            corepack enable pnpm
+            pnpm install --frozen-lockfile
+            pnpm run generate-openapi
+            pnpm run lint
+            pnpm run build
+            pnpm run test
+            ```
+
+            **For GitHub Actions PRs:**
+            ```bash
+            ruby -e "require 'yaml'; Dir[\"#{ENV['GITHUB_WORKSPACE']}/.github/workflows/*.yml\"].each { |path| YAML.load_file(path, aliases: true) }"
+            ```
+            Then also run both the .NET validation and the Node validation steps above.
+
+            If any validation fails after applying necessary in-scope fixes, do not create or finalise that PR — fail this workflow run instead.
+
+            ## Step 4 — Required PR description
+
+            Each PR description must explicitly include:
+            - Why these dependencies were grouped together
+            - Whether this is a `simple version bump`, `tool-driven update`, or `an update requiring code changes`
+            - Any best-practice change introduced or suggested by the update, with an explicit decision (`implement now` or `do not implement now`) and the reasoning for that decision
+            - The validation commands run and their result
+
+            If no best-practice change was introduced or suggested, state that explicitly and record the decision as `do not implement now` (no new best-practice action required).
