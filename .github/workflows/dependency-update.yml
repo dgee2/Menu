@@ -74,10 +74,10 @@ jobs:
         uses: github/copilot-coding-agent@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          base: main
+          base: ${{ github.event.repository.default_branch }}
           branch: ${{ matrix.branch_prefix }}
           prompt: |
-            You are responsible for all pending `${{ matrix.ecosystem }}` dependency updates in the `dgee2/Menu` repository.
+            You are responsible for all pending `${{ matrix.ecosystem }}` dependency updates in the `${{ github.repository }}` repository.
 
             ## Step 1 — Categorise pending updates
 
