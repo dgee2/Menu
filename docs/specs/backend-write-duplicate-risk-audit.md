@@ -89,8 +89,54 @@ This audit inventories every backend write endpoint under `backend/MenuApi/Recip
 5. `NewRecipeValidator` and `RecipeIngredientValidator` validate shape and value ranges, but they do not reject duplicate `(ingredient, unit)` pairs in the same request.
 6. The repository write paths rely on database primary keys to reject duplicate join-table rows instead of preventing duplicate attempts earlier.
 
+## Duplicate-Handling Policy Buckets
+
+### Set-like child / junction rows
+
+- Applies to join rows whose identity is fully described by their parent key plus referenced child key(s)
+- Duplicate input does not represent an additional business object
+- **Default policy:** silently collapse exact duplicates before writing
+- **Escalation:** reject the request when repeated keys carry conflicting payload for the same logical row
+
+### Canonical / reference rows
+
+- Applies to shared vocabulary rows that other write paths resolve by natural key
+- Duplicate storage is harmful because later lookups become ambiguous
+- **Default policy:** reuse the existing row when the incoming payload describes the same canonical value
+- **Escalation:** reject the request when the incoming payload tries to redefine an existing canonical row
+
+### Business-significant duplicates
+
+- Applies to aggregates where each row is intended to represent a distinct client-visible object
+- Reusing or silently collapsing these rows would hide user intent
+- **Default policy:** reject duplicates explicitly rather than silently reusing or ignoring them
+
+## Endpoint-by-Endpoint Duplicate Policy
+
+| Endpoint | Duplicate scenario | Classification | Policy | Client-visible behaviour |
+|---|---|---|---|---|
+| `POST /api/ingredient` | `Ingredient.Name` matches an existing ingredient and the effective `UnitIds` set is the same after deduplication | Canonical / reference row | **Reuse existing row** | Return the existing ingredient instead of inserting a second `Ingredient` row. |
+| `POST /api/ingredient` | `Ingredient.Name` matches an existing ingredient but the effective `UnitIds` set differs | Canonical / reference row | **Reject** | Return a conflict/validation response because the request is trying to redefine an existing canonical ingredient. |
+| `POST /api/ingredient` | Duplicate `UnitIds` within one request body | Set-like child / junction row | **Ignore duplicate input** | Silently collapse repeated unit IDs before building `IngredientUnit` rows. |
+| `POST /api/recipe` | `Recipe.Name` matches an existing recipe | Business-significant duplicate | **Reject** | Return a conflict/validation response; do not reuse another recipe and do not create a second same-name recipe. |
+| `POST /api/recipe` | Repeated `(IngredientName, UnitName)` pair with the same `Amount` in one request body | Set-like child / junction row | **Ignore duplicate input** | Silently collapse the exact duplicate before upserting `RecipeIngredient` rows. |
+| `POST /api/recipe` | Repeated `(IngredientName, UnitName)` pair with a different `Amount` in one request body | Set-like child / junction row | **Reject** | Return validation because the client supplied two conflicting values for one logical recipe ingredient. |
+| `PUT /api/recipe/{recipeId}` | New recipe name matches a different existing recipe | Business-significant duplicate | **Reject** | Return a conflict/validation response; do not merge or reuse the other recipe. |
+| `PUT /api/recipe/{recipeId}` | Repeated `(IngredientName, UnitName)` pair with the same `Amount` in one request body | Set-like child / junction row | **Ignore duplicate input** | Silently collapse the exact duplicate before applying the update. |
+| `PUT /api/recipe/{recipeId}` | Repeated `(IngredientName, UnitName)` pair with a different `Amount` in one request body | Set-like child / junction row | **Reject** | Return validation because the update payload is internally inconsistent. |
+
+## Decision Record: Silent vs Explicit Handling
+
+1. **Silent handling is limited to set-like duplicates inside a single request payload.** Repeated `UnitIds` and exact duplicate recipe ingredient keys do not create additional meaning, so the server should normalize them away before persistence.
+2. **Canonical rows should be reused, not duplicated, when the incoming request matches the existing canonical definition.** `Ingredient` names are later resolved by name in recipe writes, so multiple stored rows with the same name would make repository lookups ambiguous.
+3. **Canonical row redefinition must be explicit.** When a request reuses an ingredient name but changes the associated unit set, the server should reject the request rather than implicitly mutating or widening the existing canonical ingredient.
+4. **Business-significant duplicates must stay client-visible.** Recipe creation and recipe rename operations should reject same-name collisions because a recipe is an end-user aggregate, not shared reference data.
+5. **Conflicting duplicates inside one payload are validation failures, not candidates for silent normalization.** Two entries for the same logical `RecipeIngredient` with different amounts represent ambiguous intent and should be reported back to the client.
+6. **Concurrency remains out of scope.** These policies describe single-request duplicate handling only; races between concurrent writers are intentionally deferred to follow-up work.
+
 ## Summary
 
 - Every backend write endpoint is accounted for: one ingredient insert path, one recipe insert path, and one recipe update path.
 - Persisted duplicate-row risk is currently concentrated in the base tables that use surrogate keys only: `Ingredient` and `Recipe`.
 - Join tables (`IngredientUnit`, `RecipeIngredient`) already have composite primary keys, so persisted duplicates are blocked there, but duplicate attempts can still be constructed by request payloads.
+- Every audited duplicate-risk path now has an assigned handling policy: reuse for canonical ingredient matches, silent collapse for set-like duplicates, and explicit rejection for recipe-name collisions or conflicting duplicate payload entries.
