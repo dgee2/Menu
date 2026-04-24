@@ -87,8 +87,8 @@ jobs:
       - name: Enable pnpm via Corepack
         run: corepack enable pnpm
 
-      - name: Install Copilot CLI
-        run: npm install -g @github/copilot
+      - name: Setup Copilot CLI
+        uses: actions/setup-copilot@v0.0.2          
 
       - name: Create or update dependency PRs with Copilot
         env:
