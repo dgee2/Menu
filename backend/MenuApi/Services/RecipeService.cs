@@ -39,7 +39,10 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 
-        var ingredients = ViewModelMapper.Map(newRecipe.Ingredients);
+        var ingredients = ViewModelMapper.Map(newRecipe.Ingredients)
+            .GroupBy(i => new { IngredientName = i.IngredientName.Value, UnitName = i.UnitName.Value })
+            .Select(g => g.First())
+            .ToList();
 
         var strategy = db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
@@ -56,7 +59,10 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 
-        var ingredients = ViewModelMapper.Map(newRecipe.Ingredients);
+        var ingredients = ViewModelMapper.Map(newRecipe.Ingredients)
+            .GroupBy(i => new { IngredientName = i.IngredientName.Value, UnitName = i.UnitName.Value })
+            .Select(g => g.First())
+            .ToList();
 
         var strategy = db.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>

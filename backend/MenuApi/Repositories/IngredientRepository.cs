@@ -43,6 +43,7 @@ public class IngredientRepository(MenuDbContext db) : IIngredientRepository
         {
             Name = newIngredient.Name.Value,
             IngredientUnits = newIngredient.UnitIds
+                .Distinct()
                 .Select(unitId => new IngredientUnitEntity { UnitId = unitId })
                 .ToList(),
         };
