@@ -1,6 +1,8 @@
 ﻿﻿using MenuDB;
 using MenuDB.Data;
+using MenuApi.Exceptions;
 using MenuApi.ValueObjects;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace MenuApi.Repositories;
@@ -83,7 +85,16 @@ public class IngredientRepository(MenuDbContext db) : IIngredientRepository
                 .ToList(),
         };
         db.Ingredients.Add(entity);
-        await db.SaveChangesAsync().ConfigureAwait(false);
+        try
+        {
+            await db.SaveChangesAsync().ConfigureAwait(false);
+        }
+        catch (DbUpdateException ex)
+            when (ex.InnerException is SqlException { Number: 2601 or 2627 })
+        {
+            throw new ConflictException(
+                $"An ingredient named '{newIngredient.Name.Value}' already exists.");
+        }
 
         var created = await db.Ingredients
             .Where(i => i.Id == entity.Id)
