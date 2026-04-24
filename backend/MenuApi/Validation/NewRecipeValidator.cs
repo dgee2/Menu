@@ -25,10 +25,15 @@ public class NewRecipeValidator : AbstractValidator<NewRecipe>
             .SetValidator(new RecipeIngredientValidator());
 
         RuleFor(x => x.Ingredients)
-            .Must(items => !items
-                .Where(i => i.Name.IsInitialized() && i.Unit.IsInitialized() && i.Amount.IsInitialized())
-                .GroupBy(i => new { IngredientName = i.Name.Value, UnitName = i.Unit.Value })
-                .Any(g => g.Select(i => i.Amount.Value).Distinct().Count() > 1))
+            .Must(items =>
+            {
+                var initialized = items
+                    .Where(i => i.Name.IsInitialized() && i.Unit.IsInitialized() && i.Amount.IsInitialized())
+                    .ToList();
+                return !initialized
+                    .GroupBy(i => new { IngredientName = i.Name.Value, UnitName = i.Unit.Value })
+                    .Any(g => g.Select(i => i.Amount.Value).Distinct().Count() > 1);
+            })
             .When(x => x.Ingredients is not null)
             .WithMessage("Duplicate ingredient entries with the same name and unit but different amounts are not allowed.");
     }
