@@ -22,9 +22,38 @@ permissions:
   contents: read
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Set matrix
+        id: set-matrix
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          TARGET_GROUP: ${{ github.event.inputs.target-group || 'all' }}
+        run: |
+          DOTNET='{"group":"dotnet","name":".NET / NuGet updates","ecosystem":".NET / NuGet","branch_prefix":"copilot/dependency-update/dotnet"}'
+          NODE='{"group":"node","name":"Node / npm / pnpm updates","ecosystem":"Node / npm / pnpm","branch_prefix":"copilot/dependency-update/node"}'
+          GHA='{"group":"github-actions","name":"GitHub Actions updates","ecosystem":"GitHub Actions","branch_prefix":"copilot/dependency-update/github-actions"}'
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$TARGET_GROUP" != "all" ]]; then
+            if [[ "$TARGET_GROUP" == "dotnet" ]]; then
+              echo "matrix=[$DOTNET]" >> "$GITHUB_OUTPUT"
+            elif [[ "$TARGET_GROUP" == "node" ]]; then
+              echo "matrix=[$NODE]" >> "$GITHUB_OUTPUT"
+            elif [[ "$TARGET_GROUP" == "github-actions" ]]; then
+              echo "matrix=[$GHA]" >> "$GITHUB_OUTPUT"
+            else
+              echo "Unknown target-group: $TARGET_GROUP" >&2
+              exit 1
+            fi
+          else
+            echo "matrix=[$DOTNET,$NODE,$GHA]" >> "$GITHUB_OUTPUT"
+          fi
+
   dependency-update:
+    needs: setup
     name: ${{ matrix.name }}
-    if: github.event_name != 'workflow_dispatch' || inputs['target-group'] == 'all' || inputs['target-group'] == matrix.group
     runs-on: ubuntu-latest
     timeout-minutes: 120
     concurrency:
@@ -37,19 +66,7 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        include:
-          - group: dotnet
-            name: .NET / NuGet updates
-            ecosystem: .NET / NuGet
-            branch_prefix: copilot/dependency-update/dotnet
-          - group: node
-            name: Node / npm / pnpm updates
-            ecosystem: Node / npm / pnpm
-            branch_prefix: copilot/dependency-update/node
-          - group: github-actions
-            name: GitHub Actions updates
-            ecosystem: GitHub Actions
-            branch_prefix: copilot/dependency-update/github-actions
+        include: ${{ fromJSON(needs.setup.outputs.matrix) }}
 
     steps:
       - name: Checkout
