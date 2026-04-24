@@ -39,7 +39,7 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 
-        var ingredients = DeduplicateIngredients(newRecipe.Ingredients);
+        var ingredients = DeduplicateIngredients(ViewModelMapper.Map(newRecipe.Ingredients));
 
         var strategy = db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
@@ -56,7 +56,7 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 
-        var ingredients = DeduplicateIngredients(newRecipe.Ingredients);
+        var ingredients = DeduplicateIngredients(ViewModelMapper.Map(newRecipe.Ingredients));
 
         var strategy = db.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
@@ -68,8 +68,8 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
         }).ConfigureAwait(false);
     }
 
-    private static IReadOnlyList<DBModel.RecipeIngredient> DeduplicateIngredients(IEnumerable<RecipeIngredient> ingredients) =>
-        ViewModelMapper.Map(ingredients)
+    private static IReadOnlyList<DBModel.RecipeIngredient> DeduplicateIngredients(IEnumerable<DBModel.RecipeIngredient> ingredients) =>
+        ingredients
             .GroupBy(i => new { IngredientName = i.IngredientName.Value, UnitName = i.UnitName.Value })
             .Select(g => g.First())
             .ToList();

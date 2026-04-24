@@ -28,7 +28,7 @@ public class NewRecipeValidator : AbstractValidator<NewRecipe>
             .Must(items =>
             {
                 var initialized = items
-                    .Where(i => i.Name.IsInitialized() && i.Unit.IsInitialized() && i.Amount.IsInitialized())
+                    .Where(i => i is not null && i.Name.IsInitialized() && i.Unit.IsInitialized() && i.Amount.IsInitialized())
                     .ToList();
                 return !initialized
                     .GroupBy(i => new { IngredientName = i.Name.Value, UnitName = i.Unit.Value })
