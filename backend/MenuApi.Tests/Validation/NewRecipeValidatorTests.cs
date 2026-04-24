@@ -90,4 +90,55 @@ public class NewRecipeValidatorTests
 
         result.ShouldHaveValidationErrorFor("Name");
     }
+
+    [Fact]
+    public void ExactDuplicateIngredients_SameNameUnitAmount_Passes()
+    {
+        var ingredient = CreateValidIngredient();
+        var recipe = new NewRecipe
+        {
+            Name = RecipeName.From("Test Recipe"),
+            Ingredients = [ingredient, ingredient]
+        };
+
+        var result = validator.TestValidate(recipe);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.Ingredients);
+    }
+
+    [Fact]
+    public void ConflictingDuplicateIngredients_SameNameAndUnit_DifferentAmount_Fails()
+    {
+        var recipe = new NewRecipe
+        {
+            Name = RecipeName.From("Test Recipe"),
+            Ingredients =
+            [
+                new RecipeIngredient { Name = IngredientName.From("Flour"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(100m) },
+                new RecipeIngredient { Name = IngredientName.From("Flour"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(200m) }
+            ]
+        };
+
+        var result = validator.TestValidate(recipe);
+
+        result.ShouldHaveValidationErrorFor(x => x.Ingredients);
+    }
+
+    [Fact]
+    public void DifferentUnitsSameName_Passes()
+    {
+        var recipe = new NewRecipe
+        {
+            Name = RecipeName.From("Test Recipe"),
+            Ingredients =
+            [
+                new RecipeIngredient { Name = IngredientName.From("Flour"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(100m) },
+                new RecipeIngredient { Name = IngredientName.From("Flour"), Unit = IngredientUnitName.From("Kilograms"), Amount = IngredientAmount.From(1m) }
+            ]
+        };
+
+        var result = validator.TestValidate(recipe);
+
+        result.ShouldNotHaveAnyValidationErrors();
+    }
 }

@@ -124,6 +124,19 @@ public class IngredientIntegrationTests : IClassFixture<ApiTestFixture>
 #pragma warning restore S1144 // Unused private types or members should be removed
     }
 
+    [Theory, ShortStringAutoData]
+    public async Task Create_Ingredient_With_Duplicate_UnitIds_Deduplicates(string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        var (id, name, units) = await PostIngredientAsync(client, ingredientName, [4, 4]);
+
+        id.Should().BeGreaterThan(0);
+        name.Should().Be(ingredientName);
+        units.Should().HaveCount(1);
+        units.Should().ContainSingle(u => u.Name == "Grams");
+    }
+
     public class NewIngredient
     {
         public string Name { get; set; }

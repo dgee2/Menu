@@ -170,6 +170,114 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
         ingredients[0].Amount.Should().Be(200m);
     }
 
+    [Theory, ShortStringAutoData]
+    public async Task Create_Recipe_With_Exact_Duplicate_Ingredients_Succeeds(string ingredientName, string recipeName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        await PostIngredientAsync(client, ingredientName, [4]);
+
+        var ingredient = new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m };
+        var newRecipe = new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [ingredient, ingredient]
+        };
+
+        var (recipeId, returnedName, returnedIngredients) = await PostRecipeAsync(client, newRecipe);
+
+        recipeId.Should().BeGreaterThan(0);
+        returnedName.Should().Be(recipeName);
+        returnedIngredients.Should().HaveCount(1);
+        returnedIngredients[0].Name.Should().Be(ingredientName);
+    }
+
+    [Theory, ShortStringAutoData]
+    public async Task Create_Recipe_With_Conflicting_Duplicate_Ingredients_Returns_BadRequest(string ingredientName, string recipeName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        await PostIngredientAsync(client, ingredientName, [4]);
+
+        var newRecipe = new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients =
+            [
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m },
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 200m }
+            ]
+        };
+
+        using var content = new StringContent(JsonSerializer.Serialize(newRecipe, jsonOptions), Encoding.UTF8, "application/json");
+        using var response = await client.PostAsync("/api/recipe", content);
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
+    }
+
+    [Theory, ShortStringAutoData]
+    public async Task Update_Recipe_With_Exact_Duplicate_Ingredients_Succeeds(string ingredientName, string recipeName, string updatedRecipeName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        await PostIngredientAsync(client, ingredientName, [4]);
+
+        var (recipeId, _, _) = await PostRecipeAsync(client, new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m }]
+        });
+
+        var ingredient = new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 150m };
+        var updatedRecipe = new NewRecipe
+        {
+            Name = updatedRecipeName,
+            Ingredients = [ingredient, ingredient]
+        };
+
+        using var content = new StringContent(JsonSerializer.Serialize(updatedRecipe, jsonOptions), Encoding.UTF8, "application/json");
+        using var putResponse = await client.PutAsync($"/api/recipe/{recipeId}", content);
+        await putResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
+
+        using var getResponse = await client.GetAsync($"/api/recipe/{recipeId}");
+        await getResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
+
+        using var getStream = await getResponse.Content.ReadAsStreamAsync();
+        using var getDoc = await JsonDocument.ParseAsync(getStream);
+        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(
+            getDoc.RootElement.GetProperty("ingredients").GetRawText(), jsonOptions)!;
+        ingredients.Should().HaveCount(1);
+        ingredients[0].Amount.Should().Be(150m);
+    }
+
+    [Theory, ShortStringAutoData]
+    public async Task Update_Recipe_With_Conflicting_Duplicate_Ingredients_Returns_BadRequest(string ingredientName, string recipeName, string updatedRecipeName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        await PostIngredientAsync(client, ingredientName, [4]);
+
+        var (recipeId, _, _) = await PostRecipeAsync(client, new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m }]
+        });
+
+        var updatedRecipe = new NewRecipe
+        {
+            Name = updatedRecipeName,
+            Ingredients =
+            [
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m },
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 999m }
+            ]
+        };
+
+        using var content = new StringContent(JsonSerializer.Serialize(updatedRecipe, jsonOptions), Encoding.UTF8, "application/json");
+        using var putResponse = await client.PutAsync($"/api/recipe/{recipeId}", content);
+        await putResponse.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
+    }
+
     private async Task PostIngredientAsync(HttpClient client, string name, List<int> unitIds)
     {
         var body = new NewIngredient { Name = name, UnitIds = unitIds };
