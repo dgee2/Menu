@@ -209,7 +209,7 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
             ]
         };
 
-        var content = new StringContent(JsonSerializer.Serialize(newRecipe, jsonOptions), Encoding.UTF8, "application/json");
+        using var content = new StringContent(JsonSerializer.Serialize(newRecipe, jsonOptions), Encoding.UTF8, "application/json");
         using var response = await client.PostAsync("/api/recipe", content);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
@@ -235,7 +235,7 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
             Ingredients = [ingredient, ingredient]
         };
 
-        var content = new StringContent(JsonSerializer.Serialize(updatedRecipe, jsonOptions), Encoding.UTF8, "application/json");
+        using var content = new StringContent(JsonSerializer.Serialize(updatedRecipe, jsonOptions), Encoding.UTF8, "application/json");
         using var putResponse = await client.PutAsync($"/api/recipe/{recipeId}", content);
         await putResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
 
@@ -273,7 +273,7 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
             ]
         };
 
-        var content = new StringContent(JsonSerializer.Serialize(updatedRecipe, jsonOptions), Encoding.UTF8, "application/json");
+        using var content = new StringContent(JsonSerializer.Serialize(updatedRecipe, jsonOptions), Encoding.UTF8, "application/json");
         using var putResponse = await client.PutAsync($"/api/recipe/{recipeId}", content);
         await putResponse.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
     }
