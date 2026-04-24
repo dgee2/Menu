@@ -140,7 +140,7 @@ public class IngredientIntegrationTests : IClassFixture<ApiTestFixture>
         HttpClient client, string name, List<int> unitIds)
     {
         var body = new NewIngredient { Name = name, UnitIds = unitIds };
-        var requestContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
+        using var requestContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
         return await client.PostAsync("/api/ingredient", requestContent);
     }
 
@@ -148,7 +148,7 @@ public class IngredientIntegrationTests : IClassFixture<ApiTestFixture>
         HttpClient client, string name, List<int> unitIds)
     {
         var body = new NewIngredient { Name = name, UnitIds = unitIds };
-        var requestContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
+        using var requestContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
         using var response = await client.PostAsync("/api/ingredient", requestContent);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);

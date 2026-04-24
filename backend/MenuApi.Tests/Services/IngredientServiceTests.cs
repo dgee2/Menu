@@ -28,7 +28,7 @@ public class IngredientServiceTests
     public async Task CreateIngredient_NoExisting_CallsRepository(NewIngredient newIngredient, Ingredient created)
     {
         A.CallTo(() => ingredientRepository.FindByNameAsync(newIngredient.Name))
-            .Returns((ExistingIngredientLookup?)null);
+            .Returns(default(ExistingIngredientLookup?));
         A.CallTo(() => ingredientRepository.CreateIngredientAsync(newIngredient))
             .Returns(created);
 
