@@ -96,7 +96,7 @@ jobs:
           # authenticate with the Copilot service. Store this as a repository secret named
           # COPILOT_TOKEN. See https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_TOKEN }}
-          # GITHUB_TOKEN is used by git and the gh CLI for push / PR creation.
+          # GH_TOKEN is used by git and the gh CLI for push / PR creation.
           GH_TOKEN: ${{ github.token }}
         run: |
           cat > /tmp/copilot-prompt.txt << 'ENDOFPROMPT'
