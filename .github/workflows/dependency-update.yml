@@ -24,7 +24,7 @@ permissions:
 jobs:
   dependency-update:
     name: ${{ matrix.name }}
-    if: github.event_name != 'workflow_dispatch' || inputs['target-group'] == 'all' || inputs['target-group'] == matrix.group
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs['target-group'] == 'all' || inputs['target-group'] == 'dotnet' || inputs['target-group'] == 'node' || inputs['target-group'] == 'github-actions' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     concurrency:
@@ -37,19 +37,21 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        include:
-          - group: dotnet
-            name: .NET / NuGet updates
-            ecosystem: .NET / NuGet
-            branch_prefix: copilot/dependency-update/dotnet
-          - group: node
-            name: Node / npm / pnpm updates
-            ecosystem: Node / npm / pnpm
-            branch_prefix: copilot/dependency-update/node
-          - group: github-actions
-            name: GitHub Actions updates
-            ecosystem: GitHub Actions
-            branch_prefix: copilot/dependency-update/github-actions
+        include: >-
+          ${{
+            fromJSON(
+              (
+                github.event_name != 'workflow_dispatch' ||
+                inputs['target-group'] == 'all'
+              ) &&
+              '[{"group":"dotnet","name":".NET / NuGet updates","ecosystem":".NET / NuGet","branch_prefix":"copilot/dependency-update/dotnet"},{"group":"node","name":"Node / npm / pnpm updates","ecosystem":"Node / npm / pnpm","branch_prefix":"copilot/dependency-update/node"},{"group":"github-actions","name":"GitHub Actions updates","ecosystem":"GitHub Actions","branch_prefix":"copilot/dependency-update/github-actions"}]' ||
+              (inputs['target-group'] == 'dotnet') &&
+              '[{"group":"dotnet","name":".NET / NuGet updates","ecosystem":".NET / NuGet","branch_prefix":"copilot/dependency-update/dotnet"}]' ||
+              (inputs['target-group'] == 'node') &&
+              '[{"group":"node","name":"Node / npm / pnpm updates","ecosystem":"Node / npm / pnpm","branch_prefix":"copilot/dependency-update/node"}]' ||
+              '[{"group":"github-actions","name":"GitHub Actions updates","ecosystem":"GitHub Actions","branch_prefix":"copilot/dependency-update/github-actions"}]'
+            )
+          }}
 
     steps:
       - name: Checkout
