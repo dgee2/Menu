@@ -85,6 +85,65 @@ public class IngredientIntegrationTests : IClassFixture<ApiTestFixture>
         ingredients.Should().Contain(i => i.Id == createdId && i.Name == ingredientName);
     }
 
+    [Theory, ShortStringAutoData]
+    public async Task Create_Ingredient_Same_Name_Same_Units_Returns_Existing(string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        var (firstId, _, _) = await PostIngredientAsync(client, ingredientName, [1, 4]);
+        var (secondId, _, _) = await PostIngredientAsync(client, ingredientName, [1, 4]);
+
+        firstId.Should().Be(secondId);
+    }
+
+    [Theory, ShortStringAutoData]
+    public async Task Create_Ingredient_Same_Name_Different_Units_Returns_Conflict(string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        await PostIngredientAsync(client, ingredientName, [1]);
+
+        using var response = await PostIngredientRawAsync(client, ingredientName, [4]);
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.Conflict);
+    }
+
+    [Theory, ShortStringAutoData]
+    public async Task Create_Ingredient_Duplicate_UnitIds_Are_Deduplicated(string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        var (id, name, units) = await PostIngredientAsync(client, ingredientName, [1, 1, 4]);
+
+        id.Should().BeGreaterThan(0);
+        name.Should().Be(ingredientName);
+        units.Should().HaveCount(2);
+        units.Should().ContainSingle(u => u.Name == "Millilitres");
+        units.Should().ContainSingle(u => u.Name == "Grams");
+    }
+
+    [Theory, ShortStringAutoData]
+    public async Task Create_Ingredient_Duplicate_UnitIds_Then_Create_Again_Reuses(string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        // First request has a duplicate unit ID - should be collapsed to {1, 4}
+        var (firstId, _, _) = await PostIngredientAsync(client, ingredientName, [1, 1, 4]);
+
+        // Second request with the canonical set {1, 4} - should reuse
+        var (secondId, _, _) = await PostIngredientAsync(client, ingredientName, [1, 4]);
+
+        firstId.Should().Be(secondId);
+    }
+
+    private async Task<HttpResponseMessage> PostIngredientRawAsync(
+        HttpClient client, string name, List<int> unitIds)
+    {
+        var body = new NewIngredient { Name = name, UnitIds = unitIds };
+        var requestContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
+        return await client.PostAsync("/api/ingredient", requestContent);
+    }
+
     internal async Task<(int Id, string Name, List<IngredientUnit> Units)> PostIngredientAsync(
         HttpClient client, string name, List<int> unitIds)
     {
