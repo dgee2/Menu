@@ -1,4 +1,4 @@
-name: Dependency updates
+name: Dependency updates (copilot)
 run-name: Dependency updates (${{ github.event_name == 'workflow_dispatch' && inputs['target-group'] || 'all groups' }})
 
 on:
@@ -88,7 +88,7 @@ jobs:
         run: corepack enable pnpm
 
       - name: Setup Copilot CLI
-        uses: actions/setup-copilot@v0.0.2
+        uses: actions/setup-copilot@v0.0.5
 
       - name: Create or update dependency PRs with Copilot
         env:
