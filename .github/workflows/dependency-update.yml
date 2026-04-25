@@ -153,7 +153,7 @@ jobs:
 
           **For GitHub Actions PRs:**
           Run these commands and confirm they all succeed before creating or finalising the PR:
-          ruby -e "require 'yaml'; Dir['$GITHUB_WORKSPACE/.github/workflows/*.yml'].each { |path| YAML.load_file(path, aliases: true) }"
+          ruby -e "require 'yaml'; Dir[\"#{ENV['GITHUB_WORKSPACE']}/.github/workflows/*.yml\"].each { |path| YAML.load_file(path, aliases: true) }"
           Then also run all the .NET validation commands and all the Node validation commands listed above.
 
           If any validation command fails, do not create or finalise that PR. Instead, exit with a non-zero status code (e.g. `exit 1`) so that this workflow job fails and signals the problem clearly.
