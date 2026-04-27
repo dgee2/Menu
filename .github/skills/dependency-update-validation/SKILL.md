@@ -33,7 +33,6 @@ Run these commands from the repository root, in this order:
 
 ```bash
 cd backend
-dotnet workload install aspire
 dotnet restore MenuApi.sln
 dotnet build MenuApi.sln --configuration Release --no-restore
 dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
@@ -45,7 +44,6 @@ Run these commands from the repository root, in this order:
 
 ```bash
 cd backend
-dotnet workload install aspire
 dotnet restore MenuApi.sln
 dotnet build MenuApi.sln --configuration Release --no-restore
 cd ../ui/menu-website

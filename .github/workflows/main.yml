@@ -77,9 +77,6 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Install .NET Aspire workload
-        run: dotnet workload install aspire
-
       - name: Restore
         run: dotnet restore MenuApi.sln
         working-directory: ./backend
@@ -115,9 +112,6 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Install .NET Aspire workload
-        run: dotnet workload install aspire
-
       - name: Restore
         run: dotnet restore MenuApi.sln
         working-directory: ./backend
@@ -150,9 +144,6 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
-
-      - name: Install .NET Aspire workload
-        run: dotnet workload install aspire
 
       - name: Restore
         run: dotnet restore MenuApi.sln
