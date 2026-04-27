@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.2.0" />
-    <PackageReference Include="Aspire.Hosting.Redis" Version="13.2.0" />
-    <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.2.0" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.2.4" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="13.2.4" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.2.4" />
     <PackageReference Include="CommunityToolkit.Aspire.Hosting.JavaScript.Extensions" Version="13.1.1" />
   </ItemGroup>
 
