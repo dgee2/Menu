@@ -37,6 +37,13 @@ dotnet workload install aspire
 dotnet restore MenuApi.sln
 dotnet build MenuApi.sln --configuration Release --no-restore
 dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+cd ../ui/menu-website
+corepack enable pnpm
+pnpm install --frozen-lockfile
+pnpm run generate-openapi
+pnpm run lint
+pnpm run build
+pnpm run test
 ```
 
 ## Node / npm / pnpm pull requests
