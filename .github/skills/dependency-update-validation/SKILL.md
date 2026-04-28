@@ -64,10 +64,18 @@ pnpm run test
 
 ## GitHub Actions pull requests
 
-Run these commands from the repository root, in this order:
+Run one of the following YAML validation commands from the repository root, depending on which toolchain is available:
 
 ```bash
-ruby -e 'require "yaml"; Dir[".github/workflows/*.yml"].each { |path| YAML.load_file(path, aliases: true) }'
+pwsh -NoLogo -NoProfile -Command "Get-ChildItem '.github/workflows/*.yml' | ForEach-Object { Get-Content $_.FullName -Raw | ConvertFrom-Yaml | Out-Null }"
+```
+
+```bash
+python -c "from pathlib import Path; import yaml; [yaml.safe_load(path.read_text(encoding='utf-8')) for path in Path('.github/workflows').glob('*.yml')]"
+```
+
+```bash
+python3 -c "from pathlib import Path; import yaml; [yaml.safe_load(path.read_text(encoding='utf-8')) for path in Path('.github/workflows').glob('*.yml')]"
 ```
 
 Then run all `.NET / NuGet` validation commands and all `Node / npm / pnpm` validation commands listed above.
