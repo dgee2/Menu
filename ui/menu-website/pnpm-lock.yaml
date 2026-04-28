@@ -14,8 +14,8 @@ importers:
   .:
     dependencies:
       '@auth0/auth0-vue':
-        specifier: ^2.5.0
-        version: 2.5.0(typescript@6.0.3)(vue-router@5.0.6(@vue/compiler-sfc@3.5.33)(pinia@3.0.4(typescript@6.0.3)(vue@3.5.33(typescript@6.0.3)))(vue@3.5.33(typescript@6.0.3)))
+        specifier: ^2.6.0
+        version: 2.6.0(typescript@6.0.3)(vue-router@5.0.6(@vue/compiler-sfc@3.5.33)(pinia@3.0.4(typescript@6.0.3)(vue@3.5.33(typescript@6.0.3)))(vue@3.5.33(typescript@6.0.3)))
       '@quasar/extras':
         specifier: ^1.18.0
         version: 1.18.0
@@ -194,13 +194,13 @@ packages:
   '@auth0/auth0-auth-js@1.6.0':
     resolution: {integrity: sha512-/WYYNlsqhWA6I60pMVLFVeOgjOUCLdJThEAsjN8pAgYY09BTxbPaRIEVDgGu6ckoJpkmKvEYlHPO/vwRNrvX6w==}
 
-  '@auth0/auth0-spa-js@2.18.2':
-    resolution: {integrity: sha512-Dq6ZpwM8wIIs3RLDEmPgXka24J/+X3TKzKpcPu0K9Yw2jFaY5/CGAJCNxBJP1qf3uIyRidICnQ75QhvFbR3HLg==}
+  '@auth0/auth0-spa-js@2.19.2':
+    resolution: {integrity: sha512-NJOjPQZjZ8g2LXkBjNiYtf614WGVhwCg+q9L2MXcEQqey+ign9CG/wnl9OxYDz7XuItWecfYQLbiVTjIGNZ/Dw==}
 
-  '@auth0/auth0-vue@2.5.0':
-    resolution: {integrity: sha512-/qHTW64QjHCbsVFKhbJq9/ZzpEsp35sFiQaWzH/J4z+lPldgXQMmEF6yvvWhg0TbXQHMXPgOqGnK9lLdRHkR3w==}
+  '@auth0/auth0-vue@2.6.0':
+    resolution: {integrity: sha512-QptBaCGnbx52MeT1f7EqlYHHIaV3DeDkXjrYitbfgYlGg0hMJDhG7fNz/M7JVi0HqIRqRYZIZFXCxiLQ5dga0g==}
     peerDependencies:
-      vue-router: ^4.0.12
+      vue-router: ^4.0.12 || ^5.0.0
     peerDependenciesMeta:
       vue-router:
         optional: true
@@ -3152,8 +3152,8 @@ packages:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
 
-  jose@6.2.2:
-    resolution: {integrity: sha512-d7kPDd34KO/YnzaDOlikGpOurfF0ByC2sEV4cANCtdqLlTfBlw2p14O/5d/zv40gJPbIQxfES3nSx1/oYNyuZQ==}
+  jose@6.2.3:
+    resolution: {integrity: sha512-YYVDInQKFJfR/xa3ojUTl8c2KoTwiL1R5Wg9YCydwH0x0B9grbzlg5HC7mMjCtUJjbQ/YnGEZIhI5tCgfTb4Hw==}
 
   js-beautify@1.15.4:
     resolution: {integrity: sha512-9/KXeZUKKJwqCXUdBxFJ3vPh467OCckSBmYDwSK/EtV090K+iMJ7zx2S3HLVDIWFQdqMIsZWbnaGiba18aWhaA==}
@@ -3528,8 +3528,8 @@ packages:
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
 
-  oauth4webapi@3.8.5:
-    resolution: {integrity: sha512-A8jmyUckVhRJj5lspguklcl90Ydqk61H3dcU0oLhH3Yv13KpAliKTt5hknpGGPZSSfOwGyraNEFmofDYH+1kSg==}
+  oauth4webapi@3.8.6:
+    resolution: {integrity: sha512-iwemM91xz8nryHti2yTmg5fhyEMVOkOXwHNqbvcATjyajb5oQxCQzrNOA6uElRHuMhQQTKUyFKV9y/CNyg25BQ==}
 
   object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
@@ -3573,8 +3573,8 @@ packages:
     peerDependencies:
       typescript: ^5.x
 
-  openid-client@6.8.2:
-    resolution: {integrity: sha512-uOvTCndr4udZsKihJ68H9bUICrriHdUVJ6Az+4Ns6cW55rwM5h0bjVIzDz2SxgOI84LKjFyjOFvERLzdTUROGA==}
+  openid-client@6.8.4:
+    resolution: {integrity: sha512-QSw0BA08piujetEwfZsHoTrDpMEha7GDZDicQqVwX4u0ChCjefvjDB++TZ8BTg76UpwhzIQgdvvfgfl3HpCSAw==}
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -4849,19 +4849,19 @@ snapshots:
 
   '@auth0/auth0-auth-js@1.6.0':
     dependencies:
-      jose: 6.2.2
-      openid-client: 6.8.2
+      jose: 6.2.3
+      openid-client: 6.8.4
 
-  '@auth0/auth0-spa-js@2.18.2':
+  '@auth0/auth0-spa-js@2.19.2':
     dependencies:
       '@auth0/auth0-auth-js': 1.6.0
       browser-tabs-lock: 1.3.0
       dpop: 2.1.1
       es-cookie: 1.3.2
 
-  '@auth0/auth0-vue@2.5.0(typescript@6.0.3)(vue-router@5.0.6(@vue/compiler-sfc@3.5.33)(pinia@3.0.4(typescript@6.0.3)(vue@3.5.33(typescript@6.0.3)))(vue@3.5.33(typescript@6.0.3)))':
+  '@auth0/auth0-vue@2.6.0(typescript@6.0.3)(vue-router@5.0.6(@vue/compiler-sfc@3.5.33)(pinia@3.0.4(typescript@6.0.3)(vue@3.5.33(typescript@6.0.3)))(vue@3.5.33(typescript@6.0.3)))':
     dependencies:
-      '@auth0/auth0-spa-js': 2.18.2
+      '@auth0/auth0-spa-js': 2.19.2
       vue: 3.5.33(typescript@6.0.3)
     optionalDependencies:
       vue-router: 5.0.6(@vue/compiler-sfc@3.5.33)(pinia@3.0.4(typescript@6.0.3)(vue@3.5.33(typescript@6.0.3)))(vue@3.5.33(typescript@6.0.3))
@@ -7831,7 +7831,7 @@ snapshots:
 
   jiti@2.6.1: {}
 
-  jose@6.2.2: {}
+  jose@6.2.3: {}
 
   js-beautify@1.15.4:
     dependencies:
@@ -8165,7 +8165,7 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  oauth4webapi@3.8.5: {}
+  oauth4webapi@3.8.6: {}
 
   object-assign@4.1.1: {}
 
@@ -8213,10 +8213,10 @@ snapshots:
       typescript: 6.0.3
       yargs-parser: 21.1.1
 
-  openid-client@6.8.2:
+  openid-client@6.8.4:
     dependencies:
-      jose: 6.2.2
-      oauth4webapi: 3.8.5
+      jose: 6.2.3
+      oauth4webapi: 3.8.6
 
   optionator@0.9.4:
     dependencies:

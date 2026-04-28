@@ -23,7 +23,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@auth0/auth0-vue": "^2.5.0",
+    "@auth0/auth0-vue": "^2.6.0",
     "@quasar/extras": "^1.18.0",
     "@tanstack/vue-query": "^5.100.5",
     "@tanstack/vue-query-devtools": "^6.1.24",
