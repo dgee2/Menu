@@ -24,6 +24,7 @@ jobs:
       pull-requests: read
     outputs:
       backend: ${{ steps.filter.outputs.backend || 'true' }}
+      openapi: ${{ steps.filter.outputs.openapi || 'true' }}
       frontend: ${{ steps.filter.outputs.frontend || 'true' }}
     steps:
       - name: Checkout
@@ -38,6 +39,10 @@ jobs:
           filters: |
             backend:
               - 'backend/**'
+              - '.github/workflows/main.yml'
+            openapi:
+              - 'backend/**'
+              - 'ui/**'
               - '.github/workflows/main.yml'
             frontend:
               - 'ui/**'
@@ -62,7 +67,7 @@ jobs:
     needs: changes
     if: |
       github.event_name != 'pull_request' ||
-      needs.changes.outputs.backend == 'true'
+      needs.changes.outputs.openapi == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -76,9 +81,6 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
-
-      - name: Install .NET Aspire workload
-        run: dotnet workload install aspire
 
       - name: Restore
         run: dotnet restore MenuApi.sln
@@ -115,9 +117,6 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Install .NET Aspire workload
-        run: dotnet workload install aspire
-
       - name: Restore
         run: dotnet restore MenuApi.sln
         working-directory: ./backend
@@ -151,9 +150,6 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Install .NET Aspire workload
-        run: dotnet workload install aspire
-
       - name: Restore
         run: dotnet restore MenuApi.sln
         working-directory: ./backend
@@ -185,7 +181,11 @@ jobs:
     needs: [changes, backend-build]
     if: |
       !cancelled() &&
-      (github.event_name != 'pull_request' || needs.changes.outputs.frontend == 'true') &&
+      (
+        github.event_name != 'pull_request' ||
+        needs.changes.outputs.openapi == 'true' ||
+        needs.changes.outputs.frontend == 'true'
+      ) &&
       (needs.backend-build.result == 'success' || needs.backend-build.result == 'skipped')
     permissions:
       contents: read
