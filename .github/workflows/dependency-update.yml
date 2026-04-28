@@ -76,9 +76,6 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Install Aspire workload
-        run: dotnet workload install aspire
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -92,7 +89,7 @@ jobs:
 
       - name: Create or update dependency PRs with Copilot
         env:
-          # Fine-grained PAT with "Copilot Requests" permission – used by the Copilot CLI to
+          # Fine-grained PAT with "Copilot Requests" permission - used by the Copilot CLI to
           # authenticate with the Copilot service. Store this as a repository secret named
           # COPILOT_TOKEN. See https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_TOKEN }}
