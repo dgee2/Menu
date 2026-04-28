@@ -72,7 +72,8 @@ The frontend job (`frontend`) runs when any of these files change, or when the C
 - ❌ Create OpenAPI spec is skipped
 - ❌ Backend test jobs are skipped
 - ✅ Frontend job runs to regenerate types
-- The frontend uses the existing OpenAPI spec from the repository
+- The frontend job does **not** get a freshly generated OpenAPI spec artifact in this scenario
+- Because the generated JSON spec is not tracked in the repository, `open-api/**`-only changes cannot rely on an existing checked-in spec when `backend-build` is skipped
 
 ### Scenario: Both backend and frontend changes
 
