@@ -33,9 +33,9 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           TARGET_GROUP: ${{ inputs.target-group }}
         run: |
-          DOTNET='{"group":"dotnet","name":".NET / NuGet updates","ecosystem":".NET / NuGet","branch_prefix":"copilot/dependency-update/dotnet"}'
-          NODE='{"group":"node","name":"Node / npm / pnpm updates","ecosystem":"Node / npm / pnpm","branch_prefix":"copilot/dependency-update/node"}'
-          GHA='{"group":"github-actions","name":"GitHub Actions updates","ecosystem":"GitHub Actions","branch_prefix":"copilot/dependency-update/github-actions"}'
+          DOTNET='{"group":"dotnet","name":".NET / NuGet updates","ecosystem":".NET / NuGet","branch_prefix":"copilot/dependency-update/dotnet","skill":"dependency-update-dotnet"}'
+          NODE='{"group":"node","name":"Node / npm / pnpm updates","ecosystem":"Node / npm / pnpm","branch_prefix":"copilot/dependency-update/node","skill":"dependency-update-node"}'
+          GHA='{"group":"github-actions","name":"GitHub Actions updates","ecosystem":"GitHub Actions","branch_prefix":"copilot/dependency-update/github-actions","skill":"dependency-update-github-actions"}'
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$TARGET_GROUP" != "all" ]]; then
             if [[ "$TARGET_GROUP" == "dotnet" ]]; then
               echo "matrix=[$DOTNET]" >> "$GITHUB_OUTPUT"
@@ -97,13 +97,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PROMPT_ECOSYSTEM: ${{ matrix.ecosystem }}
           PROMPT_BRANCH_PREFIX: ${{ matrix.branch_prefix }}
+          PROMPT_ECOSYSTEM_SKILL: ${{ matrix.skill }}
           PROMPT_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          PROMPT_INTERACTION_MODE: unattended
+          PROMPT_GHA_DISCOVERY_SCOPE: actions and reusable workflows
+          PROMPT_PRERELEASE_POLICY: Consider prerelease versions only when the current version is prerelease; otherwise prefer stable releases.
         run: |
           cat > /tmp/copilot-prompt.txt <<EOF
           Read ".github/prompts/dependency-update.prompt.md" and apply these repository skills:
-          - dependency-update-repo-context
-          - dependency-update-classification
-          - dependency-update-validation
+          - ${PROMPT_ECOSYSTEM_SKILL}
           - dependency-update-pr-description
 
           Assume the current workspace is the target repository and the current working directory is the repository root.
@@ -112,9 +114,13 @@ jobs:
           - Ecosystem: ${PROMPT_ECOSYSTEM}
           - Branch prefix override: ${PROMPT_BRANCH_PREFIX}
           - Default branch override: ${PROMPT_DEFAULT_BRANCH}
+          - Interaction mode: ${PROMPT_INTERACTION_MODE}
+          - GitHub Actions discovery scope: ${PROMPT_GHA_DISCOVERY_SCOPE}
+          - Prerelease policy: ${PROMPT_PRERELEASE_POLICY}
 
           Use those runtime parameters when following the prompt and skills.
-          If any required validation command fails, do not create or finalise a pull request and exit with a non-zero status code.
+          If the prompt or skill says to ask clarifying questions, resolve them from the runtime parameters and the repository state instead of waiting for user input.
+          If any required validation command fails for a planned update, record the failure, do not create or finalise that pull request, continue attempting any remaining planned update groups or pull requests, and exit with a non-zero status code only after all planned work has been attempted.
           EOF
 
           copilot \

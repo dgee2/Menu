@@ -52,6 +52,12 @@ dotnet test MenuApi.Tests
 dotnet test MenuApi.Integration.Tests
 ```
 
+## Worktrees
+
+- Repository-wide rule: create temporary git worktrees only under `worktrees/` at the repository root.
+- Keep `worktrees/.gitkeep` committed so the directory exists for automation.
+- When dependency update work is split into multiple independent pull request groups, create one worktree per planned branch under `worktrees/` and use separate subagents to apply and validate those groups in parallel.
+
 ## Testing Conventions
 
 - **Unit tests** (`MenuApi.Tests`): xUnit + AutoFixture + FakeItEasy + AwesomeAssertions. Custom `ValueObjectSpecimenBuilder` in `CustomGenerator.cs` auto-constructs Vogen types via reflection; use `[CustomAutoData]` (from `CustomAutoDataAttribute.cs`) on test methods to wire it up.
