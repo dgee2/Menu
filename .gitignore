@@ -218,6 +218,10 @@ ClientBin/
 ~$*
 *~
 *.dbmdl
+
+# Temporary git worktrees used by dependency automation
+worktrees/*
+!worktrees/.gitkeep
 *.dbproj.schemaview
 *.jfm
 *.pfx

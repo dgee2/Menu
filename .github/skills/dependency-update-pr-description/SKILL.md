@@ -2,6 +2,7 @@
 name: dependency-update-pr-description
 description: Defines the required pull request description contract for automated dependency update pull requests in the Menu repository.
 user-invokable: false
+context: fork
 ---
 
 # Write Dependency Update Pull Request Descriptions
