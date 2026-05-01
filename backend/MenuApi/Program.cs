@@ -24,6 +24,7 @@ builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
 
 builder.Services.AddExceptionHandler<BusinessValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<ConflictExceptionHandler>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 

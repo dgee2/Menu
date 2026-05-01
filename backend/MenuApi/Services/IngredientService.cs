@@ -1,4 +1,5 @@
-﻿﻿using MenuApi.MappingProfiles;
+﻿﻿using MenuApi.Exceptions;
+using MenuApi.MappingProfiles;
 using MenuApi.Repositories;
 using MenuApi.ViewModel;
 
@@ -14,8 +15,23 @@ public class IngredientService(IUnitRepository unitRepository, IIngredientReposi
 
     public async Task<Ingredient> CreateIngredientAsync(NewIngredient newIngredient)
     {
+        ArgumentNullException.ThrowIfNull(newIngredient);
+
+        var effectiveUnitIds = newIngredient.UnitIds.Distinct().ToHashSet();
+
+        var existing = await ingredientRepository.FindByNameAsync(newIngredient.Name).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            if (existing.UnitIds.SetEquals(effectiveUnitIds))
+            {
+                return existing.Ingredient;
+            }
+
+            throw new ConflictException(
+                $"An ingredient named '{newIngredient.Name.Value}' already exists with a different set of units.");
+        }
+
         return await ingredientRepository.CreateIngredientAsync(newIngredient).ConfigureAwait(false);
     }
 }
-
 
