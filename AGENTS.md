@@ -58,6 +58,24 @@ dotnet test MenuApi.Integration.Tests
 - Keep `worktrees/.gitkeep` committed so the directory exists for automation.
 - When dependency update work is split into multiple independent pull request groups, create one worktree per planned branch under `worktrees/` and use separate subagents to apply and validate those groups in parallel.
 
+## Windows / PowerShell Notes
+
+Agents running on Windows must substitute Bash idioms in skill commands:
+
+| Bash | PowerShell equivalent |
+|---|---|
+| `tail -N` | `Select-Object -Last N` |
+| `grep 'pattern'` | `Select-String 'pattern'` |
+| `cmd1 && cmd2` | `cmd1; if ($LASTEXITCODE -eq 0) { cmd2 }` |
+| `rm -rf <path>` | `Remove-Item <path> -Recurse -Force` |
+| `cp src dst` | `Copy-Item src dst` |
+
+When pushing a branch containing `/` from a detached HEAD worktree, always use the full refspec:
+
+```powershell
+git push origin HEAD:refs/heads/<branch-name>
+```
+
 ## Testing Conventions
 
 - **Unit tests** (`MenuApi.Tests`): xUnit + AutoFixture + FakeItEasy + AwesomeAssertions. Custom `ValueObjectSpecimenBuilder` in `CustomGenerator.cs` auto-constructs Vogen types via reflection; use `[CustomAutoData]` (from `CustomAutoDataAttribute.cs`) on test methods to wire it up.
