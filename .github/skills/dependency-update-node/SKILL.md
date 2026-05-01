@@ -74,6 +74,23 @@ pnpm outdated --json
 - **Code-changing update**: lint failures, type errors, tests, or upgrade guidance require source changes beyond dependency and lock-file edits.
 - `eslint`, `quasar`, `vue`, and `tanstack` are not automatically tool-driven. Treat them as simple version bumps unless the update evidence shows a dedicated upgrade workflow or source changes are required.
 
+## Package-specific upgrade steps
+
+Before finalising any dependency update, check whether the package being updated has a custom post-install step. Consult the package's changelog or migration guide for the version range being updated. If a custom step is required, run it as part of the same branch — do not commit version bumps without also applying the required post-install steps.
+
+### msw
+
+`ui/menu-website/public/mockServiceWorker.js` is a **generated file** managed by MSW. The file header explicitly says "Please do NOT modify this file". Do **not** manually edit `PACKAGE_VERSION`, `INTEGRITY_CHECKSUM`, or any other constant in this file.
+
+After updating `msw` to a new version, always regenerate the worker file by running:
+
+```bash
+cd ui/menu-website
+pnpm dlx msw init public/ --save
+```
+
+This ensures both `PACKAGE_VERSION` and `INTEGRITY_CHECKSUM` are in sync with the installed MSW version. Failing to regenerate the worker can cause the runtime integrity check to fail and silently disable request mocking in the browser.
+
 ## Label management
 
 ### Labels to apply
