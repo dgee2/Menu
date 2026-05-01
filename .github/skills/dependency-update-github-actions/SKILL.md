@@ -64,6 +64,21 @@ Use workflow references plus GitHub release or tag data as the source of truth.
 - Use each subagent's worktree to apply workflow changes and run validation for only that planned pull request.
 - After each pull request is created or updated, remove the corresponding temporary worktree and run `git worktree prune`.
 
+**Pushing from a worktree:** When pushing from a detached HEAD worktree, branch names containing `/` require the full refspec:
+
+```bash
+git push origin HEAD:refs/heads/<branch-name>
+```
+
+Using the short form (`HEAD:<branch-name>`) will fail with a refspec error.
+
+**Worktree cleanup:** `git worktree remove --force` may still fail on Windows when a directory is large. If that happens, delete the directory first, then prune:
+
+```powershell
+Remove-Item <worktree-path> -Recurse -Force
+git worktree prune
+```
+
 ## Validation
 
 Run one of the following YAML validation commands from the repository root, depending on which toolchain is available:
@@ -96,3 +111,5 @@ pnpm run test
 ```
 
 - If any required validation command fails for a planned pull request, do not create or finalise that pull request. Record the failure, continue processing the remaining planned pull requests for this ecosystem, and exit with a non-zero status code after all planned pull requests have been attempted.
+
+**Running tests on Windows:** `pnpm run test` launches Playwright/Chromium browser tests. On Windows agents the process will appear to block the shell. Use PowerShell's `Start-Job` pattern — see the Windows / PowerShell Notes section in AGENTS.md for the canonical pattern.
