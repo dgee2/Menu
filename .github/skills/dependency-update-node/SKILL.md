@@ -74,6 +74,45 @@ pnpm outdated --json
 - **Code-changing update**: lint failures, type errors, tests, or upgrade guidance require source changes beyond dependency and lock-file edits.
 - `eslint`, `quasar`, `vue`, and `tanstack` are not automatically tool-driven. Treat them as simple version bumps unless the update evidence shows a dedicated upgrade workflow or source changes are required.
 
+## Label management
+
+### Labels to apply
+
+Apply both of these labels to every pull request created or updated by this skill:
+
+- `dependency-update`
+- `node`
+
+If either label does not exist in the repository, create it before applying:
+
+```bash
+gh label create "dependency-update" --color "0075ca" --description "Automated dependency update PR"
+gh label create "node" --color "026e00" --description "Node / npm / pnpm ecosystem dependency update"
+```
+
+When creating a pull request use `--label dependency-update --label node`. For an existing pull request use `gh pr edit <number> --add-label dependency-update --add-label node`.
+
+### Checking for existing PRs
+
+Before creating any pull requests, retrieve all currently open pull requests that carry **both** `dependency-update` and `node` labels:
+
+```bash
+gh pr list --label dependency-update --label node --state open --json number,headRefName,title
+```
+
+Record this list as the _initial open set_. Use it to:
+
+- Reuse an existing open PR when it targets the same planned branch (push changes to that branch; rebase onto the default branch if it is behind).
+- Identify stale PRs (those not part of this run) after all planned PRs have been created or updated.
+
+### Closing stale PRs
+
+After all planned pull requests for this ecosystem have been created or updated, close every PR in the _initial open set_ that was **not** created or updated during this run:
+
+```bash
+gh pr close <number> --comment "Superseded by current dependency update run. This update is no longer pending or has already been merged."
+```
+
 ## Pull request boundaries
 
 - Create one pull request for all simple version bumps using the selected branch prefix plus `/simple`.

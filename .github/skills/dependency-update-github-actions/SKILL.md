@@ -51,6 +51,45 @@ Use workflow references plus GitHub release or tag data as the source of truth.
 - **Simple version bump**: only workflow refs and adjacent version comments change.
 - **Code-changing update**: workflow syntax, required inputs, or job structure must change beyond ref updates.
 
+## Label management
+
+### Labels to apply
+
+Apply both of these labels to every pull request created or updated by this skill:
+
+- `dependency-update`
+- `github-actions`
+
+If either label does not exist in the repository, create it before applying:
+
+```bash
+gh label create "dependency-update" --color "0075ca" --description "Automated dependency update PR"
+gh label create "github-actions" --color "1f6ebb" --description "GitHub Actions ecosystem dependency update"
+```
+
+When creating a pull request use `--label dependency-update --label github-actions`. For an existing pull request use `gh pr edit <number> --add-label dependency-update --add-label github-actions`.
+
+### Checking for existing PRs
+
+Before creating any pull requests, retrieve all currently open pull requests that carry **both** `dependency-update` and `github-actions` labels:
+
+```bash
+gh pr list --label dependency-update --label github-actions --state open --json number,headRefName,title
+```
+
+Record this list as the _initial open set_. Use it to:
+
+- Reuse an existing open PR when it targets the same planned branch (push changes to that branch; rebase onto the default branch if it is behind).
+- Identify stale PRs (those not part of this run) after all planned PRs have been created or updated.
+
+### Closing stale PRs
+
+After all planned pull requests for this ecosystem have been created or updated, close every PR in the _initial open set_ that was **not** created or updated during this run:
+
+```bash
+gh pr close <number> --comment "Superseded by current dependency update run. This update is no longer pending or has already been merged."
+```
+
 ## Pull request boundaries
 
 - Create one pull request for all simple version bumps using the selected branch prefix plus `/simple`.

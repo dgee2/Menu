@@ -65,6 +65,45 @@ dotnet list MenuApi.sln package --outdated --format json
 - **Tool-driven update**: an `aspire` update when release notes or local evidence show related hosting, workload, or generated changes should be applied as part of the update.
 - **Code-changing update**: build output, tests, or upgrade guidance require application or test source changes beyond version edits.
 
+## Label management
+
+### Labels to apply
+
+Apply both of these labels to every pull request created or updated by this skill:
+
+- `dependency-update`
+- `dotnet`
+
+If either label does not exist in the repository, create it before applying:
+
+```bash
+gh label create "dependency-update" --color "0075ca" --description "Automated dependency update PR"
+gh label create "dotnet" --color "512BD4" --description ".NET / NuGet ecosystem dependency update"
+```
+
+When creating a pull request use `--label dependency-update --label dotnet`. For an existing pull request use `gh pr edit <number> --add-label dependency-update --add-label dotnet`.
+
+### Checking for existing PRs
+
+Before creating any pull requests, retrieve all currently open pull requests that carry **both** `dependency-update` and `dotnet` labels:
+
+```bash
+gh pr list --label dependency-update --label dotnet --state open --json number,headRefName,title
+```
+
+Record this list as the _initial open set_. Use it to:
+
+- Reuse an existing open PR when it targets the same planned branch (push changes to that branch; rebase onto the default branch if it is behind).
+- Identify stale PRs (those not part of this run) after all planned PRs have been created or updated.
+
+### Closing stale PRs
+
+After all planned pull requests for this ecosystem have been created or updated, close every PR in the _initial open set_ that was **not** created or updated during this run:
+
+```bash
+gh pr close <number> --comment "Superseded by current dependency update run. This update is no longer pending or has already been merged."
+```
+
 ## Pull request boundaries
 
 - Create one pull request for all simple version bumps using the selected branch prefix plus `/simple`.
