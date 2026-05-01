@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import { mergeConfig, defineConfig, configDefaults } from 'vitest/config';
 import viteConfig from './vite.config';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
