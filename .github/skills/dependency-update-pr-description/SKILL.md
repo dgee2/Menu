@@ -21,6 +21,15 @@ When available, the caller should provide this runtime context in plain text:
 - `Branch prefix` override
 - `Default branch` override
 
+## Required labels
+
+Every pull request created or updated by a dependency update skill must have these two labels applied:
+
+1. `dependency-update` — marks this as an automated dependency update pull request.
+2. The ecosystem label for this run — one of `dotnet`, `node`, or `github-actions`.
+
+Create any missing labels before applying them (use `gh label create` or the GitHub MCP tools). See each ecosystem skill for the exact label name and the label management workflow (checking for existing open PRs and closing stale ones).
+
 ## Required contents
 
 Every pull request description must explicitly include:

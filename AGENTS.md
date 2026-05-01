@@ -58,6 +58,37 @@ dotnet test MenuApi.Integration.Tests
 - Keep `worktrees/.gitkeep` committed so the directory exists for automation.
 - When dependency update work is split into multiple independent pull request groups, create one worktree per planned branch under `worktrees/` and use separate subagents to apply and validate those groups in parallel.
 
+## Windows / PowerShell Notes
+
+Agents running on Windows must substitute Bash idioms in skill commands:
+
+| Bash | PowerShell equivalent |
+|---|---|
+| `tail -n N` | `Select-Object -Last N` |
+| `grep 'pattern'` | `Select-String 'pattern'` |
+| `cmd1 && cmd2` | `cmd1; if ($LASTEXITCODE -eq 0) { cmd2 }` |
+| `rm -rf <path>` | `Remove-Item <path> -Recurse -Force` |
+| `cp src dst` | `Copy-Item src dst` |
+
+When pushing a branch containing `/` from a detached HEAD worktree, always use the full refspec:
+
+```powershell
+git push origin HEAD:refs/heads/<branch-name>
+```
+
+**Running a command with timeout using `Start-Job`:** When a command may block the shell (e.g. Playwright/Chromium tests), use this pattern to run it with an explicit timeout and propagate the exit status:
+
+```powershell
+$job = Start-Job { Set-Location <working-directory>; <command> }
+$completed = Wait-Job $job -Timeout <timeout-seconds>
+$output = Receive-Job $job
+$state = $job.State
+Remove-Job $job -Force
+$output
+if ($null -eq $completed) { throw "Command timed out after <timeout-seconds> seconds" }
+if ($state -ne 'Completed') { throw "Command failed (job state: $state)" }
+```
+
 ## Testing Conventions
 
 - **Unit tests** (`MenuApi.Tests`): xUnit + AutoFixture + FakeItEasy + AwesomeAssertions. Custom `ValueObjectSpecimenBuilder` in `CustomGenerator.cs` auto-constructs Vogen types via reflection; use `[CustomAutoData]` (from `CustomAutoDataAttribute.cs`) on test methods to wire it up.
