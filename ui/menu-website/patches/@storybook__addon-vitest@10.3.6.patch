@@ -1,0 +1,13 @@
+diff --git a/dist/vitest-plugin/index.js b/dist/vitest-plugin/index.js
+index 6b316029dd42a82cb6f4d20359ad49c3159e5f94..482b169708ce3a40a9075074b5faa5135b6b6d28 100644
+--- a/dist/vitest-plugin/index.js
++++ b/dist/vitest-plugin/index.js
+@@ -2519,7 +2519,7 @@ var WORKING_DIR = process.cwd(), defaultOptions = {
+           nonMutableInputConfig.test,
+           finalOptions
+         ) && "@storybook/addon-vitest/internal/setup-file-with-project-annotations"
+-      ].filter(Boolean).map((filePath) => fileURLToPath(import.meta.resolve(filePath))), baseConfig = {
++      ].filter(Boolean).map((filePath) => fileURLToPath(import.meta.resolve(CJS_COMPAT_NODE_PATH_62figg9psgv.isAbsolute(filePath) ? CJS_COMPAT_NODE_URL_62figg9psgv.pathToFileURL(filePath).href : filePath))), baseConfig = {
+         cacheDir: resolvePathInStorybookCache("sb-vitest", projectId),
+         test: {
+           expect: { requireAssertions: !1 },

@@ -5,4 +5,4 @@ onlyBuiltDependencies:
   - msw
   - vue-demi
 patchedDependencies:
-  '@storybook/addon-vitest@10.3.3': patches/@storybook__addon-vitest@10.3.3.patch
+  '@storybook/addon-vitest@10.3.6': patches/@storybook__addon-vitest@10.3.6.patch
