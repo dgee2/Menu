@@ -101,6 +101,37 @@ public class RecipeServiceTests
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
     }
 
+    [Fact]
+    public async Task CreateRecipeAsync_Deduplicates_Exact_Duplicate_Ingredients_Before_Upsert()
+    {
+        var recipeId = RecipeId.From(1);
+        var recipeName = RecipeName.From("Cake");
+        var duplicateIngredient = new RecipeIngredient
+        {
+            Name = IngredientName.From("Sugar"),
+            Unit = IngredientUnitName.From("Grams"),
+            Amount = IngredientAmount.From(100m),
+        };
+
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipeName)).Returns(recipeId);
+
+        await sut.CreateRecipeAsync(new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [duplicateIngredient, duplicateIngredient],
+        });
+
+        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(
+                recipeId,
+                A<IEnumerable<DBModel.RecipeIngredient>>.That.Matches(ingredients =>
+                    ingredients.Count() == 1 &&
+                    ingredients.Single() == new DBModel.RecipeIngredient(
+                        IngredientName.From("Sugar"),
+                        IngredientAmount.From(100m),
+                        IngredientUnitName.From("Grams")))))
+            .MustHaveHappenedOnceExactly();
+    }
+
     [Theory, CustomAutoData]
     public async Task UpdateRecipeSuccess(RecipeId recipeId, RecipeName recipeName, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
@@ -119,6 +150,35 @@ public class RecipeServiceTests
 
         A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName)).MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task UpdateRecipeAsync_Deduplicates_Exact_Duplicate_Ingredients_Before_Upsert()
+    {
+        var recipeId = RecipeId.From(1);
+        var recipeName = RecipeName.From("Cake");
+        var duplicateIngredient = new RecipeIngredient
+        {
+            Name = IngredientName.From("Sugar"),
+            Unit = IngredientUnitName.From("Grams"),
+            Amount = IngredientAmount.From(100m),
+        };
+
+        await sut.UpdateRecipeAsync(recipeId, new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [duplicateIngredient, duplicateIngredient],
+        });
+
+        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(
+                recipeId,
+                A<IEnumerable<DBModel.RecipeIngredient>>.That.Matches(ingredients =>
+                    ingredients.Count() == 1 &&
+                    ingredients.Single() == new DBModel.RecipeIngredient(
+                        IngredientName.From("Sugar"),
+                        IngredientAmount.From(100m),
+                        IngredientUnitName.From("Grams")))))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Theory, CustomAutoData]
