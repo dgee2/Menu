@@ -27,12 +27,14 @@ public static class RecipeApi
             .AddEndpointFilter<ValidationFilter<NewRecipe>>()
             .Produces<FullRecipe>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         group.MapPut("{recipeId}", UpdateRecipeAsync)
             .AddEndpointFilter<ValidationFilter<NewRecipe>>()
             .Produces<FullRecipe>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         return group;

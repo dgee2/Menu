@@ -70,7 +70,7 @@ public class IngredientRepositoryTests
             UnitIds = [1, 4],
         });
 
-        await act.Should().ThrowAsync<BusinessValidationException>()
+        await act.Should().ThrowAsync<ConflictException>()
             .WithMessage("Ingredient 'Sugar' already exists with a different unit set.");
         (await db.Ingredients.CountAsync(i => i.Name == "Sugar", cancellationToken)).Should().Be(1);
     }

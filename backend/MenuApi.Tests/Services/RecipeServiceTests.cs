@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using FakeItEasy;
 using MenuDB;
+using MenuApi.Exceptions;
 using MenuApi.Repositories;
 using MenuApi.Services;
 using MenuApi.ValueObjects;
@@ -101,6 +102,84 @@ public class RecipeServiceTests
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
     }
 
+    [Fact]
+    public async Task CreateRecipeAsync_Deduplicates_Exact_Duplicate_Ingredients_Before_Upsert()
+    {
+        var recipeId = RecipeId.From(1);
+        var recipeName = RecipeName.From("Cake");
+        var duplicateIngredient = new RecipeIngredient
+        {
+            Name = IngredientName.From("Sugar"),
+            Unit = IngredientUnitName.From("Grams"),
+            Amount = IngredientAmount.From(100m),
+        };
+
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipeName)).Returns(recipeId);
+
+        await sut.CreateRecipeAsync(new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [duplicateIngredient, duplicateIngredient],
+        });
+
+        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(
+                recipeId,
+                A<IEnumerable<DBModel.RecipeIngredient>>.That.Matches(ingredients =>
+                    ingredients.Count() == 1 &&
+                    ingredients.Single() == new DBModel.RecipeIngredient(
+                        IngredientName.From("Sugar"),
+                        IngredientAmount.From(100m),
+                        IngredientUnitName.From("Grams")))))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task CreateRecipeAsync_Throws_Conflict_When_Name_Already_Exists()
+    {
+        var recipeName = RecipeName.From("Cake");
+        A.CallTo(() => recipeRepository.RecipeNameExistsAsync(recipeName)).Returns(true);
+
+        var act = async () => await sut.CreateRecipeAsync(new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [],
+        });
+
+        await act.Should().ThrowAsync<ConflictException>()
+            .WithMessage("Recipe 'Cake' already exists.");
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(A<RecipeName>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task CreateRecipeAsync_Throws_Validation_When_Duplicate_Ingredient_Amounts_Conflict()
+    {
+        var recipeName = RecipeName.From("Cake");
+
+        var act = async () => await sut.CreateRecipeAsync(new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients =
+            [
+                new RecipeIngredient
+                {
+                    Name = IngredientName.From("Sugar"),
+                    Unit = IngredientUnitName.From("Grams"),
+                    Amount = IngredientAmount.From(100m),
+                },
+                new RecipeIngredient
+                {
+                    Name = IngredientName.From("Sugar"),
+                    Unit = IngredientUnitName.From("Grams"),
+                    Amount = IngredientAmount.From(125m),
+                },
+            ],
+        });
+
+        var result = await act.Should().ThrowAsync<RequestValidationException>();
+        result.Which.Errors["ingredients"].Single().Should().Contain("different amounts");
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(A<RecipeName>._)).MustNotHaveHappened();
+    }
+
     [Theory, CustomAutoData]
     public async Task UpdateRecipeSuccess(RecipeId recipeId, RecipeName recipeName, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
@@ -119,6 +198,84 @@ public class RecipeServiceTests
 
         A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName)).MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task UpdateRecipeAsync_Deduplicates_Exact_Duplicate_Ingredients_Before_Upsert()
+    {
+        var recipeId = RecipeId.From(1);
+        var recipeName = RecipeName.From("Cake");
+        var duplicateIngredient = new RecipeIngredient
+        {
+            Name = IngredientName.From("Sugar"),
+            Unit = IngredientUnitName.From("Grams"),
+            Amount = IngredientAmount.From(100m),
+        };
+
+        await sut.UpdateRecipeAsync(recipeId, new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [duplicateIngredient, duplicateIngredient],
+        });
+
+        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(
+                recipeId,
+                A<IEnumerable<DBModel.RecipeIngredient>>.That.Matches(ingredients =>
+                    ingredients.Count() == 1 &&
+                    ingredients.Single() == new DBModel.RecipeIngredient(
+                        IngredientName.From("Sugar"),
+                        IngredientAmount.From(100m),
+                        IngredientUnitName.From("Grams")))))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task UpdateRecipeAsync_Throws_Conflict_When_Name_Already_Exists_On_Another_Recipe()
+    {
+        var recipeId = RecipeId.From(1);
+        var recipeName = RecipeName.From("Cake");
+        A.CallTo(() => recipeRepository.RecipeNameExistsAsync(recipeName, recipeId)).Returns(true);
+
+        var act = async () => await sut.UpdateRecipeAsync(recipeId, new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [],
+        });
+
+        await act.Should().ThrowAsync<ConflictException>()
+            .WithMessage("Recipe 'Cake' already exists.");
+        A.CallTo(() => recipeRepository.UpdateRecipeAsync(A<RecipeId>._, A<RecipeName>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task UpdateRecipeAsync_Throws_Validation_When_Duplicate_Ingredient_Amounts_Conflict()
+    {
+        var recipeId = RecipeId.From(1);
+        var recipeName = RecipeName.From("Cake");
+
+        var act = async () => await sut.UpdateRecipeAsync(recipeId, new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients =
+            [
+                new RecipeIngredient
+                {
+                    Name = IngredientName.From("Sugar"),
+                    Unit = IngredientUnitName.From("Grams"),
+                    Amount = IngredientAmount.From(100m),
+                },
+                new RecipeIngredient
+                {
+                    Name = IngredientName.From("Sugar"),
+                    Unit = IngredientUnitName.From("Grams"),
+                    Amount = IngredientAmount.From(125m),
+                },
+            ],
+        });
+
+        var result = await act.Should().ThrowAsync<RequestValidationException>();
+        result.Which.Errors["ingredients"].Single().Should().Contain("different amounts");
+        A.CallTo(() => recipeRepository.UpdateRecipeAsync(A<RecipeId>._, A<RecipeName>._)).MustNotHaveHappened();
     }
 
     [Theory, CustomAutoData]

@@ -31,12 +31,13 @@ public class IngredientServiceTests
             .Returns(expected);
 
         var sut = new IngredientService(unitRepository, ingredientRepository);
-
-        var result = await sut.CreateIngredientAsync(new NewIngredient
+        var newIngredient = new NewIngredient
         {
             Name = IngredientName.From("Sugar"),
-            UnitIds = [1, 4, 1, 4],
-        });
+            UnitIds = [1, 1, 4, 4],
+        };
+
+        var result = await sut.CreateIngredientAsync(newIngredient);
 
         result.Should().Be(expected);
         A.CallTo(() => ingredientRepository.CreateIngredientAsync(

@@ -34,6 +34,8 @@
 - Confirmed business-unique columns are currently `backend/MenuDB\Data\IngredientEntity.Name` and `backend/MenuDB\Data\RecipeEntity.Name`; `backend/MenuDB\MenuDbContext.cs` now enforces both with unique indexes.
 - Migration `backend/MenuDB\Migrations\20260503213945_AddBusinessUniqueIndexes.cs` now pre-checks for duplicate `Ingredient.Name` and `Recipe.Name` rows before creating unique indexes so deployments fail with actionable remediation guidance instead of opaque SQL index errors.
 - Schema hardening verification now includes model-metadata tests in `backend/MenuApi.Tests\Database\MenuDbContextTests.cs` plus an idempotent migration script generation check (`dotnet ef migrations script --idempotent --project MenuDB --startup-project MenuApi`).
+- Duplicate policy is now contract-visible only where meaning changes: `backend/MenuApi/Repositories/IngredientRepository.cs` throws `ConflictException` for canonical ingredient redefinition, while `backend/MenuApi/Services/RecipeService.cs` maps same-name recipe collisions to 409 conflicts and conflicting duplicate recipe ingredient amounts to 400 validation problems.
+- API contract metadata for duplicate-visible writes now advertises 409 responses in `backend/MenuApi/Recipes/IngredientApi.cs` and `backend/MenuApi/Recipes/RecipeApi.cs`, and custom exception handlers in `backend/MenuApi/Exceptions/` keep conflict and validation payloads aligned with Problem Details responses.
 
 ### Issue #977: Duplicate Prevention (2026-05-03T21:56:25.759+01:00)
 
@@ -51,7 +53,14 @@
 
 ### Issue #979: Schema Hardening (2026-05-03T21:56:25.759+01:00)
 
-- **Status:** ✅ Implemented
+- **Status:** ✅ PR opened / clean handoff
 - **Decision:** Add database-enforced unique indexes for `Ingredient.Name` and `Recipe.Name`, and make the migration fail early with explicit remediation guidance if duplicate data already exists.
 - **Scope:** `backend/MenuDB\MenuDbContext.cs`, `backend/MenuDB\Migrations\20260503213945_AddBusinessUniqueIndexes.cs`, and `docs/specs/backend-write-duplicate-risk-audit.md`
 - **Rationale:** Application-layer normalization now covers canonical ingredients, and the remaining business-unique names need schema enforcement before duplicate handling can be completed cleanly in #980.
+
+### Issue #980: Explicit Duplicate Conflicts (2026-05-03T21:56:25.759+01:00)
+
+- **Status:** ✅ Implemented / validated
+- **Decision:** Surface only business-significant duplicates as client-visible errors: canonical redefinitions and recipe-name collisions return 409 conflict responses, while conflicting duplicate ingredient amounts inside one recipe payload return a 400 validation problem.
+- **Scope:** `POST /api/ingredient`, `POST /api/recipe`, `PUT /api/recipe/{recipeId}`, and the duplicate-specific exception handling in `backend/MenuApi/Exceptions/`.
+- **Rationale:** Exact duplicate set-like items and equivalent canonical rows remain idempotent, so the API contract only changes for duplicates that would otherwise hide a real business conflict.

@@ -88,6 +88,19 @@ public class IngredientIntegrationTests : IClassFixture<ApiTestFixture>
     }
 
     [Theory, ShortStringAutoData]
+    public async Task Create_Ingredient_With_Duplicate_Units_Returns_Unique_Units(string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        var (_, name, units) = await PostIngredientAsync(client, ingredientName, [1, 1, 4, 4]);
+
+        name.Should().Be(ingredientName);
+        units.Should().HaveCount(2);
+        units.Should().ContainSingle(u => u.Name == "Millilitres");
+        units.Should().ContainSingle(u => u.Name == "Grams");
+    }
+
+    [Theory, ShortStringAutoData]
     public async Task Create_Ingredient_Reuses_Equivalent_Existing_Canonical_Row(string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
@@ -108,6 +121,25 @@ public class IngredientIntegrationTests : IClassFixture<ApiTestFixture>
         var ingredients = JsonSerializer.Deserialize<List<Ingredient>>(data, jsonOptions);
         ingredients.Should().NotBeNull();
         ingredients.Where(i => i.Name == ingredientName).Should().ContainSingle(i => i.Id == firstId);
+    }
+
+    [Theory, ShortStringAutoData]
+    public async Task Create_Ingredient_With_Different_Unit_Set_Returns_Conflict(string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        await PostIngredientAsync(client, ingredientName, [1]);
+
+        var body = new NewIngredient { Name = ingredientName, UnitIds = [1, 4] };
+        using var requestContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
+        using var response = await client.PostAsync("/api/ingredient", requestContent);
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.Conflict);
+
+        using var stream = await response.Content.ReadAsStreamAsync();
+        using var jsonDoc = await JsonDocument.ParseAsync(stream);
+        jsonDoc.RootElement.GetProperty("status").GetInt32().Should().Be((int)HttpStatusCode.Conflict);
+        jsonDoc.RootElement.GetProperty("detail").GetString().Should().Be($"Ingredient '{ingredientName}' already exists with a different unit set.");
     }
 
     internal async Task<(int Id, string Name, List<IngredientUnit> Units)> PostIngredientAsync(

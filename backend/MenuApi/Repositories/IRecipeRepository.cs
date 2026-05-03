@@ -14,5 +14,9 @@ public interface IRecipeRepository
 
     Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync();
 
+    Task<bool> RecipeNameExistsAsync(RecipeName name);
+
+    Task<bool> RecipeNameExistsAsync(RecipeName name, RecipeId excludedRecipeId);
+
     Task UpdateRecipeAsync(RecipeId recipeId, RecipeName name);
 }

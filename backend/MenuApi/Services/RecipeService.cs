@@ -1,4 +1,5 @@
-﻿using MenuDB;
+using MenuDB;
+using MenuApi.Exceptions;
 using MenuApi.MappingProfiles;
 using MenuApi.Repositories;
 using MenuApi.ValueObjects;
@@ -39,7 +40,12 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 
-        var ingredients = ViewModelMapper.Map(newRecipe.Ingredients);
+        if (await recipeRepository.RecipeNameExistsAsync(newRecipe.Name).ConfigureAwait(false))
+        {
+            throw new ConflictException($"Recipe '{newRecipe.Name.Value}' already exists.");
+        }
+
+        var ingredients = NormalizeRecipeIngredients(newRecipe.Ingredients);
 
         var strategy = db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
@@ -56,7 +62,12 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 
-        var ingredients = ViewModelMapper.Map(newRecipe.Ingredients);
+        if (await recipeRepository.RecipeNameExistsAsync(newRecipe.Name, recipeId).ConfigureAwait(false))
+        {
+            throw new ConflictException($"Recipe '{newRecipe.Name.Value}' already exists.");
+        }
+
+        var ingredients = NormalizeRecipeIngredients(newRecipe.Ingredients);
 
         var strategy = db.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
@@ -66,5 +77,32 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
             await tran.CommitAsync().ConfigureAwait(false);
         }).ConfigureAwait(false);
+    }
+
+    private static IReadOnlyList<DBModel.RecipeIngredient> NormalizeRecipeIngredients(IEnumerable<ViewModel.RecipeIngredient> recipeIngredients)
+    {
+        ArgumentNullException.ThrowIfNull(recipeIngredients);
+
+        var mappedIngredients = ViewModelMapper.Map(recipeIngredients).ToList();
+        var conflictingDuplicates = mappedIngredients
+            .GroupBy(ingredient => new
+            {
+                IngredientName = ingredient.IngredientName.Value,
+                UnitName = ingredient.UnitName.Value,
+            })
+            .Where(group => group.Select(ingredient => ingredient.Amount.Value).Distinct().Count() > 1)
+            .Select(group =>
+                $"Ingredient '{group.Key.IngredientName}' with unit '{group.Key.UnitName}' is specified multiple times with different amounts.")
+            .ToArray();
+
+        if (conflictingDuplicates.Length != 0)
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]>
+            {
+                ["ingredients"] = conflictingDuplicates,
+            });
+        }
+
+        return [.. mappedIngredients.Distinct()];
     }
 }

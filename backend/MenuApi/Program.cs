@@ -23,6 +23,8 @@ builder.Services.AddTransient<IIngredientService, IngredientService>();
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
 
+builder.Services.AddExceptionHandler<RequestValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<ConflictExceptionHandler>();
 builder.Services.AddExceptionHandler<BusinessValidationExceptionHandler>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();

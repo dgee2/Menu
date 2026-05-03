@@ -22,7 +22,8 @@ public static class IngredientApi
         group.MapPost("/", CreateIngredientAsync)
             .AddEndpointFilter<ValidationFilter<NewIngredient>>()
             .Produces<ViewModel.Ingredient>(StatusCodes.Status200OK)
-            .ProducesValidationProblem();
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         return group;
     }

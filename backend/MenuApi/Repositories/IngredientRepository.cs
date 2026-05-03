@@ -59,7 +59,7 @@ public class IngredientRepository(MenuDbContext db) : IIngredientRepository
 
         if (existingIngredients.Count != 0)
         {
-            throw new BusinessValidationException(
+            throw new ConflictException(
                 $"Ingredient '{newIngredient.Name.Value}' already exists with a different unit set.");
         }
 

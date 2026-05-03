@@ -43,6 +43,20 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             .ConfigureAwait(false);
     }
 
+    public async Task<bool> RecipeNameExistsAsync(RecipeName name)
+    {
+        return await db.Recipes
+            .AnyAsync(r => r.Name == name.Value)
+            .ConfigureAwait(false);
+    }
+
+    public async Task<bool> RecipeNameExistsAsync(RecipeName name, RecipeId excludedRecipeId)
+    {
+        return await db.Recipes
+            .AnyAsync(r => r.Name == name.Value && r.Id != excludedRecipeId.Value)
+            .ConfigureAwait(false);
+    }
+
     public async Task<RecipeId> CreateRecipeAsync(RecipeName name)
     {
         var entity = new RecipeEntity { Name = name.Value };
@@ -55,7 +69,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         ArgumentNullException.ThrowIfNull(recipeIngredients);
 
-        var incoming = recipeIngredients.ToList();
+        var incoming = recipeIngredients.Distinct().ToList();
         var incomingKeys = incoming
             .Select(i => new { IngredientName = i.IngredientName.Value, UnitName = i.UnitName.Value })
             .ToHashSet();

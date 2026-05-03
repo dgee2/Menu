@@ -55,14 +55,38 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         name.Should().Be(recipe.Name);
     }
 
-    [Theory, AutoData]
+    [Theory, ShortStringAutoData]
+    public async Task Create_Recipe_With_Duplicate_Name_Returns_Conflict(string recipeName, string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+        await PostIngredientAsync(client, ingredientName);
+
+        var recipe = new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }],
+        };
+
+        await PostRecipeAsync(client, recipe);
+
+        using var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
+        using var response = await client.PostAsync("/api/recipe", requestContent);
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.Conflict);
+
+        using var streamResponse = await response.Content.ReadAsStreamAsync();
+        using var jsonDoc = await JsonDocument.ParseAsync(streamResponse);
+        jsonDoc.RootElement.GetProperty("detail").GetString().Should().Be($"Recipe '{recipeName}' already exists.");
+    }
+
+    [Theory, ShortStringAutoData]
     public async Task Create_and_Update_Recipe(
-        [NoAutoProperties] NewRecipe recipe,
-        [StringLength(500, MinimumLength = 1)] string recipeName,
-        [NoAutoProperties] NewRecipe updatedRecipe,
-        [StringLength(500, MinimumLength = 1)] string updatedRecipeName,
-        [StringLength(50, MinimumLength = 1)] string ingredientName,
-        [StringLength(50, MinimumLength = 1)] string ingredientName2)
+        NewRecipe recipe,
+        string recipeName,
+        NewRecipe updatedRecipe,
+        string updatedRecipeName,
+        string ingredientName,
+        string ingredientName2)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
@@ -79,11 +103,46 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         name.Should().Be(updatedRecipe.Name);
     }
 
-    [Theory, AutoData]
-    public async Task Create_And_Get_Recipe(
-        [NoAutoProperties] NewRecipe recipe,
-        [StringLength(500, MinimumLength = 1)] string recipeName,
-        [StringLength(50, MinimumLength = 1)] string ingredientName)
+    [Theory, ShortStringAutoData]
+    public async Task Update_Recipe_With_Duplicate_Name_Returns_Conflict(
+        string recipeName,
+        string otherRecipeName,
+        string ingredientName,
+        string otherIngredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+        await PostIngredientAsync(client, ingredientName);
+        await PostIngredientAsync(client, otherIngredientName);
+
+        var recipe = new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }],
+        };
+
+        var otherRecipe = new NewRecipe
+        {
+            Name = otherRecipeName,
+            Ingredients = [new RecipeIngredient { Name = otherIngredientName, Unit = Grams, Amount = 200 }],
+        };
+
+        await PostRecipeAsync(client, recipe);
+        var (otherRecipeId, _) = await PostRecipeAsync(client, otherRecipe);
+
+        otherRecipe.Name = recipeName;
+
+        using var requestContent = new StringContent(JsonSerializer.Serialize(otherRecipe), Encoding.UTF8, "application/json");
+        using var response = await client.PutAsync($"/api/recipe/{otherRecipeId}", requestContent);
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.Conflict);
+
+        using var streamResponse = await response.Content.ReadAsStreamAsync();
+        using var jsonDoc = await JsonDocument.ParseAsync(streamResponse);
+        jsonDoc.RootElement.GetProperty("detail").GetString().Should().Be($"Recipe '{recipeName}' already exists.");
+    }
+
+    [Theory, ShortStringAutoData]
+    public async Task Create_And_Get_Recipe(NewRecipe recipe, string recipeName, string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
