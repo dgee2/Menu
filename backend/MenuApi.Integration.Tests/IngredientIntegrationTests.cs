@@ -87,8 +87,8 @@ public class IngredientIntegrationTests : IClassFixture<ApiTestFixture>
         ingredients.Should().Contain(i => i.Id == createdId && i.Name == ingredientName);
     }
 
-    [Theory, ShortStringAutoData]
-    public async Task Create_Ingredient_Reuses_Equivalent_Existing_Canonical_Row(string ingredientName)
+    [Theory, AutoData]
+    public async Task Create_Ingredient_Reuses_Equivalent_Existing_Canonical_Row([StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
 
