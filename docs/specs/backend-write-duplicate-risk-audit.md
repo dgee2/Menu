@@ -89,6 +89,39 @@ This audit inventories every backend write endpoint under `backend/MenuApi/Recip
 5. `NewRecipeValidator` and `RecipeIngredientValidator` validate shape and value ranges, but they do not reject duplicate `(ingredient, unit)` pairs in the same request.
 6. The repository write paths rely on database primary keys to reject duplicate join-table rows instead of preventing duplicate attempts earlier.
 
+## Schema Hardening and Remediation Plan (2026-05-03T21:56:25.759+01:00)
+
+### Unique indexes to add
+
+- `Ingredient.Name` — canonical ingredient rows are now reused in the application layer, so the database can enforce one stored definition per ingredient name.
+- `Recipe.Name` — recipe names are business-significant and must be unique before the API can expose duplicate conflicts cleanly.
+
+### Pre-migration duplicate audit queries
+
+Run these checks before applying the uniqueness migration to any existing environment:
+
+```sql
+SELECT [Name], COUNT(*) AS [Count]
+FROM [Ingredient]
+GROUP BY [Name]
+HAVING COUNT(*) > 1;
+
+SELECT [Name], COUNT(*) AS [Count]
+FROM [Recipe]
+GROUP BY [Name]
+HAVING COUNT(*) > 1;
+```
+
+### Remediation steps if duplicates exist
+
+1. **Ingredient duplicates:** choose the canonical row to keep per duplicated name, update any `RecipeIngredient` references to point to that retained ingredient row, delete orphaned `IngredientUnit` links for removed rows, then delete the duplicate `Ingredient` rows.
+2. **Recipe duplicates:** choose the retained recipe record per duplicated name and either rename, merge, or remove the extras according to product intent before the uniqueness migration is retried.
+3. Re-run the duplicate audit queries until they return zero rows, then apply the migration.
+
+### Deployment note
+
+`Recipe.Name` uniqueness is intended to pair with issue #980's explicit conflict handling so duplicate recipe writes surface as controlled API responses rather than raw database failures.
+
 ## Duplicate-Handling Policy Buckets
 
 > **Note:** The sections below describe **target / intended** behaviour, not the current runtime behaviour described above. The current write paths do not yet implement these policies.
