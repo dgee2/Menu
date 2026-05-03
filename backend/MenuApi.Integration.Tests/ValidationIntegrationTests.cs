@@ -1,5 +1,7 @@
+using AutoFixture.Xunit3;
 using AwesomeAssertions;
 using MenuApi.Integration.Tests.Factory;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -105,8 +107,10 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
         await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
     }
 
-    [Theory, ShortStringAutoData]
-    public async Task UpdateRecipe_EmptyName_Returns400(string recipeName, string ingredientName)
+    [Theory, AutoData]
+    public async Task UpdateRecipe_EmptyName_Returns400(
+        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
         var recipeId = await CreateRecipeAsync(client, recipeName, ingredientName);
@@ -118,8 +122,10 @@ public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
         await updateResponse.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
     }
 
-    [Theory, ShortStringAutoData]
-    public async Task UpdateRecipe_NonExistentIngredient_Returns422(string recipeName, string ingredientName)
+    [Theory, AutoData]
+    public async Task UpdateRecipe_NonExistentIngredient_Returns422(
+        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
         var recipeId = await CreateRecipeAsync(client, recipeName, ingredientName);

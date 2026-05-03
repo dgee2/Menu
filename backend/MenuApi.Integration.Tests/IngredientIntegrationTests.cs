@@ -1,5 +1,7 @@
-﻿using AwesomeAssertions;
+using AutoFixture.Xunit3;
+using AwesomeAssertions;
 using MenuApi.Integration.Tests.Factory;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -55,8 +57,8 @@ public class IngredientIntegrationTests : IClassFixture<ApiTestFixture>
         units.Should().ContainSingle(u => u.Name == "Kilograms" && u.Abbreviation == "kg" && u.Type == "Weight");
     }
 
-    [Theory, ShortStringAutoData]
-    public async Task Create_Ingredient(string ingredientName)
+    [Theory, AutoData]
+    public async Task Create_Ingredient([StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -69,8 +71,8 @@ public class IngredientIntegrationTests : IClassFixture<ApiTestFixture>
         units.Should().ContainSingle(u => u.Name == "Grams");
     }
 
-    [Theory, ShortStringAutoData]
-    public async Task Create_Ingredient_Then_Get_Ingredients_Contains_Created(string ingredientName)
+    [Theory, AutoData]
+    public async Task Create_Ingredient_Then_Get_Ingredients_Contains_Created([StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
 

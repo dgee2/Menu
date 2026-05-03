@@ -1,5 +1,7 @@
+using AutoFixture.Xunit3;
 using AwesomeAssertions;
 using MenuApi.Integration.Tests.Factory;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -22,8 +24,10 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
         this.fixture = fixture;
     }
 
-    [Theory, ShortStringAutoData]
-    public async Task Create_Recipe_With_Ingredients(string ingredientName, string recipeName)
+    [Theory, AutoData]
+    public async Task Create_Recipe_With_Ingredients(
+        [StringLength(50, MinimumLength = 1)] string ingredientName,
+        [StringLength(500, MinimumLength = 1)] string recipeName)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -50,9 +54,10 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
         returnedIngredients[0].Amount.Should().Be(250.5m);
     }
 
-    [Theory, ShortStringAutoData]
+    [Theory, AutoData]
     public async Task Create_Recipe_With_Ingredients_Then_Get_Recipe_Returns_Ingredients(
-        string ingredientName, string recipeName)
+        [StringLength(50, MinimumLength = 1)] string ingredientName,
+        [StringLength(500, MinimumLength = 1)] string recipeName)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -86,9 +91,10 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
         ingredients[0].Amount.Should().Be(500m);
     }
 
-    [Theory, ShortStringAutoData]
+    [Theory, AutoData]
     public async Task Create_Recipe_With_Ingredients_Then_Get_Recipe_Ingredients_Endpoint(
-        string ingredientName, string recipeName)
+        [StringLength(50, MinimumLength = 1)] string ingredientName,
+        [StringLength(500, MinimumLength = 1)] string recipeName)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -117,9 +123,12 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
         ingredients[0].Amount.Should().Be(2m);
     }
 
-    [Theory, ShortStringAutoData]
+    [Theory, AutoData]
     public async Task Update_Recipe_With_Different_Ingredients(
-        string ingredientName1, string ingredientName2, string recipeName, string updatedRecipeName)
+        [StringLength(50, MinimumLength = 1)] string ingredientName1,
+        [StringLength(50, MinimumLength = 1)] string ingredientName2,
+        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(500, MinimumLength = 1)] string updatedRecipeName)
     {
         using var client = await fixture.GetHttpClient();
 
