@@ -10,7 +10,7 @@ using Xunit;
 namespace MenuApi.Integration.Tests;
 
 [Collection("API Host Collection")]
-public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
+public class RecipeIntegrationTests
 {
     private const string Grams = "Grams";
 

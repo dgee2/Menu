@@ -10,7 +10,7 @@ using Xunit;
 namespace MenuApi.Integration.Tests;
 
 [Collection("API Host Collection")]
-public class ValidationIntegrationTests : IClassFixture<ApiTestFixture>
+public class ValidationIntegrationTests
 {
     private const string ApplicationJson = "application/json";
     private const string ApiRecipeRoute = "/api/recipe";

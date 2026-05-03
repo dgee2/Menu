@@ -10,7 +10,7 @@ using Xunit;
 namespace MenuApi.Integration.Tests;
 
 [Collection("API Host Collection")]
-public class IngredientIntegrationTests : IClassFixture<ApiTestFixture>
+public class IngredientIntegrationTests
 {
     private readonly JsonSerializerOptions jsonOptions;
     private readonly ApiTestFixture fixture;
