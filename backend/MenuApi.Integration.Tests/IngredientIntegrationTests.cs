@@ -87,6 +87,19 @@ public class IngredientIntegrationTests
         ingredients.Should().Contain(i => i.Id == createdId && i.Name == ingredientName);
     }
 
+    [Theory, AutoData]
+    public async Task Create_Ingredient_With_Duplicate_Units_Returns_Unique_Units([StringLength(50, MinimumLength = 1)] string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        var (_, name, units) = await PostIngredientAsync(client, ingredientName, [1, 1, 4, 4]);
+
+        name.Should().Be(ingredientName);
+        units.Should().HaveCount(2);
+        units.Should().ContainSingle(u => u.Name == "Millilitres");
+        units.Should().ContainSingle(u => u.Name == "Grams");
+    }
+
     internal async Task<(int Id, string Name, List<IngredientUnit> Units)> PostIngredientAsync(
         HttpClient client, string name, List<int> unitIds)
     {
