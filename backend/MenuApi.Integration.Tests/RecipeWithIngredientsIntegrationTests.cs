@@ -82,6 +82,7 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
         returnedIngredients[0].Amount.Should().Be(250.5m);
     }
 
+    [Theory, AutoData]
     public async Task Create_Recipe_With_Ingredients_Then_Get_Recipe_Returns_Ingredients(
         [StringLength(50, MinimumLength = 1)] string ingredientName,
         [StringLength(500, MinimumLength = 1)] string recipeName)
@@ -185,25 +186,13 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
             ]
         };
 
-        var putContent = new StringContent(JsonSerializer.Serialize(updatedRecipe, jsonOptions), Encoding.UTF8, "application/json");
-        using var putResponse = await client.PutAsync($"/api/recipe/{recipeId}", putContent);
-        await putResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
+        var (_, returnedName, returnedIngredients) = await PutRecipeAsync(client, recipeId, updatedRecipe);
 
-        // GET the recipe and verify the update
-        using var getResponse = await client.GetAsync($"/api/recipe/{recipeId}");
-        await getResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
-
-        using var getStream = await getResponse.Content.ReadAsStreamAsync();
-        using var getDoc = await JsonDocument.ParseAsync(getStream);
-        var root = getDoc.RootElement;
-
-        root.GetProperty("name").GetString().Should().Be(updatedRecipeName);
-        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(
-            root.GetProperty("ingredients").GetRawText(), jsonOptions)!;
-        ingredients.Should().HaveCount(1);
-        ingredients[0].Name.Should().Be(ingredientName2);
-        ingredients[0].Unit.Should().Be("Millilitres");
-        ingredients[0].Amount.Should().Be(200m);
+        returnedName.Should().Be(updatedRecipeName);
+        returnedIngredients.Should().HaveCount(1);
+        returnedIngredients[0].Name.Should().Be(ingredientName2);
+        returnedIngredients[0].Unit.Should().Be("Millilitres");
+        returnedIngredients[0].Amount.Should().Be(200m);
     }
 
     [Theory, AutoData]
@@ -237,24 +226,13 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
             ]
         };
 
-        var putContent = new StringContent(JsonSerializer.Serialize(updatedRecipe, jsonOptions), Encoding.UTF8, "application/json");
-        using var putResponse = await client.PutAsync($"/api/recipe/{recipeId}", putContent);
-        await putResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
+        var (_, returnedName, returnedIngredients) = await PutRecipeAsync(client, recipeId, updatedRecipe);
 
-        using var getResponse = await client.GetAsync($"/api/recipe/{recipeId}");
-        await getResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
-
-        using var getStream = await getResponse.Content.ReadAsStreamAsync();
-        using var getDoc = await JsonDocument.ParseAsync(getStream);
-        var root = getDoc.RootElement;
-
-        root.GetProperty("name").GetString().Should().Be(updatedRecipeName);
-        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(
-            root.GetProperty("ingredients").GetRawText(), jsonOptions)!;
-        ingredients.Should().HaveCount(1);
-        ingredients[0].Name.Should().Be(ingredientName);
-        ingredients[0].Unit.Should().Be("Grams");
-        ingredients[0].Amount.Should().Be(125m);
+        returnedName.Should().Be(updatedRecipeName);
+        returnedIngredients.Should().HaveCount(1);
+        returnedIngredients[0].Name.Should().Be(ingredientName);
+        returnedIngredients[0].Unit.Should().Be("Grams");
+        returnedIngredients[0].Amount.Should().Be(125m);
     }
 
     private async Task PostIngredientAsync(HttpClient client, string name, List<int> unitIds)
@@ -268,7 +246,7 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
     private async Task<(int Id, string Name, List<RecipeIngredient> Ingredients)> PostRecipeAsync(
         HttpClient client, NewRecipe recipe)
     {
-        var content = new StringContent(JsonSerializer.Serialize(recipe, jsonOptions), Encoding.UTF8, "application/json");
+        using var content = new StringContent(JsonSerializer.Serialize(recipe, jsonOptions), Encoding.UTF8, "application/json");
         using var response = await client.PostAsync("/api/recipe", content);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
@@ -283,6 +261,26 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
             root.GetProperty("ingredients").GetRawText(), jsonOptions) ?? [];
 
         return (id, name, ingredients);
+    }
+
+    private async Task<(int Id, string Name, List<RecipeIngredient> Ingredients)> PutRecipeAsync(
+        HttpClient client, int id, NewRecipe recipe)
+    {
+        using var content = new StringContent(JsonSerializer.Serialize(recipe, jsonOptions), Encoding.UTF8, "application/json");
+        using var response = await client.PutAsync($"/api/recipe/{id}", content);
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.OK);
+
+        using var stream = await response.Content.ReadAsStreamAsync();
+        using var jsonDoc = await JsonDocument.ParseAsync(stream);
+        var root = jsonDoc.RootElement;
+
+        var updatedId = root.GetProperty("id").GetInt32();
+        var name = root.GetProperty("name").GetString()!;
+        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(
+            root.GetProperty("ingredients").GetRawText(), jsonOptions) ?? [];
+
+        return (updatedId, name, ingredients);
     }
 
     private class NewIngredient
