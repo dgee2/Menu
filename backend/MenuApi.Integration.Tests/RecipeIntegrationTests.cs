@@ -1,5 +1,7 @@
+using AutoFixture.Xunit3;
 using AwesomeAssertions;
 using MenuApi.Integration.Tests.Factory;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -38,26 +40,38 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         deserializedData.Should().NotBeNull();
     }
 
-    [Theory, ShortStringAutoData]
-    public async Task Create_Recipe(NewRecipe recipe, string ingredientName)
+    [Theory, AutoData]
+    public async Task Create_Recipe(
+        [NoAutoProperties] NewRecipe recipe,
+        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
+        recipe.Name = recipeName;
         recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
         var (_, name) = await PostRecipeAsync(client, recipe);
 
         name.Should().Be(recipe.Name);
     }
 
-    [Theory, ShortStringAutoData]
-    public async Task Create_and_Update_Recipe(NewRecipe recipe, NewRecipe updatedRecipe, string ingredientName, string ingredientName2)
+    [Theory, AutoData]
+    public async Task Create_and_Update_Recipe(
+        [NoAutoProperties] NewRecipe recipe,
+        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [NoAutoProperties] NewRecipe updatedRecipe,
+        [StringLength(500, MinimumLength = 1)] string updatedRecipeName,
+        [StringLength(50, MinimumLength = 1)] string ingredientName,
+        [StringLength(50, MinimumLength = 1)] string ingredientName2)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
         await PostIngredientAsync(client, ingredientName2);
+        recipe.Name = recipeName;
+        updatedRecipe.Name = updatedRecipeName;
         recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
         updatedRecipe.Ingredients = [new RecipeIngredient { Name = ingredientName2, Unit = Grams, Amount = 200 }];
-       
+
         var (id, _) = await PostRecipeAsync(client, recipe);
 
         var (_, name) = await PutRecipeAsync(client, id, updatedRecipe);
@@ -65,13 +79,17 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         name.Should().Be(updatedRecipe.Name);
     }
 
-    [Theory, ShortStringAutoData]
-    public async Task Create_And_Get_Recipe(NewRecipe recipe, string ingredientName)
+    [Theory, AutoData]
+    public async Task Create_And_Get_Recipe(
+        [NoAutoProperties] NewRecipe recipe,
+        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
+        recipe.Name = recipeName;
         recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
-     
+
         var (id, _) = await PostRecipeAsync(client, recipe);
         var (getId, name) = await GetRecipeAsync(client, id);
 
@@ -79,11 +97,15 @@ public class RecipeIntegrationTests : IClassFixture<ApiTestFixture>
         name.Should().Be(recipe.Name);
     }
 
-    [Theory, ShortStringAutoData]
-    public async Task Create_Recipe_And_Get_Ingredients(NewRecipe recipe, string ingredientName)
+    [Theory, AutoData]
+    public async Task Create_Recipe_And_Get_Ingredients(
+        [NoAutoProperties] NewRecipe recipe,
+        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
+        recipe.Name = recipeName;
         recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
 
         var (id, _) = await PostRecipeAsync(client, recipe);
