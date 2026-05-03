@@ -14,7 +14,15 @@ public class IngredientService(IUnitRepository unitRepository, IIngredientReposi
 
     public async Task<Ingredient> CreateIngredientAsync(NewIngredient newIngredient)
     {
-        return await ingredientRepository.CreateIngredientAsync(newIngredient).ConfigureAwait(false);
+        ArgumentNullException.ThrowIfNull(newIngredient);
+
+        var normalizedIngredient = new NewIngredient
+        {
+            Name = newIngredient.Name,
+            UnitIds = [.. newIngredient.UnitIds.Distinct()],
+        };
+
+        return await ingredientRepository.CreateIngredientAsync(normalizedIngredient).ConfigureAwait(false);
     }
 }
 
