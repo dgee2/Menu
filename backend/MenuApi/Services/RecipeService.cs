@@ -1,4 +1,4 @@
-﻿using MenuDB;
+using MenuDB;
 using MenuApi.MappingProfiles;
 using MenuApi.Repositories;
 using MenuApi.ValueObjects;
@@ -39,7 +39,7 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 
-        var ingredients = ViewModelMapper.Map(newRecipe.Ingredients);
+        var ingredients = NormalizeRecipeIngredients(newRecipe.Ingredients);
 
         var strategy = db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
@@ -56,7 +56,7 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 
-        var ingredients = ViewModelMapper.Map(newRecipe.Ingredients);
+        var ingredients = NormalizeRecipeIngredients(newRecipe.Ingredients);
 
         var strategy = db.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
@@ -66,5 +66,11 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
             await tran.CommitAsync().ConfigureAwait(false);
         }).ConfigureAwait(false);
+    }
+
+    private static IReadOnlyList<DBModel.RecipeIngredient> NormalizeRecipeIngredients(IEnumerable<ViewModel.RecipeIngredient> recipeIngredients)
+    {
+        ArgumentNullException.ThrowIfNull(recipeIngredients);
+        return [.. ViewModelMapper.Map(recipeIngredients).Distinct()];
     }
 }

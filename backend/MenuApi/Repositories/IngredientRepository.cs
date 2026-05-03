@@ -39,10 +39,12 @@ public class IngredientRepository(MenuDbContext db) : IIngredientRepository
     {
         ArgumentNullException.ThrowIfNull(newIngredient);
 
+        var unitIds = newIngredient.UnitIds.Distinct().ToList();
+
         var entity = new IngredientEntity
         {
             Name = newIngredient.Name.Value,
-            IngredientUnits = newIngredient.UnitIds
+            IngredientUnits = unitIds
                 .Select(unitId => new IngredientUnitEntity { UnitId = unitId })
                 .ToList(),
         };

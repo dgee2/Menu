@@ -25,3 +25,6 @@
 - Backend code lives under `backend/`.
 - Recipe persistence and API behavior are core product responsibilities.
 - Duplicate handling work is sequenced: service/repo logic → schema constraints → API contract.
+- Exact duplicate handling for set-like writes now normalizes request payloads in `backend/MenuApi/Services/IngredientService.cs` and `backend/MenuApi/Services/RecipeService.cs` before repository calls.
+- Repository write paths also stay defensive: `backend/MenuApi/Repositories/IngredientRepository.cs` deduplicates `UnitIds`, and `backend/MenuApi/Repositories/RecipeRepository.cs` deduplicates exact `RecipeIngredient` records before upsert.
+- Regression coverage for duplicate-equivalent write requests lives in `backend/MenuApi.Tests/Services/IngredientServiceTests.cs`, `backend/MenuApi.Tests/Repositories/RecipeRepositoryTests.cs`, `backend/MenuApi.Tests/Services/RecipeServiceTests.cs`, `backend/MenuApi.Integration.Tests/IngredientIntegrationTests.cs`, and `backend/MenuApi.Integration.Tests/RecipeWithIngredientsIntegrationTests.cs`.

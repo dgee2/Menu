@@ -55,6 +55,33 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
     }
 
     [Theory, AutoData]
+    public async Task Create_Recipe_With_Duplicate_Equivalent_Ingredients_Returns_Single_Link(
+        [StringLength(50, MinimumLength = 1)] string ingredientName,
+        [StringLength(500, MinimumLength = 1)] string recipeName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        await PostIngredientAsync(client, ingredientName, [4]);
+
+        var newRecipe = new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients =
+            [
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 250.5m },
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 250.5m },
+            ]
+        };
+
+        var (_, returnedName, returnedIngredients) = await PostRecipeAsync(client, newRecipe);
+
+        returnedName.Should().Be(recipeName);
+        returnedIngredients.Should().HaveCount(1);
+        returnedIngredients[0].Name.Should().Be(ingredientName);
+        returnedIngredients[0].Unit.Should().Be("Grams");
+        returnedIngredients[0].Amount.Should().Be(250.5m);
+    }
+
     public async Task Create_Recipe_With_Ingredients_Then_Get_Recipe_Returns_Ingredients(
         [StringLength(50, MinimumLength = 1)] string ingredientName,
         [StringLength(500, MinimumLength = 1)] string recipeName)
@@ -177,6 +204,57 @@ public class RecipeWithIngredientsIntegrationTests : IClassFixture<ApiTestFixtur
         ingredients[0].Name.Should().Be(ingredientName2);
         ingredients[0].Unit.Should().Be("Millilitres");
         ingredients[0].Amount.Should().Be(200m);
+    }
+
+    [Theory, AutoData]
+    public async Task Update_Recipe_With_Duplicate_Equivalent_Existing_Ingredient_Remains_Single_Link(
+        [StringLength(50, MinimumLength = 1)] string ingredientName,
+        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(500, MinimumLength = 1)] string updatedRecipeName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        await PostIngredientAsync(client, ingredientName, [4]);
+
+        var newRecipe = new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients =
+            [
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m }
+            ]
+        };
+
+        var (recipeId, _, _) = await PostRecipeAsync(client, newRecipe);
+
+        var updatedRecipe = new NewRecipe
+        {
+            Name = updatedRecipeName,
+            Ingredients =
+            [
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 125m },
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 125m },
+            ]
+        };
+
+        var putContent = new StringContent(JsonSerializer.Serialize(updatedRecipe, jsonOptions), Encoding.UTF8, "application/json");
+        using var putResponse = await client.PutAsync($"/api/recipe/{recipeId}", putContent);
+        await putResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
+
+        using var getResponse = await client.GetAsync($"/api/recipe/{recipeId}");
+        await getResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
+
+        using var getStream = await getResponse.Content.ReadAsStreamAsync();
+        using var getDoc = await JsonDocument.ParseAsync(getStream);
+        var root = getDoc.RootElement;
+
+        root.GetProperty("name").GetString().Should().Be(updatedRecipeName);
+        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(
+            root.GetProperty("ingredients").GetRawText(), jsonOptions)!;
+        ingredients.Should().HaveCount(1);
+        ingredients[0].Name.Should().Be(ingredientName);
+        ingredients[0].Unit.Should().Be("Grams");
+        ingredients[0].Amount.Should().Be(125m);
     }
 
     private async Task PostIngredientAsync(HttpClient client, string name, List<int> unitIds)

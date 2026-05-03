@@ -55,7 +55,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         ArgumentNullException.ThrowIfNull(recipeIngredients);
 
-        var incoming = recipeIngredients.ToList();
+        var incoming = recipeIngredients.Distinct().ToList();
         var incomingKeys = incoming
             .Select(i => new { IngredientName = i.IngredientName.Value, UnitName = i.UnitName.Value })
             .ToHashSet();
