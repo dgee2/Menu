@@ -31,6 +31,9 @@
 - Canonical ingredient writes now normalize `UnitIds` in `backend/MenuApi/Services/IngredientService.cs` before repository comparison so equivalent payloads match existing rows regardless of order or repetition.
 - `backend/MenuApi/Repositories/IngredientRepository.cs` now performs lookup-before-insert by ingredient name, reuses equivalent canonical rows, and blocks differing unit-set redefinitions before a duplicate row is written.
 - Canonical-row reuse coverage lives in `backend/MenuApi.Tests/Services/IngredientServiceTests.cs`, `backend/MenuApi.Tests/Repositories/IngredientRepositoryTests.cs`, and `backend/MenuApi.Integration.Tests/IngredientIntegrationTests.cs`.
+- Confirmed business-unique columns are currently `backend/MenuDB\Data\IngredientEntity.Name` and `backend/MenuDB\Data\RecipeEntity.Name`; `backend/MenuDB\MenuDbContext.cs` now enforces both with unique indexes.
+- Migration `backend/MenuDB\Migrations\20260503213945_AddBusinessUniqueIndexes.cs` now pre-checks for duplicate `Ingredient.Name` and `Recipe.Name` rows before creating unique indexes so deployments fail with actionable remediation guidance instead of opaque SQL index errors.
+- Schema hardening verification now includes model-metadata tests in `backend/MenuApi.Tests\Database\MenuDbContextTests.cs` plus an idempotent migration script generation check (`dotnet ef migrations script --idempotent --project MenuDB --startup-project MenuApi`).
 
 ### Issue #977: Duplicate Prevention (2026-05-03T21:56:25.759+01:00)
 
@@ -41,7 +44,14 @@
 
 ### Issue #978: Canonical Ingredient Reuse (2026-05-03T21:56:25.759+01:00)
 
-- **Status:** ✅ Implemented
+- **Status:** ✅ PR opened / clean handoff
 - **Decision:** Canonical ingredient creation now reuses an existing same-name row only when the normalized unit-id set is equivalent; otherwise the write is rejected before insert.
 - **Scope:** `POST /api/ingredient`
 - **Rationale:** Ingredient names are later resolved by name in recipe writes, so allowing multiple persisted definitions for the same canonical ingredient would keep lookups ambiguous and block safe uniqueness constraints in #979.
+
+### Issue #979: Schema Hardening (2026-05-03T21:56:25.759+01:00)
+
+- **Status:** ✅ Implemented
+- **Decision:** Add database-enforced unique indexes for `Ingredient.Name` and `Recipe.Name`, and make the migration fail early with explicit remediation guidance if duplicate data already exists.
+- **Scope:** `backend/MenuDB\MenuDbContext.cs`, `backend/MenuDB\Migrations\20260503213945_AddBusinessUniqueIndexes.cs`, and `docs/specs/backend-write-duplicate-risk-audit.md`
+- **Rationale:** Application-layer normalization now covers canonical ingredients, and the remaining business-unique names need schema enforcement before duplicate handling can be completed cleanly in #980.

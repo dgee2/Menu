@@ -20,6 +20,7 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
             e.Property(x => x.Name).HasColumnType("varchar(500)").IsRequired();
+            e.HasIndex(x => x.Name).IsUnique();
         });
 
         modelBuilder.Entity<IngredientEntity>(e =>
@@ -28,6 +29,7 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
             e.Property(x => x.Name).HasColumnType("varchar(50)").IsRequired();
+            e.HasIndex(x => x.Name).IsUnique();
         });
 
         modelBuilder.Entity<UnitTypeEntity>(e =>
