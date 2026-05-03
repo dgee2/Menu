@@ -85,6 +85,29 @@ public class IngredientIntegrationTests : IClassFixture<ApiTestFixture>
         ingredients.Should().Contain(i => i.Id == createdId && i.Name == ingredientName);
     }
 
+    [Theory, ShortStringAutoData]
+    public async Task Create_Ingredient_Reuses_Equivalent_Existing_Canonical_Row(string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        var (firstId, _, _) = await PostIngredientAsync(client, ingredientName, [1, 4]);
+        var (secondId, secondName, secondUnits) = await PostIngredientAsync(client, ingredientName, [4, 1, 4]);
+
+        secondId.Should().Be(firstId);
+        secondName.Should().Be(ingredientName);
+        secondUnits.Should().HaveCount(2);
+        secondUnits.Should().ContainSingle(u => u.Name == "Millilitres");
+        secondUnits.Should().ContainSingle(u => u.Name == "Grams");
+
+        using var response = await client.GetAsync("/api/ingredient");
+        await response.ShouldHaveStatusCode(HttpStatusCode.OK);
+
+        var data = await response.Content.ReadAsStringAsync();
+        var ingredients = JsonSerializer.Deserialize<List<Ingredient>>(data, jsonOptions);
+        ingredients.Should().NotBeNull();
+        ingredients.Where(i => i.Name == ingredientName).Should().ContainSingle(i => i.Id == firstId);
+    }
+
     internal async Task<(int Id, string Name, List<IngredientUnit> Units)> PostIngredientAsync(
         HttpClient client, string name, List<int> unitIds)
     {
