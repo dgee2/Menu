@@ -203,13 +203,13 @@ jobs:
           path: open-api
           merge-multiple: true
 
-      - name: Enable pnpm with corepack
-        run: corepack enable pnpm
-
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
           node-version: 22.x
+
+      - name: Enable pnpm with corepack
+        run: corepack enable pnpm
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -220,7 +220,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('ui/menu-website/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('ui/menu-website/pnpm-lock.yaml', 'ui/menu-website/package.json') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
