@@ -118,15 +118,18 @@ public class IngredientIntegrationTests
         var data = await listResponse.Content.ReadAsStringAsync();
         var ingredients = JsonSerializer.Deserialize<List<Ingredient>>(data, jsonOptions);
         ingredients.Should().NotBeNull();
-        ingredients!.Count(i => i.Name == ingredientName).Should().Be(1);
+        ingredients!.Count(i => string.Equals(i.Name, ingredientName, StringComparison.OrdinalIgnoreCase)).Should().Be(1);
     }
 
     [Theory, AutoData]
-    public async Task Create_Ingredient_With_Different_Case_Returns_Same_Id([StringLength(50, MinimumLength = 1)] string ingredientName)
+    public async Task Create_Ingredient_With_Different_Case_Returns_Same_Id([StringLength(49, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
-        var upperName = ingredientName.ToUpperInvariant();
-        var lowerName = ingredientName.ToLowerInvariant();
+
+        // Prepend "X" to guarantee at least one cased letter so upper/lower are always distinct
+        var baseName = "X" + ingredientName;
+        var upperName = baseName.ToUpperInvariant();
+        var lowerName = baseName.ToLowerInvariant();
 
         var (firstId, _, _) = await PostIngredientAsync(client, upperName, [4]);
         var (secondId, _, _) = await PostIngredientAsync(client, lowerName, [1]);
