@@ -23,11 +23,14 @@ Place components in the correct subfolder of `src/components/`:
 
 | Type | Location | Example |
 |---|---|---|
-| Reusable form fields | `src/components/generic/form/` | `text-field`, `select-field` |
-| Reusable header buttons | `src/components/generic/header/` | `header-button` |
-| Recipe-specific components | `src/components/recipe/` | `new-recipe-form` |
-| Recipe field sub-components | `src/components/recipe/fields/` | field components |
-| Auth/nav buttons | `src/components/buttons/` | `LoginButton`, `LogoutButton` |
+| Simple/reusable UI atoms | `src/components/atoms/form/` | `text-field`, `select-field` |
+| Reusable header elements | `src/components/atoms/header/` | `header-button` |
+| Compound components | `src/components/molecules/recipe/` | recipe molecules |
+| Recipe field sub-components | `src/components/molecules/recipe/fields/` | field components |
+| Navigation components | `src/components/molecules/navigation/` | nav molecules |
+| Complex sections | `src/components/organisms/recipe/` | recipe organisms |
+| Navigation organisms | `src/components/organisms/navigation/` | nav organisms |
+| Layout shells | `src/components/templates/` | `main-shell-template` |
 
 Pages live in `src/pages/` and are route-level components only.
 
@@ -91,8 +94,9 @@ Pages and components must **never** call the API layer (`recipe-api.ts`) directl
 In a component, import and use a composable from the service layer:
 
 ```ts
-import { useRecipes } from '@/services/recipe-service'
+import { useRecipeService } from '@/services/recipe-service'
 
+const { useRecipes } = useRecipeService()
 const { data: recipes, isLoading } = useRecipes()
 ```
 

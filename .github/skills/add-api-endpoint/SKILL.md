@@ -31,7 +31,7 @@ Never mix these layers. Each has a distinct location and purpose:
 
 ### 1. Add ViewModel DTOs
 
-Create or update files in `backend/MenuApi/ViewModel/`. Each DTO is a C# `record`. Use Vogen value objects for all typed properties (see `add-value-object` skill); never use raw `int`, `string`, or `Guid` for domain identifiers or constrained values.
+Create or update files in `backend/MenuApi/ViewModel/`. Each DTO is a C# `class` (not a `record`) to support DataAnnotations such as `[Required]`. Use Vogen value objects for all typed properties (see `add-value-object` skill); never use raw `int`, `string`, or `Guid` for domain identifiers or constrained values.
 
 ### 2. Add DB model records (if needed)
 
@@ -57,16 +57,12 @@ Open `backend/MenuApi/MappingProfiles/ViewModelMapper.cs` and add or update `[Ma
 
 ### 6. Register the endpoint
 
-Add the endpoint in the relevant `backend/MenuApi/Recipes/*Api.cs` file using the `MapGroup` pattern. Example:
+Add the endpoint in the relevant `backend/MenuApi/Recipes/*Api.cs` file using the `MapGroup` pattern. Use `.Produces<T>(statusCode)` and `.ProducesProblem(statusCode)` to document response types — the existing endpoints do not use `.WithName()` or `.WithOpenApi()`. Example:
 
 ```csharp
-group.MapGet("/{id}", async (RecipeId id, IRecipeService service) =>
-{
-    var result = await service.GetByIdAsync(id).ConfigureAwait(false);
-    return result is null ? Results.NotFound() : Results.Ok(result);
-})
-.WithName("GetRecipeById")
-.WithOpenApi();
+group.MapGet("/{id}", GetByIdAsync)
+    .Produces<FullRecipe>(StatusCodes.Status200OK)
+    .ProducesProblem(StatusCodes.Status404NotFound);
 ```
 
 ### 7. Register DI services

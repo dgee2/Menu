@@ -14,7 +14,7 @@ Use this skill when wrapping a primitive type in a Vogen value object. All domai
 ## Repository facts
 
 - Value objects live in: `backend/MenuApi/ValueObjects/`
-- Assembly-wide Vogen defaults: `backend/MenuApi/ValueObjects/VogenDefaults.cs`
+- Assembly-wide Vogen defaults: `backend/MenuApi/VogenDefaults.cs` (note: at the project root, not inside the `ValueObjects/` folder)
 - The assembly-level attribute in `VogenDefaults.cs` enables EF Core value converters and Swagger schema mapping automatically for all value objects in the assembly.
 
 ## Steps

@@ -37,7 +37,7 @@ public async Task CreateRecipe_ReturnsCreatedRecipe(
         .Returns(Task.CompletedTask);
 
     // Act
-    var result = await sut.CreateAsync(newRecipe).ConfigureAwait(false);
+    var result = await sut.CreateAsync(newRecipe);
 
     // Assert
     result.Should().NotBeNull();
@@ -71,6 +71,7 @@ Add `ConfigureAwait(false)` on every `await` in test helpers and non-test-method
   - `parameters__Auth0TestClientId`
   - `parameters__Auth0TestClientSecret`
   - `parameters__Auth0Domain`
+  - `parameters__Auth0Audience`
 
 ### Mandatory collection attribute
 
@@ -82,19 +83,21 @@ Every integration test class **must** use:
 
 This ensures all integration test classes run sequentially against the single shared `AppHost` instance. Omitting it causes parallelism issues and flaky tests.
 
-### The `[ShortStringAutoData]` attribute
+### Data annotation attributes for integration tests
 
-Use `[ShortStringAutoData]` (defined in the integration test project) instead of `[CustomAutoData]` for integration tests. It:
+Integration tests use `[Theory, AutoData]` combined with per-parameter AutoFixture attributes to constrain generated values to fit database constraints. Key attributes:
 
-- Limits generated strings to lengths that fit `varchar(50)` database columns.
-- Empties collection properties to avoid constraint violations on first insert.
+- `[StringLength(N, MinimumLength = 1)]` — limits a `string` parameter to at most N characters (matches the `varchar(N)` column size).
+- `[NoAutoProperties]` — tells AutoFixture not to populate collection/navigation properties that would cause constraint violations.
 
 ```csharp
-[Theory]
-[ShortStringAutoData]
-public async Task PostRecipe_ReturnsCreated(NewRecipe newRecipe, HttpClient client)
+[Theory, AutoData]
+public async Task PostRecipe_ReturnsCreated(
+    [StringLength(500, MinimumLength = 1)] string recipeName,
+    HttpClient client)
 {
-    var response = await client.PostAsJsonAsync("/recipes", newRecipe).ConfigureAwait(false);
+    var response = await client.PostAsJsonAsync("/recipes", new NewRecipe { Name = recipeName })
+        .ConfigureAwait(false);
     response.StatusCode.Should().Be(HttpStatusCode.Created);
 }
 ```

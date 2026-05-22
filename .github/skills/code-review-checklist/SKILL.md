@@ -43,8 +43,8 @@ The three model layers must never be mixed:
 
 ## 6. API endpoints
 
-- [ ] Each new endpoint has `.WithName(...)` and `.WithOpenApi()` for OpenAPI documentation.
-- [ ] The OpenAPI spec (`open-api/menu-api.json`) and generated frontend types (`src/generated/open-api/menu-api.ts`) are updated in the same commit as the endpoint change.
+- [ ] Each new endpoint is documented with `.Produces<T>(statusCode)`, `.ProducesProblem(statusCode)`, and/or `.ProducesValidationProblem()` — do not use `.WithName(...)` or `.WithOpenApi()`.
+- [ ] The generated frontend types (`src/generated/open-api/menu-api.ts`) are updated in the same commit as the endpoint change (run `pnpm generate-openapi` in `ui/menu-website/`). Note: `open-api/menu-api.json` is gitignored and should not be committed.
 
 ## 7. StyleCop and code style
 
@@ -58,7 +58,7 @@ The three model layers must never be mixed:
 - [ ] Unit tests use `[CustomAutoData]` (not bare `[AutoData]`) to handle Vogen specimen construction.
 - [ ] Assertions use AwesomeAssertions (`.Should()`) — not xUnit raw assertions or FluentAssertions.
 - [ ] New integration tests carry `[Collection("API Host Collection")]`.
-- [ ] Integration tests use `[ShortStringAutoData]` to avoid `varchar(50)` overflow.
+- [ ] Integration test string parameters use `[StringLength(N, MinimumLength = 1)]` to avoid `varchar` overflow and `[NoAutoProperties]` to prevent constraint violations from auto-populated collections.
 
 ## 9. Frontend (if applicable)
 
