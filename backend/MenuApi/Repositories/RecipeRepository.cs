@@ -47,7 +47,15 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         var entity = new RecipeEntity { Name = name.Value };
         db.Recipes.Add(entity);
-        await db.SaveChangesAsync().ConfigureAwait(false);
+        try
+        {
+            await db.SaveChangesAsync().ConfigureAwait(false);
+        }
+        catch (DbUpdateException ex) when (ex.IsUniqueConstraintViolation())
+        {
+            throw new BusinessValidationException($"A recipe named '{name.Value}' already exists.");
+        }
+
         return RecipeId.From(entity.Id);
     }
 
