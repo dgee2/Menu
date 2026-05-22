@@ -14,4 +14,10 @@ public static class DbUpdateExceptionExtensions
                (sqlEx.Number == SqlServerUniqueConstraintViolationError ||
                 sqlEx.Number == SqlServerUniqueIndexViolationError);
     }
+
+    public static bool IsUniqueConstraintViolation(this SqlException exception)
+    {
+        return exception.Number == SqlServerUniqueConstraintViolationError ||
+               exception.Number == SqlServerUniqueIndexViolationError;
+    }
 }

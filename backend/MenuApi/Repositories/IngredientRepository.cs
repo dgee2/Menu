@@ -56,6 +56,14 @@ public class IngredientRepository(MenuDbContext db) : IIngredientRepository
         }
         catch (DbUpdateException ex) when (ex.IsUniqueConstraintViolation())
         {
+            // Detach the failed entities so EF doesn't retry the insert.
+            foreach (var unit in entity.IngredientUnits)
+            {
+                db.Entry(unit).State = EntityState.Detached;
+            }
+
+            db.Entry(entity).State = EntityState.Detached;
+
             // Race condition: another request inserted the same name between our read and write.
             // Re-query and return the now-existing ingredient.
             var racedExisting = await db.Ingredients

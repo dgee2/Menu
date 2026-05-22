@@ -4,6 +4,7 @@ using MenuDB.Data;
 using MenuApi.DBModel;
 using MenuApi.Exceptions;
 using MenuApi.ValueObjects;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace MenuApi.Repositories;
@@ -129,7 +130,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
                 .ExecuteUpdateAsync(s => s.SetProperty(r => r.Name, name.Value))
                 .ConfigureAwait(false);
         }
-        catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+        catch (SqlException ex) when (ex.IsUniqueConstraintViolation())
         {
             throw new BusinessValidationException($"A recipe named '{name.Value}' already exists.");
         }
