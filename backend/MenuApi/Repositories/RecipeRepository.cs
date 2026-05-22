@@ -122,9 +122,16 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
 
     public async Task UpdateRecipeAsync(RecipeId recipeId, RecipeName name)
     {
-        await db.Recipes
-            .Where(r => r.Id == recipeId.Value)
-            .ExecuteUpdateAsync(s => s.SetProperty(r => r.Name, name.Value))
-            .ConfigureAwait(false);
+        try
+        {
+            await db.Recipes
+                .Where(r => r.Id == recipeId.Value)
+                .ExecuteUpdateAsync(s => s.SetProperty(r => r.Name, name.Value))
+                .ConfigureAwait(false);
+        }
+        catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+        {
+            throw new BusinessValidationException($"A recipe named '{name.Value}' already exists.");
+        }
     }
 }

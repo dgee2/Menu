@@ -29,11 +29,33 @@ namespace MenuDB.Migrations
                 column: "Name",
                 unique: true);
 
+            migrationBuilder.Sql(@"
+                IF EXISTS (
+                    SELECT Name FROM Recipe
+                    GROUP BY Name
+                    HAVING COUNT(*) > 1
+                )
+                BEGIN
+                    THROW 51000, 'Duplicate Recipe names exist. Deduplicate Recipe rows before running this migration.', 1;
+                END
+            ");
+
             migrationBuilder.CreateIndex(
                 name: "UX_Recipe_Name",
                 table: "Recipe",
                 column: "Name",
                 unique: true);
+
+            migrationBuilder.Sql(@"
+                IF EXISTS (
+                    SELECT Name FROM Ingredient
+                    GROUP BY Name
+                    HAVING COUNT(*) > 1
+                )
+                BEGIN
+                    THROW 51000, 'Duplicate Ingredient names exist. Deduplicate Ingredient rows before running this migration.', 1;
+                END
+            ");
 
             migrationBuilder.CreateIndex(
                 name: "UX_Ingredient_Name",
