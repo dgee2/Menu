@@ -39,6 +39,36 @@ public class IngredientRepository(MenuDbContext db) : IIngredientRepository
     {
         ArgumentNullException.ThrowIfNull(newIngredient);
 
+        var existing = await db.Ingredients
+            .Where(i => i.Name == newIngredient.Name.Value)
+            .OrderBy(i => i.Id)
+            .Select(i => new
+            {
+                i.Id,
+                i.Name,
+                Units = i.IngredientUnits.Select(iu => new
+                {
+                    iu.Unit.Name,
+                    iu.Unit.Abbreviation,
+                    UnitType = iu.Unit.UnitType.Name,
+                })
+            })
+            .FirstOrDefaultAsync()
+            .ConfigureAwait(false);
+
+        if (existing is not null)
+        {
+            return new ViewModel.Ingredient
+            {
+                Id = IngredientId.From(existing.Id),
+                Name = IngredientName.From(existing.Name),
+                Units = existing.Units.Select(u => new ViewModel.IngredientUnit(
+                    IngredientUnitName.From(u.Name),
+                    u.Abbreviation is not null ? IngredientUnitAbbreviation.From(u.Abbreviation) : null,
+                    IngredientUnitType.From(u.UnitType))),
+            };
+        }
+
         var unitIds = newIngredient.UnitIds.Distinct().ToList();
 
         var entity = new IngredientEntity
