@@ -12,6 +12,8 @@ namespace MenuApi.Integration.Tests;
 [Collection("API Host Collection")]
 public class IngredientIntegrationTests
 {
+    private const string IngredientEndpoint = "/api/ingredient";
+
     private readonly JsonSerializerOptions jsonOptions;
     private readonly ApiTestFixture fixture;
 
@@ -28,7 +30,7 @@ public class IngredientIntegrationTests
     public async Task Get_Ingredients_Returns_Ok()
     {
         using var client = await fixture.GetHttpClient();
-        using var response = await client.GetAsync("/api/ingredient");
+        using var response = await client.GetAsync(IngredientEndpoint);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
 
@@ -78,7 +80,7 @@ public class IngredientIntegrationTests
 
         var (createdId, _, _) = await PostIngredientAsync(client, ingredientName, [3]);
 
-        using var response = await client.GetAsync("/api/ingredient");
+        using var response = await client.GetAsync(IngredientEndpoint);
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
 
         var data = await response.Content.ReadAsStringAsync();
@@ -110,7 +112,7 @@ public class IngredientIntegrationTests
 
         secondId.Should().Be(firstId);
 
-        using var listResponse = await client.GetAsync("/api/ingredient");
+        using var listResponse = await client.GetAsync(IngredientEndpoint);
         await listResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
 
         var data = await listResponse.Content.ReadAsStringAsync();
@@ -137,7 +139,7 @@ public class IngredientIntegrationTests
     {
         var body = new NewIngredient { Name = name, UnitIds = unitIds };
         var requestContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
-        using var response = await client.PostAsync("/api/ingredient", requestContent);
+        using var response = await client.PostAsync(IngredientEndpoint, requestContent);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
 
