@@ -66,6 +66,32 @@ public class IngredientRepositoryTests
         count.Should().Be(1);
     }
 
+    [Fact]
+    public async Task CreateIngredientAsync_Returns_Existing_Ingredient_When_Name_Already_Exists_Even_With_Unknown_UnitId()
+    {
+        // UnitIds are only used when inserting a new row. When the canonical row already exists,
+        // the provided UnitIds are intentionally ignored — the existing ingredient is returned as-is.
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await using var db = CreateDbContext();
+        await SeedUnitsAsync(db, cancellationToken);
+
+        var sut = new IngredientRepository(db);
+        var first = await sut.CreateIngredientAsync(new NewIngredient
+        {
+            Name = IngredientName.From("Sugar"),
+            UnitIds = [4],
+        });
+
+        var second = await sut.CreateIngredientAsync(new NewIngredient
+        {
+            Name = IngredientName.From("Sugar"),
+            UnitIds = [9999], // non-existent unit ID — ignored because ingredient already exists
+        });
+
+        second.Id.Should().Be(first.Id);
+        second.Units.Should().ContainSingle(u => u.Name == IngredientUnitName.From("Grams"));
+    }
+
     private static MenuDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<MenuDbContext>()
