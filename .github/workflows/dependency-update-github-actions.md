@@ -34,6 +34,11 @@ safe-outputs:
     preserve-branch-name: true
     recreate-ref: true
     fallback-as-issue: false
+    allowed-files:
+      - '.github/workflows/*.yml'
+      - '.github/workflows/*.yaml'
+      - '.github/actions/**/*.yml'
+      - '.github/actions/**/*.yaml'
   close-pull-request:
     max: 10
   add-labels:
