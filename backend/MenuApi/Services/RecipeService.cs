@@ -1,4 +1,5 @@
 using MenuDB;
+using MenuApi.Exceptions;
 using MenuApi.MappingProfiles;
 using MenuApi.Repositories;
 using MenuApi.ValueObjects;
@@ -71,6 +72,23 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
     private static IReadOnlyList<DBModel.RecipeIngredient> NormalizeRecipeIngredients(IEnumerable<ViewModel.RecipeIngredient> recipeIngredients)
     {
         ArgumentNullException.ThrowIfNull(recipeIngredients);
-        return [.. ViewModelMapper.Map(recipeIngredients).Distinct()];
+
+        var deduped = ViewModelMapper.Map(recipeIngredients).Distinct().ToList();
+
+        // After exact-duplicate removal, any (IngredientName, UnitName) group with more than one
+        // entry represents the same ingredient+unit with conflicting amounts — a business conflict.
+        var conflicts = deduped
+            .GroupBy(i => (i.IngredientName, i.UnitName))
+            .Where(g => g.Count() > 1)
+            .Select(g => $"'{g.Key.IngredientName.Value}' with unit '{g.Key.UnitName.Value}'")
+            .ToList();
+
+        if (conflicts.Count > 0)
+        {
+            throw new BusinessValidationException(
+                $"The following ingredients appear more than once with conflicting amounts: {string.Join(", ", conflicts)}.");
+        }
+
+        return deduped;
     }
 }

@@ -235,6 +235,71 @@ public class RecipeWithIngredientsIntegrationTests
         returnedIngredients[0].Amount.Should().Be(125m);
     }
 
+    [Theory, AutoData]
+    public async Task Create_Recipe_With_Conflicting_Ingredient_Amounts_Returns_UnprocessableEntity(
+        [StringLength(50, MinimumLength = 1)] string ingredientName,
+        [StringLength(500, MinimumLength = 1)] string recipeName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        await PostIngredientAsync(client, ingredientName, [4]);
+
+        var newRecipe = new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients =
+            [
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m },
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 200m },
+            ]
+        };
+
+        using var content = new StringContent(JsonSerializer.Serialize(newRecipe, jsonOptions), Encoding.UTF8, "application/json");
+        using var response = await client.PostAsync("/api/recipe", content);
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(responseBody);
+        doc.RootElement.GetProperty("status").GetInt32().Should().Be(422);
+    }
+
+    [Theory, AutoData]
+    public async Task Update_Recipe_With_Conflicting_Ingredient_Amounts_Returns_UnprocessableEntity(
+        [StringLength(50, MinimumLength = 1)] string ingredientName,
+        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(500, MinimumLength = 1)] string updatedRecipeName)
+    {
+        using var client = await fixture.GetHttpClient();
+
+        await PostIngredientAsync(client, ingredientName, [4]);
+
+        var (recipeId, _, _) = await PostRecipeAsync(client, new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m }]
+        });
+
+        var updateBody = new NewRecipe
+        {
+            Name = updatedRecipeName,
+            Ingredients =
+            [
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m },
+                new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 200m },
+            ]
+        };
+
+        using var content = new StringContent(JsonSerializer.Serialize(updateBody, jsonOptions), Encoding.UTF8, "application/json");
+        using var response = await client.PutAsync($"/api/recipe/{recipeId}", content);
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(responseBody);
+        doc.RootElement.GetProperty("status").GetInt32().Should().Be(422);
+    }
+
     private async Task PostIngredientAsync(HttpClient client, string name, List<int> unitIds)
     {
         var body = new NewIngredient { Name = name, UnitIds = unitIds };
