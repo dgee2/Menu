@@ -13,9 +13,6 @@ permissions:
 
 engine:
   id: copilot
-  env:
-    # Fine-grained PAT with "Copilot Requests" permission — stored as COPILOT_TOKEN in this repository.
-    COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_TOKEN }}
 
 checkout:
   - fetch-depth: 0
