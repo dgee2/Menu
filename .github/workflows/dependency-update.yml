@@ -84,8 +84,8 @@ jobs:
       - name: Enable pnpm via Corepack
         run: corepack enable pnpm
 
-      - name: Setup Copilot CLI
-        uses: actions/setup-copilot@v0.0.5
+      - name: Install Copilot CLI
+        run: npm install -g --ignore-scripts @github/copilot@1
 
       - name: Create or update dependency PRs with Copilot
         env:
@@ -103,7 +103,7 @@ jobs:
           PROMPT_GHA_DISCOVERY_SCOPE: actions and reusable workflows
           PROMPT_PRERELEASE_POLICY: Consider prerelease versions only when the current version is prerelease; otherwise prefer stable releases.
         run: |
-          cat > /tmp/copilot-prompt.txt <<EOF
+          cat > "$RUNNER_TEMP/copilot-prompt.txt" <<EOF
           Read ".github/prompts/dependency-update.prompt.md" and apply these repository skills:
           - ${PROMPT_ECOSYSTEM_SKILL}
           - dependency-update-pr-description
@@ -128,4 +128,4 @@ jobs:
             --enable-all-github-mcp-tools \
             --autopilot \
             --no-ask-user \
-            -p "$(cat /tmp/copilot-prompt.txt)"
+            -p "$(cat "$RUNNER_TEMP/copilot-prompt.txt")"
