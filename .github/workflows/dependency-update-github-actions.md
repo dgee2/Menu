@@ -1,4 +1,5 @@
 ---
+name: "Dependency Update GitHub Actions"
 on:
   schedule:
     # Run weekly on Friday at 09:00 UTC so dependency PRs stay predictable and reviewable.
