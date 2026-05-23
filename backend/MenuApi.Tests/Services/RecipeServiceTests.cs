@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using FakeItEasy;
 using MenuDB;
+using MenuApi.Exceptions;
 using MenuApi.Repositories;
 using MenuApi.Services;
 using MenuApi.ValueObjects;
@@ -188,5 +189,83 @@ public class RecipeServiceTests
 
         var result = await fun.Should().ThrowAsync<ArgumentNullException>();
         result.And.ParamName.Should().Be("newRecipe");
+    }
+
+    [Fact]
+    public async Task CreateRecipeAsync_Throws_BusinessValidationException_When_Same_IngredientUnit_Has_Conflicting_Amounts()
+    {
+        var recipeName = RecipeName.From("Cake");
+
+        await sut.Invoking(s => s.CreateRecipeAsync(new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients =
+            [
+                new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(100m) },
+                new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(200m) },
+            ],
+        })).Should().ThrowAsync<BusinessValidationException>();
+
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(A<RecipeName>._)).MustNotHaveHappened();
+        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(A<RecipeId>._, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task UpdateRecipeAsync_Throws_BusinessValidationException_When_Same_IngredientUnit_Has_Conflicting_Amounts()
+    {
+        var recipeId = RecipeId.From(1);
+        var recipeName = RecipeName.From("Cake");
+
+        await sut.Invoking(s => s.UpdateRecipeAsync(recipeId, new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients =
+            [
+                new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(100m) },
+                new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(200m) },
+            ],
+        })).Should().ThrowAsync<BusinessValidationException>();
+
+        A.CallTo(() => recipeRepository.UpdateRecipeAsync(A<RecipeId>._, A<RecipeName>._)).MustNotHaveHappened();
+        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(A<RecipeId>._, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task CreateRecipeAsync_Reports_All_Conflicting_IngredientUnit_Pairs()
+    {
+        var recipeName = RecipeName.From("Cake");
+
+        var ex = await sut.Invoking(s => s.CreateRecipeAsync(new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients =
+            [
+                new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(100m) },
+                new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(200m) },
+                new RecipeIngredient { Name = IngredientName.From("Flour"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(300m) },
+                new RecipeIngredient { Name = IngredientName.From("Flour"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(400m) },
+            ],
+        })).Should().ThrowAsync<BusinessValidationException>();
+
+        ex.And.Message.Should().Contain("Sugar");
+        ex.And.Message.Should().Contain("Flour");
+    }
+
+    [Fact]
+    public async Task CreateRecipeAsync_Exact_Duplicate_Then_Conflicting_Detects_Conflict()
+    {
+        // Three entries: two exact duplicates (silently absorbed) + one with different amount = conflict
+        var recipeName = RecipeName.From("Cake");
+
+        await sut.Invoking(s => s.CreateRecipeAsync(new NewRecipe
+        {
+            Name = recipeName,
+            Ingredients =
+            [
+                new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(100m) },
+                new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(100m) },
+                new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(200m) },
+            ],
+        })).Should().ThrowAsync<BusinessValidationException>();
     }
 }
