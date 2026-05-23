@@ -120,6 +120,51 @@ public class RecipeIntegrationTests
         ingredients![0].Name.Should().Be(ingredientName);
     }
 
+    [Theory, AutoData]
+    public async Task Create_Recipe_With_Duplicate_Name_Returns_UnprocessableEntity(
+        [NoAutoProperties] NewRecipe recipe,
+        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(50, MinimumLength = 1)] string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+        await PostIngredientAsync(client, ingredientName);
+        recipe.Name = recipeName;
+        recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
+
+        await PostRecipeAsync(client, recipe);
+
+        using var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
+        using var response = await client.PostAsync("/api/recipe", requestContent);
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Theory, AutoData]
+    public async Task Update_Recipe_To_Duplicate_Name_Returns_UnprocessableEntity(
+        [NoAutoProperties] NewRecipe recipe1,
+        [StringLength(500, MinimumLength = 1)] string recipeName1,
+        [NoAutoProperties] NewRecipe recipe2,
+        [StringLength(500, MinimumLength = 1)] string recipeName2,
+        [StringLength(50, MinimumLength = 1)] string ingredientName)
+    {
+        using var client = await fixture.GetHttpClient();
+        await PostIngredientAsync(client, ingredientName);
+        recipe1.Name = recipeName1;
+        recipe1.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
+        recipe2.Name = recipeName2;
+        recipe2.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 200 }];
+
+        await PostRecipeAsync(client, recipe1);
+        var (id2, _) = await PostRecipeAsync(client, recipe2);
+
+        // Try to rename recipe2 to recipe1's name - should be 422
+        recipe2.Name = recipeName1;
+        using var requestContent = new StringContent(JsonSerializer.Serialize(recipe2), Encoding.UTF8, "application/json");
+        using var response = await client.PutAsync($"/api/recipe/{id2}", requestContent);
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
+    }
+
     private static async Task PostIngredientAsync(HttpClient client, string name)
     {
         var body = new { name, unitIds = new[] { 4 } }; // Grams

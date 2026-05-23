@@ -20,6 +20,7 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
             e.Property(x => x.Name).HasColumnType("varchar(500)").IsRequired();
+            e.HasIndex(x => x.Name).IsUnique().HasDatabaseName("UX_Recipe_Name");
         });
 
         modelBuilder.Entity<IngredientEntity>(e =>
@@ -28,6 +29,7 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
             e.Property(x => x.Name).HasColumnType("varchar(50)").IsRequired();
+            e.HasIndex(x => x.Name).IsUnique().HasDatabaseName("UX_Ingredient_Name");
         });
 
         modelBuilder.Entity<UnitTypeEntity>(e =>
@@ -36,6 +38,7 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).ValueGeneratedNever();
             e.Property(x => x.Name).HasColumnType("varchar(50)").IsRequired();
+            e.HasIndex(x => x.Name).IsUnique().HasDatabaseName("UX_UnitType_Name");
             e.HasData(
                 new UnitTypeEntity { Id = 1, Name = "Volume" },
                 new UnitTypeEntity { Id = 2, Name = "Quantity" },
@@ -49,6 +52,8 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
             e.Property(x => x.Id).ValueGeneratedNever();
             e.Property(x => x.Name).HasColumnType("varchar(50)").IsRequired();
             e.Property(x => x.Abbreviation).HasColumnType("varchar(5)");
+            e.HasIndex(x => x.Name).IsUnique().HasDatabaseName("UX_Unit_Name");
+            e.HasIndex(x => x.Abbreviation).IsUnique().HasDatabaseName("UX_Unit_Abbreviation").HasFilter("[Abbreviation] IS NOT NULL");
             e.HasOne(x => x.UnitType)
              .WithMany(x => x.Units)
              .HasForeignKey(x => x.UnitTypeId)

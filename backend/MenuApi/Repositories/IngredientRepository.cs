@@ -1,5 +1,6 @@
 ﻿﻿using MenuDB;
 using MenuDB.Data;
+using MenuApi.Exceptions;
 using MenuApi.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,7 +50,33 @@ public class IngredientRepository(MenuDbContext db) : IIngredientRepository
                 .ToList(),
         };
         db.Ingredients.Add(entity);
-        await db.SaveChangesAsync().ConfigureAwait(false);
+        try
+        {
+            await db.SaveChangesAsync().ConfigureAwait(false);
+        }
+        catch (DbUpdateException ex) when (ex.IsUniqueConstraintViolation())
+        {
+            // Detach the failed entities so EF doesn't retry the insert.
+            foreach (var unit in entity.IngredientUnits)
+            {
+                db.Entry(unit).State = EntityState.Detached;
+            }
+
+            db.Entry(entity).State = EntityState.Detached;
+
+            // Race condition: another request inserted the same name between our read and write.
+            // Re-query and return the now-existing ingredient.
+            var racedExisting = await db.Ingredients
+                .Where(i => i.Name == newIngredient.Name.Value)
+                .OrderBy(i => i.Id)
+                .Select(i => new IngredientProjection(
+                    i.Id,
+                    i.Name,
+                    i.IngredientUnits.Select(iu => new UnitProjection(iu.Unit.Name, iu.Unit.Abbreviation, iu.Unit.UnitType.Name))))
+                .FirstAsync()
+                .ConfigureAwait(false);
+            return MapToViewModel(racedExisting);
+        }
 
         var created = await db.Ingredients
             .Where(i => i.Id == entity.Id)

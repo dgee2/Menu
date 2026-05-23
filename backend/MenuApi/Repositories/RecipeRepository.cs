@@ -4,6 +4,7 @@ using MenuDB.Data;
 using MenuApi.DBModel;
 using MenuApi.Exceptions;
 using MenuApi.ValueObjects;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace MenuApi.Repositories;
@@ -47,7 +48,15 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         var entity = new RecipeEntity { Name = name.Value };
         db.Recipes.Add(entity);
-        await db.SaveChangesAsync().ConfigureAwait(false);
+        try
+        {
+            await db.SaveChangesAsync().ConfigureAwait(false);
+        }
+        catch (DbUpdateException ex) when (ex.IsUniqueConstraintViolation())
+        {
+            throw new BusinessValidationException($"A recipe named '{name.Value}' already exists.");
+        }
+
         return RecipeId.From(entity.Id);
     }
 
@@ -114,9 +123,16 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
 
     public async Task UpdateRecipeAsync(RecipeId recipeId, RecipeName name)
     {
-        await db.Recipes
-            .Where(r => r.Id == recipeId.Value)
-            .ExecuteUpdateAsync(s => s.SetProperty(r => r.Name, name.Value))
-            .ConfigureAwait(false);
+        try
+        {
+            await db.Recipes
+                .Where(r => r.Id == recipeId.Value)
+                .ExecuteUpdateAsync(s => s.SetProperty(r => r.Name, name.Value))
+                .ConfigureAwait(false);
+        }
+        catch (SqlException ex) when (ex.IsUniqueConstraintViolation())
+        {
+            throw new BusinessValidationException($"A recipe named '{name.Value}' already exists.");
+        }
     }
 }
