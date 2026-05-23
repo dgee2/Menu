@@ -34,6 +34,12 @@ safe-outputs:
     preserve-branch-name: true
     recreate-ref: true
     fallback-as-issue: false
+    allowed-files:
+      - '**/package.json'
+      - '**/pnpm-lock.yaml'
+      - '**/package-lock.json'
+      - '**/yarn.lock'
+      - '**/.npmrc'
   close-pull-request:
     max: 10
   add-labels:
