@@ -48,6 +48,7 @@ public class ApiTestFixture : IAsyncLifetime
         // Retry app startup to handle Docker daemon health checks in CI environments
         const int maxRetries = 3;
         const int delayMs = 2000;
+        Exception lastException = null;
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {
             try
@@ -55,14 +56,19 @@ public class ApiTestFixture : IAsyncLifetime
                 await app.StartAsync().ConfigureAwait(false);
                 break;
             }
-            catch (Exception ex) when (attempt < maxRetries && ex.Message.Contains("unhealthy"))
+            catch (Exception ex) when (ex.Message.Contains("unhealthy"))
             {
-                await Task.Delay(delayMs).ConfigureAwait(false);
-                if (attempt == maxRetries)
+                lastException = ex;
+                if (attempt < maxRetries)
                 {
-                    throw;
+                    await Task.Delay(delayMs).ConfigureAwait(false);
                 }
             }
+        }
+
+        if (lastException != null)
+        {
+            throw lastException;
         }
 
         var resourceNotificationService = app.Services
