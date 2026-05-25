@@ -40,6 +40,7 @@ safe-outputs:
       - '**/package-lock.json'
       - '**/yarn.lock'
       - '**/.npmrc'
+      - 'ui/menu-website/**'
   close-pull-request:
     max: 10
   add-labels:

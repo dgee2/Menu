@@ -39,6 +39,7 @@ safe-outputs:
       - '.github/workflows/*.yaml'
       - '.github/actions/**/*.yml'
       - '.github/actions/**/*.yaml'
+    protected-files: fallback-to-issue
   close-pull-request:
     max: 10
   add-labels:
