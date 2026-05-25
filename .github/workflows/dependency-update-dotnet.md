@@ -34,6 +34,8 @@ safe-outputs:
     preserve-branch-name: true
     recreate-ref: true
     fallback-as-issue: false
+    allowed-files:
+      - 'backend/**'
   close-pull-request:
     max: 10
   add-labels:
