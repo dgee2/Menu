@@ -36,7 +36,7 @@ When available, the caller should provide this runtime context in plain text:
 
 Use workflow references plus GitHub release or tag data as the source of truth.
 
-- Parse `.github/workflows/*.yml`.
+- Parse `.github/workflows/*.yml`, **excluding files that match `*.lock.yml`** (those are auto-generated compiled outputs from `gh aw compile` and must not be edited directly).
 - Collect step-level `uses:` action references and, when the discovery scope includes reusable workflows, `jobs.<job>.uses` references.
 - Ignore local references that begin with `./`.
 - Ignore Docker image references that begin with `docker://`.
