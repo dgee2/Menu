@@ -41,6 +41,8 @@ safe-outputs:
       - '**/yarn.lock'
       - '**/.npmrc'
       - 'ui/menu-website/public/mockServiceWorker.js'
+      - 'ui/menu-website/src/**'
+      - 'ui/menu-website/e2e/**'
   close-pull-request:
     max: 10
   add-labels:
