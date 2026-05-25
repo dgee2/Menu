@@ -19,7 +19,7 @@ public class ApiTestFixture : IAsyncLifetime
     {
         var httpClient = app.CreateHttpClient("apiservice");
 
-        cachedAuthHeader ??= await new ApiAuthentication().GetAuthenticationHeaderValue();
+        cachedAuthHeader ??= await new ApiAuthentication().GetAuthenticationHeaderValue().ConfigureAwait(false);
 
         httpClient.DefaultRequestHeaders.Authorization = cachedAuthHeader;
         return httpClient;
@@ -45,7 +45,31 @@ public class ApiTestFixture : IAsyncLifetime
 
         app = await appHost.BuildAsync();
 
-        await app.StartAsync();
+        // Retry app startup to handle Docker daemon health checks in CI environments
+        const int maxRetries = 3;
+        const int delayMs = 2000;
+        Exception lastException = null;
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                await app.StartAsync().ConfigureAwait(false);
+                break;
+            }
+            catch (Exception ex) when (ex.Message.Contains("unhealthy"))
+            {
+                lastException = ex;
+                if (attempt < maxRetries)
+                {
+                    await Task.Delay(delayMs).ConfigureAwait(false);
+                }
+            }
+        }
+
+        if (lastException != null)
+        {
+            throw lastException;
+        }
 
         var resourceNotificationService = app.Services
             .GetRequiredService<ResourceNotificationService>();
@@ -53,18 +77,18 @@ public class ApiTestFixture : IAsyncLifetime
             "migrations",
             KnownResourceStates.Finished
             )
-            .WaitAsync(TimeSpan.FromSeconds(120));
+            .WaitAsync(TimeSpan.FromSeconds(120)).ConfigureAwait(false);
 
         await resourceNotificationService.WaitForResourceAsync(
             "apiservice",
             KnownResourceStates.Running
             )
-            .WaitAsync(TimeSpan.FromSeconds(30));
+            .WaitAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
     }
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
-        await app.StopAsync();
-        await app.DisposeAsync();
+        await app.StopAsync().ConfigureAwait(false);
+        await app.DisposeAsync().ConfigureAwait(false);
     }
 }
 
@@ -102,7 +126,7 @@ public static class TestExtensions
     {
         if (response.StatusCode != expected)
         {
-            var body = await response.Content.ReadAsStringAsync();
+            var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             throw new Xunit.Sdk.XunitException(
                 $"Expected status code {(int)expected} {expected} but received {(int)response.StatusCode} {response.StatusCode}.\n\nResponse body:\n{body}");
         }
