@@ -39,8 +39,10 @@ safe-outputs:
     allowed-files:
       - '.github/workflows/*.yml'
       - '.github/workflows/*.yaml'
+      - '.github/workflows/*.md'
       - '.github/actions/**/*.yml'
       - '.github/actions/**/*.yaml'
+      - '.github/actions/**/*.md'
     protected-files:
       policy: allowed
       exclude:
