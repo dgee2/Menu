@@ -21,6 +21,8 @@ network:
   allowed:
     - defaults
     - github
+    - dotnet
+    - node
 
 tools:
   edit:
@@ -39,7 +41,12 @@ safe-outputs:
       - '.github/workflows/*.yaml'
       - '.github/actions/**/*.yml'
       - '.github/actions/**/*.yaml'
-    protected-files: fallback-to-issue
+    protected-files:
+      policy: allowed
+      exclude:
+        - .github/workflows/
+        - .github/actions/
+    github-token: ${{ secrets.GH_AW_GITHUB_TOKEN }}
   close-pull-request:
     max: 10
   add-labels:
