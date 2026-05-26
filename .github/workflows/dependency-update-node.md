@@ -20,6 +20,7 @@ network:
   allowed:
     - defaults
     - github
+    - dotnet
     - node
 
 tools:
