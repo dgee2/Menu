@@ -21,6 +21,7 @@ network:
     - defaults
     - github
     - dotnet
+    - node
 
 tools:
   edit:

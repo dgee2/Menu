@@ -20,6 +20,7 @@ network:
   allowed:
     - defaults
     - github
+    - dotnet
     - node
 
 tools:
@@ -41,6 +42,13 @@ safe-outputs:
       - '**/yarn.lock'
       - '**/.npmrc'
       - 'ui/menu-website/**'
+    protected-files:
+      policy: allowed
+      exclude:
+        - '**/package.json'
+        - '**/pnpm-lock.yaml'
+        - '**/package-lock.json'
+        - '**/yarn.lock'
   close-pull-request:
     max: 10
   add-labels:
