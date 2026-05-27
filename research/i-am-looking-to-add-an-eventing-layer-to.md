@@ -46,14 +46,13 @@ That existing transaction is the key technical hook: the safest pattern for Menu
 This scoring was reviewed with the rubber duck agent, and I adopted the key corrections:
 
 1. **Cost is treated as a practical feasibility filter, not just another score.** That is why NServiceBus is shown as budget-constrained despite a high technical score.
-2. **Apples-to-oranges categories were separated.** MediatR is treated as an in-process baseline, Dapr as a runtime/platform abstraction, EventStoreDB as an event store, and Redis Pub/Sub vs Redis Streams are scored separately.
+2. **Apples-to-oranges categories were separated.** EventStoreDB is treated as an event store, and Redis Pub/Sub vs Redis Streams are scored separately.
 3. **Scoring anchors were tightened.** The report now defines what 1 through 5 mean and calls out the important nuances for replay, .NET/Aspire fit, and delivery guarantees.
 4. **Additional criteria were added:** idempotency/deduplication, schema/versioning support, and operational tooling/admin UX.
 5. **Specific score corrections were applied:**  
    - Azure Service Bus operational complexity reduced from the earlier too-generous position  
    - SQL Server transport operational complexity reduced  
    - Amazon MQ lock-in improved because protocol portability is better than the earlier score implied  
-   - Dapr saga/workflow score increased because Dapr Workflow materially changes its orchestration story
 6. **AWS-specific options were added**: Amazon MQ, Amazon EventBridge, and Amazon Kinesis.
 
 ## How the scoring works
@@ -128,8 +127,6 @@ Maximum possible transport score: `500`.
 
 To avoid misleading rankings:
 
-- **MediatR** is a baseline in-process dispatcher, not a distributed eventing stack.
-- **Dapr** is a runtime/platform abstraction, not just a library.
 - **Redis Pub/Sub** and **Redis Streams** are separate options because their semantics are fundamentally different.
 - **Amazon MQ (RabbitMQ)** changes ops/cost/lock-in, so it is scored separately from self-managed RabbitMQ.
 - **EventStoreDB** is an event store; it is not a drop-in queue broker.
@@ -145,10 +142,7 @@ To avoid misleading rankings:
 | Rebus | Distributed messaging library | Lightweight, pragmatic, inexpensive, easy to understand | Outbox and advanced features are not as first-class as MassTransit/NServiceBus |
 | Brighter | Command processor + messaging | Good command pipeline story; can grow toward distributed messaging | Smaller ecosystem; more assembly required for a complete eventing layer |
 | CAP | Event bus / eventual consistency helper | Strong outbox flavor; pragmatic fit for integration events | Narrower pattern support and ecosystem depth than top-tier options |
-| Dapr | Runtime/platform abstraction | Broker-agnostic pub/sub API; at-least-once delivery; workflow building block exists | Adds sidecar/runtime operational surface; not just a library choice; abstraction can hide broker-specific semantics |
-| MediatR | In-process baseline | Very low friction; great for in-process domain events and command dispatch | Not a distributed bus; no broker, no replay, no cross-service event backbone |
-
-Useful references: [MassTransit transactional outbox](https://masstransit.io/documentation/patterns/transactional-outbox), [NServiceBus licensing](https://docs.particular.net/nservicebus/licensing/), [Dapr pub/sub](https://docs.dapr.io/developing-applications/building-blocks/pubsub/pubsub-overview/), [Dapr Workflow](https://docs.dapr.io/developing-applications/building-blocks/workflow/workflow-overview/), [Rebus](https://github.com/rebus-org/Rebus), [Wolverine](https://wolverinefx.io/), [Brighter](https://github.com/BrighterCommand/Brighter), [CAP](https://cap.dotnetcore.xyz/), [MediatR](https://github.com/jbogard/MediatR).
+Useful references: [MassTransit transactional outbox](https://masstransit.io/documentation/patterns/transactional-outbox), [NServiceBus licensing](https://docs.particular.net/nservicebus/licensing/), [Rebus](https://github.com/rebus-org/Rebus), [Wolverine](https://wolverinefx.io/), [Brighter](https://github.com/BrighterCommand/Brighter), [CAP](https://cap.dotnetcore.xyz/).
 
 ## Option review: transports and brokers
 
@@ -185,18 +179,6 @@ Useful references: [RabbitMQ docs](https://www.rabbitmq.com/docs), [Azure Servic
 | 5 | Brighter | 389 / 585 | 66.5% | Useful if you want more command-processor flavor |
 | 6 | CAP | 384 / 585 | 65.6% | Good outbox/event-bus helper, narrower overall fit |
 
-#### Runtime/platform abstraction
-
-| Option | Weighted score | Percent | Practical note |
-|---|---:|---:|---|
-| Dapr | 400 / 585 | 68.4% | Viable if you want sidecar-driven portability and workflow building blocks |
-
-#### Baseline only
-
-| Option | Weighted score | Percent | Practical note |
-|---|---:|---:|---|
-| MediatR | 369 / 585 | 63.1% | Good in-process baseline, not a distributed eventing layer |
-
 ### Full library scoring matrix
 
 `L1-L17` correspond to the weighted criteria listed above.
@@ -207,10 +189,8 @@ Useful references: [RabbitMQ docs](https://www.rabbitmq.com/docs), [Azure Servic
 | NServiceBus | 5 | 5 | 5 | 5 | 5 | 3 | 5 | 4 | 4 | 5 | 5 | 4 | 4 | 1 | 3 | 5 | 3 | 489 | 83.6 |
 | Wolverine | 4 | 4 | 4 | 4 | 4 | 3 | 4 | 4 | 4 | 3 | 4 | 3 | 3 | 5 | 3 | 4 | 5 | 459 | 78.5 |
 | Rebus | 4 | 3 | 4 | 4 | 3 | 2 | 4 | 3 | 4 | 3 | 3 | 2 | 4 | 5 | 4 | 4 | 5 | 431 | 73.7 |
-| Dapr | 4 | 3 | 3 | 3 | 3 | 3 | 4 | 3 | 3 | 4 | 3 | 3 | 4 | 5 | 3 | 4 | 2 | 400 | 68.4 |
 | Brighter | 4 | 3 | 3 | 4 | 3 | 2 | 3 | 3 | 3 | 3 | 3 | 2 | 3 | 5 | 3 | 3 | 5 | 389 | 66.5 |
 | CAP | 4 | 3 | 3 | 3 | 2 | 2 | 3 | 4 | 4 | 3 | 3 | 2 | 3 | 5 | 3 | 3 | 4 | 384 | 65.6 |
-| MediatR | 2 | 4 | 2 | 4 | 1 | 1 | 1 | 5 | 5 | 2 | 2 | 2 | 1 | 5 | 5 | 5 | 5 | 369 | 63.1 |
 
 ### Why the library scores came out this way
 
@@ -218,9 +198,6 @@ Useful references: [RabbitMQ docs](https://www.rabbitmq.com/docs), [Azure Servic
 - **NServiceBus** would rank near the top technically, but the current budget constraint is real enough that it should be filtered out for now.
 - **Wolverine** scores well as a modern open-source option, but it has less ecosystem depth than MassTransit.
 - **Rebus** stays attractive if you want something simpler and lighter than MassTransit.
-- **Dapr** improved after the rubber duck review because Dapr Workflow materially strengthens its process orchestration story. Still, Dapr is a larger platform choice than just "pick a library."
-- **MediatR** should not be misread as a bus recommendation; it scores on simplicity, local fit, and cost, not on distributed eventing capability.
-
 ## Weighted results: transport rankings
 
 ### Summary by practical category
@@ -304,7 +281,6 @@ Why:
 | AWS becomes the main platform later | MassTransit + Amazon MQ | Keeps RabbitMQ semantics while moving to managed AWS operations |
 | Replay becomes a first-class requirement | MassTransit/Wolverine + Kafka or NATS JetStream | Better durable replay and retention story |
 | Event sourcing becomes a strategic architecture choice | EventStoreDB, likely with a simpler integration bus beside it | EventStoreDB is strongest when the event log is the system of record |
-| You only need in-process notifications for now | MediatR | Useful baseline, but not enough for a true eventing layer |
 
 ### What I would not choose as the primary backbone today
 
