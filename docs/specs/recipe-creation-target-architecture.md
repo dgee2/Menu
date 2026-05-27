@@ -136,7 +136,7 @@ This is the right fit because:
 
 Important implementation note:
 
-- model-based full-text configuration arrives in EF Core 11
+- model-based full-text configuration is not available in EF Core 10
 - this repository is currently on EF Core `10.0.8`
 - therefore, full-text catalog and index creation should be treated as migration SQL, not normal `OnModelCreating` configuration
 
@@ -233,6 +233,141 @@ This matters for:
 | Numeric ingredient amount | `Amount` | Matches current codebase and Vogen naming |
 | Ingredient grouping | `SectionTitle` | Simple, display-oriented grouping name |
 
+## Target DDD structure
+
+This target architecture is described in explicit domain-driven design terms.
+
+Important scope note:
+
+- this section defines the **target logical structure** for the Menu monolith
+- it does **not** require the repository to be physically reorganized in one large refactor before recipe features can be implemented
+- the goal is to define clean boundaries, aggregate ownership, and layer responsibilities so future work moves toward a coherent model instead of extending the current flat structure indefinitely
+
+### Bounded contexts
+
+The target backend should be understood as a set of logical bounded contexts.
+
+| Bounded context | Owns | Aggregate roots / key models | Notes |
+|---|---|---|---|
+| Recipe Authoring and Access | Authored recipe content, access rules, publication state | `Recipe` | Owns recipe title, summary, timings, ingredients, steps, sharing, and publication lifecycle |
+| Identity and Preferences | Local user identity and communication preferences | `MenuUser` | Resolves Auth0 users into local IDs and owns communication-consent state |
+| Recipe Discovery | Search and usage projections | `RecipeSearchIndex`, `RecipeMetricsSnapshot` | Projection-only context; read models, not transactional aggregates |
+| Planning and Usage | Planned and historical recipe usage | `RecipeDiaryEntry` | Supports planning, cooked history, and downstream shopping-list generation |
+| Curation | Themed curated sets of recipes | `RecipeCollection` | Supports editorial grouping and future public collection publishing |
+| Shopping | Shopping lists derived from recipes or diary plans | `ShoppingList` (future) | Adjacent context; intentionally left at the boundary level in this document |
+| Communications | Notification workflows and delivery concerns | notification workflows | Consumes events such as publication and sharing changes |
+
+### Aggregate roots and boundaries
+
+The target aggregate roots should be:
+
+| Aggregate root | Owns inside its boundary | Outside its boundary |
+|---|---|---|
+| `Recipe` | recipe core fields, `RecipeIngredient`, `RecipeStep`, `RecipeShare`, `RecipePublication` | search index rows, metrics snapshots, diary entries, favourites, collections |
+| `MenuUser` | local user profile and communication preference records | recipe content and recipe usage records |
+| `RecipeDiaryEntry` | a single planned or cooked diary record | recipe aggregate internals |
+| `RecipeCollection` | collection metadata and ordered collection items | recipe aggregate internals and search projections |
+| `ShoppingList` (future) | selected recipes, generated list items, merge state | recipe authoring internals |
+
+Important rules:
+
+- `Recipe` remains the aggregate root for authored recipe content and publication/access invariants
+- `RecipeIngredient`, `RecipeStep`, `RecipeShare`, and `RecipePublication` should be treated as entities inside the `Recipe` aggregate boundary
+- `RecipeFavorite`, `RecipeDiaryEntry`, `RecipeCollection`, and future `ShoppingList` records should remain outside the `Recipe` aggregate so they can evolve independently without bloating the recipe consistency boundary
+- `RecipeSearchIndex` and `RecipeMetricsSnapshot` are read models, not aggregate members
+
+### Value objects and entity roles
+
+In DDD terms, the target model should distinguish between:
+
+- aggregate roots
+- child entities inside an aggregate
+- value objects
+- read models / projections
+
+Recommended interpretation in this architecture:
+
+| Type | Examples |
+|---|---|
+| Aggregate roots | `Recipe`, `MenuUser`, `RecipeDiaryEntry`, `RecipeCollection` |
+| Child entities | `RecipeIngredient`, `RecipeStep`, `RecipeShare`, `RecipePublication`, `RecipeCollectionItem` |
+| Value objects | recipe title, recipe summary, ingredient measure, access scope, slug, share permission, communication category |
+| Read models | `RecipeSearchIndex`, `RecipeMetricsSnapshot` |
+
+### Layer responsibilities
+
+The target backend should separate responsibilities into the following layers.
+
+| Layer | Responsibility | Should not own |
+|---|---|---|
+| Presentation | Minimal API endpoints, OpenAPI surface, auth/policy entry points, request/response DTOs | domain rules, persistence logic |
+| Application | commands, queries, transaction orchestration, aggregate loading/saving, user resolution, policy coordination | HTTP details, EF entity mapping details |
+| Domain | aggregates, entities, value objects, domain invariants, domain events, repository contracts | DTOs, auth claims, EF Core, transport concerns |
+| Infrastructure | EF Core persistence, repository implementations, outbox persistence, projection consumers, email adapters, auth/provider adapters | business use-case orchestration |
+| Projections / Read side | search index, metrics projections, read-optimized queries | transactional domain invariants |
+
+### Separation between presentation and domain
+
+Because presentation/domain separation is a specific concern, the target architecture should make the boundary explicit:
+
+1. The presentation layer receives HTTP requests, validates transport concerns, and maps them to application commands or queries.
+2. The application layer resolves the caller, loads aggregates, applies transactions, and invokes domain behavior.
+3. The domain layer enforces business rules and raises domain events.
+4. The infrastructure layer persists aggregate state and outbox events, and runs asynchronous consumers that update projections or integrate with external systems.
+
+The domain layer should not reference:
+
+- Minimal API types
+- OpenAPI DTOs
+- Auth0 claim objects
+- EF Core entity configuration details
+
+The presentation layer should not:
+
+- encode domain rules directly
+- mutate EF entities directly
+- bypass application-layer command/query handling
+
+### Target project structure
+
+The target backend structure should move toward the following logical project layout:
+
+| Target project / area | Responsibility |
+|---|---|
+| `Menu.Api` | presentation layer: endpoints, DTOs, OpenAPI, auth policies, request validation |
+| `Menu.Application` | commands, queries, handlers, transaction orchestration, application services |
+| `Menu.Domain` | aggregates, entities, value objects, repository interfaces, domain events |
+| `Menu.Infrastructure` | EF Core persistence, repository implementations, outbox storage, background consumers, external adapters |
+| `Menu.Web` | frontend SPA |
+
+The current responsibilities would map like this:
+
+- current `MenuApi/ViewModel` concepts belong at the presentation boundary
+- current `MenuApi/Services` orchestration concerns belong in the application layer
+- current `MenuApi/ValueObjects` align with the domain layer
+- current `MenuDB` persistence concerns align with infrastructure persistence
+- current `RecipeSearchIndex`, metrics, and similar projections belong on the read side, implemented through infrastructure/background projection components
+
+### Cross-context identity reference rule
+
+`MenuUser` belongs to the identity/preferences context, but the recipe context will still reference it by ID.
+
+Important rule:
+
+- the application layer resolves Auth0 `sub` to `MenuUser.Id` before invoking recipe commands
+- the recipe context references users by ID and does not hydrate or own `MenuUser` state inside the `Recipe` aggregate
+
+```mermaid
+flowchart LR
+    A[Presentation: Menu.Api] --> B[Application: commands and queries]
+    B --> C[Domain: aggregates and value objects]
+    B --> D[Infrastructure: repositories and adapters]
+    D --> E[(Write model)]
+    D --> F[(Outbox)]
+    F --> G[Projection and integration consumers]
+    G --> H[(Read models)]
+```
+
 ## Target domain model
 
 > **Note:** The ERD below shows the key fields and relationships only. The detailed field tables that follow are the authoritative source for the target schema.
@@ -245,7 +380,7 @@ erDiagram
     RECIPE ||--o{ RECIPE_SHARE : grants
     MENU_USER ||--o{ RECIPE_SHARE : receives
     RECIPE ||--o| RECIPE_PUBLICATION : publishes
-    RECIPE ||--|| RECIPE_SEARCH_INDEX : indexes
+    RECIPE ||--o| RECIPE_SEARCH_INDEX : indexes
 
     MENU_USER {
         int Id
@@ -477,8 +612,8 @@ Slug rules:
 | `RecipeId` | Yes | PK and FK to `Recipe` |
 | `Title` | Yes | Recipe title for weighted search |
 | `SummaryText` | No | Optional summary/snippet field |
-| `IngredientsText` | Yes | Concatenated ingredient lines |
-| `StepsText` | Yes | Concatenated step text |
+| `IngredientsText` | No | Concatenated ingredient lines; projection can default to an empty value when no ingredient content exists yet |
+| `StepsText` | No | Concatenated step text; projection can default to an empty value when no step content exists yet |
 | `OwnerUserId` | Yes | Supports ownership filtering |
 | `AccessScope` | Yes | Supports broad access filtering |
 | `IsPublishedExternally` | Yes | Supports public search/read filtering |
@@ -487,9 +622,10 @@ Slug rules:
 Search rules:
 
 1. Full-text index `Title`, `IngredientsText`, `StepsText`, and optionally `SummaryText`.
-2. Update `RecipeSearchIndex` in the same transaction as recipe writes.
-3. Authenticated search may still join to `RecipeShare` to include shared private recipes.
-4. If that join becomes a bottleneck later, a mirrored share-search table can be added without replacing the overall architecture.
+2. Rebuild `RecipeSearchIndex` asynchronously from committed recipe-domain events rather than writing it inline in the request transaction.
+3. The projection consumer should update the row when recipe content, access scope, or publication state changes.
+4. Authenticated search may still join to `RecipeShare` to include shared private recipes.
+5. If that join becomes a bottleneck later, a mirrored share-search table can be added without replacing the overall architecture.
 
 ## Search architecture
 
@@ -529,24 +665,31 @@ Recommended initial behavior:
 
 ### Search projection update path
 
-The search index should be rebuilt for a recipe inside the same application-layer transaction that writes:
+The search index should be rebuilt asynchronously after the recipe transaction commits.
 
-- the recipe root
-- the ingredient rows
-- the step rows
+Recommended target path:
 
-This keeps the relational search projection row consistent with the recipe aggregate and avoids trigger-based hidden behavior.
+1. The application layer writes the `Recipe` aggregate changes and an outbox event in the same transaction.
+2. A background projection consumer reads committed outbox events.
+3. That consumer rebuilds the `RecipeSearchIndex` row from the committed aggregate state.
 
-Additional sync rules:
+This is the preferred target structure because it:
 
+- avoids dual-write risk between the write model and asynchronous consumers
+- aligns with the accepted event-driven direction for the target architecture
+- keeps search as a projection that can lag safely behind the transactional write model
+
+Projection trigger rules:
+
+- rebuild the search projection when recipe content changes
 - rebuild the search projection when `Recipe.AccessScope` changes
 - rebuild the search projection when a `RecipePublication` row is published or unpublished
 
 Important consistency note:
 
-- the relational `RecipeSearchIndex` row is updated synchronously inside the transaction
-- SQL Server full-text population is still asynchronous after commit
-- that means full-text query results may be briefly stale immediately after a recipe write or publication change
+- `RecipeSearchIndex` may lag behind the write model because it is now an asynchronous projection
+- SQL Server full-text population is also asynchronous after the projection row is written
+- that means search results may be briefly stale after recipe writes, share/publication changes, or projection backlog
 - this is acceptable for recipe search, but it should not be treated as a strict transactional read-your-writes guarantee
 
 ### Migration note
@@ -756,7 +899,13 @@ Specific category names should be finalized in a dedicated communications design
 
 ### Event-driven integration points
 
-This document does not define a full event-driven platform topology, but it should identify where events are the right extension point.
+This document does not require an external broker immediately, but it does define the target asynchronous-processing model for the monolith.
+
+Recommended target mechanism:
+
+1. Aggregates raise domain events inside the domain layer.
+2. The application/infrastructure boundary persists those events into an outbox in the same transaction as the aggregate write.
+3. A background consumer processes committed outbox records and updates projections or triggers integrations.
 
 Recommended emitted events:
 
@@ -773,6 +922,7 @@ Recommended emitted events:
 
 Recommended consumers:
 
+- search projection consumer
 - metrics projection updater
 - publication notification workflow
 - diary reminder workflow
@@ -781,25 +931,26 @@ Recommended consumers:
 
 Important architectural nuance:
 
-- the transactional write of the relational `RecipeSearchIndex` row should remain synchronous in the request path
-- future event-driven consumers should extend the architecture around that core write path rather than replace it prematurely
+- `RecipeSearchIndex` should be updated by an asynchronous projection consumer rather than in the request path
+- the first target implementation can use an outbox-backed hosted background service; it does not need an external broker on day one
 - once a broader event-driven architecture is implemented, an outbox-style pattern is the safest way to publish these events without dual-write risk
 
 ```mermaid
 flowchart LR
-    A[Recipe and related APIs] --> B[(Transactional recipe write model)]
-    B --> C[(RecipeSearchIndex)]
-    B --> D[Event outbox or domain events]
-    D --> E[(RecipeMetricsSnapshot)]
-    D --> F[Notification workflows]
-    D --> G[Diary and reminder workflows]
-    D --> H[Shopping list workflows]
-    D --> I[Collection and recommendation projections]
+    A[Recipe and related APIs] --> B[(Transactional write model)]
+    B --> C[(Outbox)]
+    C --> D[Search projection consumer]
+    C --> E[Metrics projection updater]
+    C --> F[Notification workflows]
+    C --> G[Diary and reminder workflows]
+    C --> H[Shopping list workflows]
+    C --> I[Collection and recommendation projections]
+    D --> J[(RecipeSearchIndex)]
 ```
 
 ## Target API architecture
 
-The current recipe API is too small for the target domain model. The target API should expand into these concerns:
+The current recipe API is too small for the target domain model. In DDD terms, the presentation layer should expose application commands and queries across these concerns:
 
 1. recipe create/update
 2. recipe read/search for authenticated users
@@ -886,6 +1037,8 @@ The exact DTO names can be adjusted, but the important architectural point is th
 - detail reads
 - list/search reads
 - publication/sharing administration
+
+In a DDD-oriented target structure, these DTOs live at the presentation boundary and should not be treated as domain entities.
 
 ## Frontend target architecture
 
@@ -1002,8 +1155,9 @@ Because this frontend uses generated OpenAPI types, any target API change also i
 7. Add `RecipePublication` with slug and publication audit fields.
 8. Add `RecipeSearchIndex`.
 9. Add `RecipeFavorite`, `RecipeDiaryEntry`, `RecipeMetricsSnapshot`, `RecipeCollection`, `RecipeCollectionItem`, and `MenuUserCommunicationPreference`.
-10. Add SQL Server full-text catalog and full-text index creation to migrations.
-11. Define delete behavior so recipe deletion also removes dependent ingredient, step, share, publication, and search-index rows.
+10. Add an outbox table for committed domain/integration events.
+11. Add SQL Server full-text catalog and full-text index creation to migrations.
+12. Define delete behavior so recipe deletion also removes dependent ingredient, step, share, publication, and search-index rows.
 
 ## Data required to display recipes well
 
@@ -1046,16 +1200,18 @@ Image support is recommended for a later enhancement, but it is not required to 
 ```mermaid
 flowchart LR
     A[Vue recipe editor] --> B[Authenticated recipe API]
-    B --> C[Recipe validation and authorization]
-    C --> D[Recipe service transaction]
+    B --> C[Application command handling]
+    C --> D[Recipe aggregate transaction]
     D --> E[(Recipe tables)]
-    D --> F[(RecipeSearchIndex)]
-    G[Authenticated search page] --> H[Search API]
-    H --> F
-    H --> I[(RecipeShare filtering)]
-    J[Public recipe page] --> K[Public recipe API]
-    K --> L[(RecipePublication by slug)]
-    K --> E
+    D --> F[(Outbox)]
+    F --> G[Projection consumer]
+    G --> H[(RecipeSearchIndex)]
+    I[Authenticated search page] --> J[Search API query]
+    J --> H
+    J --> K[(RecipeShare filtering)]
+    L[Public recipe page] --> M[Public recipe API]
+    M --> N[(RecipePublication by slug)]
+    M --> E
 ```
 
 ## Rejected alternatives
