@@ -12,7 +12,7 @@ It is intentionally focused on architecture rather than delivery sequencing. It 
 - the current state of the Menu app
 - the target data model for recipes
 - the frontend, API, and database changes required to support that model
-- the search architecture for recipe name, ingredients, and recipe content
+- the search architecture for recipe title, ingredients, and recipe content
 - the display-oriented data that should exist if recipes are to be useful inside the app and on curated public pages
 
 ## Constraints and clarified assumptions
@@ -108,7 +108,7 @@ Important current limitations:
 
 ## Architectural decisions
 
-## 1. Keep the core recipe write model relational
+### 1. Keep the core recipe write model relational
 
 The recipe aggregate has a stable structure and must support:
 
@@ -123,7 +123,7 @@ That makes a relational write model the right fit.
 
 A JSON-first design was considered and rejected. SQL Server JSON support is useful when the shape is truly flexible, but recipes in Menu have a clear structure and need normal relational integrity.
 
-## 2. Use SQL Server full-text search first
+### 2. Use SQL Server full-text search first
 
 The target architecture should use SQL Server full-text search rather than add an external search engine initially.
 
@@ -140,11 +140,11 @@ Important implementation note:
 - this repository is currently on EF Core `10.0.8`
 - therefore, full-text catalog and index creation should be treated as migration SQL, not normal `OnModelCreating` configuration
 
-## 3. Use a dedicated search projection
+### 3. Use a dedicated search projection
 
 Search must cover data that lives across multiple write-model tables:
 
-- recipe name
+- recipe title
 - recipe ingredient text
 - recipe steps and instruction text
 
@@ -154,7 +154,7 @@ Searching directly across joined transactional tables is possible but awkward an
 
 This table is not the source of truth for recipes. It is a read model maintained from the recipe aggregate.
 
-## 4. Separate ownership, sharing, authenticated visibility, and internet publication
+### 4. Separate ownership, sharing, authenticated visibility, and internet publication
 
 These are different concerns and should not be collapsed into a single field.
 
@@ -167,7 +167,7 @@ The target architecture should separate them like this:
 
 This avoids overloaded state such as `Private`, `Shared`, `Public`, `Published`, and `Approved` all being encoded into one enum.
 
-## 5. Make recipe ingredients recipe-owned content
+### 5. Make recipe ingredients recipe-owned content
 
 The current ingredient model forces recipes to reference only pre-existing canonical ingredients and units. That is too restrictive for real recipe authoring.
 
@@ -179,19 +179,26 @@ That means:
 - the ingredient line must remain displayable even if no canonical match exists
 - canonical ingredient and unit links are enrichment, not the primary stored representation
 
-## 6. Keep naming consistent with the existing codebase where the gain is not compelling
+### 6. Use `Recipe.Title` for the authored recipe heading
 
-The current codebase already uses `Recipe.Name`, `Ingredient.Name`, and `Unit.Name`.
+The current codebase uses `Recipe.Name`, but the target architecture should rename the main authored recipe field to `Recipe.Title`.
 
-For that reason the target architecture should keep:
+Reasons:
 
-- `Recipe.Name`
+- recipes are authored content, and `Title` makes that role explicit
+- the recipe heading should be distinguishable from canonical reference data such as `Ingredient.Name` and `Unit.Name`
+- this gives the future model a clearer distinction between authored content and canonical vocabulary
+
+The target architecture should still keep:
+
 - `Ingredient.Name`
 - `Unit.Name`
 
-and use stronger supporting names around them rather than renaming the main recipe field to `Title`.
+For public structured-data output, the system can still emit schema.org's `name` property from the internal `Title` field.
 
-## 7. Use Unicode text for recipe-authored content
+The same `Title` pattern should be used consistently for other authored-content entities in this model, such as `RecipeStep.Title` and `RecipeCollection.Title`.
+
+### 7. Use Unicode text for recipe-authored content
 
 The existing schema uses `varchar` widely, but recipe-authored content should be treated as multilingual user-generated text.
 
@@ -202,7 +209,7 @@ For recipe-authored fields, the target architecture should prefer Unicode-capabl
 
 This matters for:
 
-- international recipe names
+- international recipe titles
 - accented ingredient names
 - multilingual instruction text
 - future public web pages
@@ -213,12 +220,13 @@ This matters for:
 | Concern | Target naming | Why |
 |---|---|---|
 | Local app user record | `MenuUser` | Avoids collision with common ASP.NET Identity names such as `AppUser` |
-| Main recipe field | `Name` | Matches current Menu conventions and schema.org `name` |
+| Main recipe field | `Title` | Better reflects authored content while still allowing schema.org `name` output |
 | Authenticated recipe visibility | `AccessScope` with `Private` / `AuthenticatedUsers` | Clear and narrow; does not overload sharing or public publication |
 | Explicit shares | `RecipeShare` | Direct and consistent with the domain |
 | Share capability | `SharePermission` | Avoids confusion with Auth0 or ASP.NET auth roles |
 | Public internet publication | `RecipePublication` | Separate editorial/public concern |
 | Search read model | `RecipeSearchIndex` | Clear and practical; avoids CQRS-heavy terminology |
+| Search projection recipe heading | `Title` | Keeps search and aggregate field naming aligned |
 | Ordered instructions | `RecipeStep` | Clear and domain-correct |
 | Recipe ingredient free text | `IngredientText` | Distinguishes authored ingredient text from canonical references |
 | Ingredient display measure | `MeasureText` | Makes the display/search source explicit |
@@ -251,7 +259,7 @@ erDiagram
     RECIPE {
         int Id
         int OwnerUserId
-        string Name
+        string Title
         string Summary
         int Servings
         string YieldText
@@ -304,7 +312,7 @@ erDiagram
 
     RECIPE_SEARCH_INDEX {
         int RecipeId
-        string Name
+        string Title
         string SummaryText
         string IngredientsText
         string StepsText
@@ -339,7 +347,7 @@ erDiagram
 |---|---|---|
 | `Id` | Yes | Primary key |
 | `OwnerUserId` | Yes | FK to `MenuUser` |
-| `Name` | Yes | Main recipe name; unique per owner |
+| `Title` | Yes | Main recipe title; unique per owner |
 | `Summary` | No | Short description for cards, snippets, and public pages |
 | `Servings` | No | Structured count when the recipe serves a known number of people |
 | `YieldText` | No | Human-readable output such as `1 loaf` or `24 cookies` |
@@ -352,13 +360,13 @@ erDiagram
 
 Key constraints:
 
-- replace the current global recipe-name uniqueness rule with uniqueness per owner
+- replace the current global recipe-name uniqueness rule with title uniqueness per owner
 - authenticated visibility and external publication are **not** the same thing
 
 Recommended database rules:
 
-- unique index on `(OwnerUserId, Name)`
-- bounded `Name`
+- unique index on `(OwnerUserId, Title)`
+- bounded `Title`
 - Unicode storage for authored text
 
 ### `RecipeIngredient`
@@ -444,12 +452,13 @@ State rule:
 
 Important rules:
 
-- one `RecipePublication` row exists per recipe
+- at most one `RecipePublication` row exists per recipe
 - unpublishing sets `UnpublishedAtUtc` and `UnpublishedByUserId` on that row
 - re-publishing reactivates the same row by clearing the unpublish fields and updating the publication audit fields
 - `Slug` must be globally unique among active public publications
 - the slug belongs on `RecipePublication`, not on `Recipe`
 - the public page should resolve only active publications where `UnpublishedAtUtc IS NULL`
+- this row tracks the current publication state rather than a full publication-history log
 
 Slug rules:
 
@@ -457,7 +466,7 @@ Slug rules:
 - it should be lowercase and URL-safe
 - it should be bounded to a sensible public URL length
 - if the natural slug is already taken, a disambiguating suffix should be added
-- a recipe name change does **not** automatically change the public slug; public URLs should stay stable once published
+- a recipe title change does **not** automatically change the public slug; public URLs should stay stable once published
 
 ### `RecipeSearchIndex`
 
@@ -466,7 +475,7 @@ Slug rules:
 | Field | Required | Notes |
 |---|---|---|
 | `RecipeId` | Yes | PK and FK to `Recipe` |
-| `Name` | Yes | Recipe name for weighted search |
+| `Title` | Yes | Recipe title for weighted search |
 | `SummaryText` | No | Optional summary/snippet field |
 | `IngredientsText` | Yes | Concatenated ingredient lines |
 | `StepsText` | Yes | Concatenated step text |
@@ -477,7 +486,7 @@ Slug rules:
 
 Search rules:
 
-1. Full-text index `Name`, `IngredientsText`, `StepsText`, and optionally `SummaryText`.
+1. Full-text index `Title`, `IngredientsText`, `StepsText`, and optionally `SummaryText`.
 2. Update `RecipeSearchIndex` in the same transaction as recipe writes.
 3. Authenticated search may still join to `RecipeShare` to include shared private recipes.
 4. If that join becomes a bottleneck later, a mirrored share-search table can be added without replacing the overall architecture.
@@ -500,7 +509,7 @@ The target architecture should search these fields:
 
 | Search intent | Source |
 |---|---|
-| Recipe name | `RecipeSearchIndex.Name` |
+| Recipe title | `RecipeSearchIndex.Title` |
 | Ingredients | `RecipeSearchIndex.IngredientsText` |
 | Recipe content / method | `RecipeSearchIndex.StepsText` |
 | Optional summary text | `RecipeSearchIndex.SummaryText` |
@@ -510,7 +519,7 @@ The target architecture should search these fields:
 Recommended initial behavior:
 
 1. Use full-text ranking for user-entered search text.
-2. Weight recipe name matches above ingredient and step matches.
+2. Weight recipe title matches above ingredient and step matches.
 3. Return snippets from summary or matched step text where practical.
 4. Filter by access before returning results:
    - owner
@@ -595,14 +604,209 @@ This avoids:
 - first-write race conditions
 - recipe rows that cannot be linked to a local user record
 
+## Related recipe usage capabilities
+
+The following capabilities sit adjacent to recipe creation, but they materially affect the target architecture because they depend on the recipe model and influence which related records, read models, and events should exist.
+
+### Metrics and engagement
+
+Recipe usage metrics should be modeled as read-side projection data, not as mutable counters on `Recipe`.
+
+Recommended projection:
+
+- `RecipeMetricsSnapshot`
+
+| Field | Notes |
+|---|---|
+| `RecipeId` | FK to `Recipe` |
+| `PublicViewCount` | Views from unauthenticated traffic |
+| `AuthenticatedViewCount` | Views from signed-in users |
+| `FavoriteCount` | Derived from `RecipeFavorite` |
+| `PlannedCount` | Derived from planned diary entries |
+| `CookedCount` | Derived from cooked diary entries |
+| `LastViewedAtUtc` | Optional recency signal |
+| `LastCookedAtUtc` | Optional recency signal |
+
+Important rules:
+
+- these values should be projection data, not write-model columns on `Recipe`
+- segmented view counts should be derived from view events, not maintained by direct request-time increments on the recipe row
+- view events must carry enough context to distinguish authenticated and unauthenticated traffic, either via an auth flag or separate event types
+- `CookedCount` should derive from diary entries marked as cooked, so there is only one source of truth for recipe usage history
+
+### Favourites
+
+Code identifiers in this section intentionally use American spelling, for example `RecipeFavorite`.
+
+Users should be able to add visible recipes to a favourites list.
+
+Recommended record:
+
+- `RecipeFavorite`
+
+| Field | Notes |
+|---|---|
+| `UserId` | FK to `MenuUser` |
+| `RecipeId` | FK to `Recipe` |
+| `CreatedAtUtc` | Audit and ordering |
+
+Recommended rule:
+
+- unique key on `(UserId, RecipeId)`
+
+This keeps favourites as an explicit user capability and makes favourite count derivable from real user records.
+
+### Recipe diary
+
+Users should be able to keep both:
+
+- future planned recipe usage
+- historical cooked recipe usage
+
+Recommended record:
+
+- `RecipeDiaryEntry`
+
+| Field | Notes |
+|---|---|
+| `Id` | Primary key |
+| `UserId` | FK to `MenuUser` |
+| `RecipeId` | FK to `Recipe` |
+| `EntryStatus` | `Planned`, `Cooked`, or another lifecycle status as the diary evolves |
+| `PlannedForDate` | Nullable planning date |
+| `OccurredAtUtc` | When the cook or diary event happened |
+| `Notes` | Optional user notes |
+| `CreatedAtUtc` | Audit |
+
+Important rule:
+
+- historical cooked diary entries are the source of truth for cooked-count metrics
+
+### Shopping list integration boundary
+
+Shopping lists are large enough to justify their own architecture document, but the recipe architecture should still prepare for them.
+
+Recommended boundary:
+
+- shopping list generation should accept a normalized recipe selection set from either:
+  - diary-planned recipes
+  - an ad hoc user selection of recipes
+
+This allows both workflows without forcing two separate shopping-list subsystems. The current recipe architecture should preserve enough ingredient structure to support later list generation, merging, and normalization work.
+
+### Curated recipe collections
+
+Curated themed sets of recipes should be supported as an adjacent capability.
+
+Recommended records:
+
+- `RecipeCollection`
+- `RecipeCollectionItem`
+
+Suggested collection fields:
+
+| Field | Notes |
+|---|---|
+| `Id` | Primary key |
+| `Title` | Collection title |
+| `Summary` | Short thematic description |
+| `CreatedByUserId` | Editor or admin owner |
+| `IsCurated` | Distinguishes editorial sets from broader future collection types |
+| `CreatedAtUtc` | Audit |
+
+Suggested collection-item fields:
+
+| Field | Notes |
+|---|---|
+| `CollectionId` | FK to `RecipeCollection` |
+| `RecipeId` | FK to `Recipe` |
+| `SortOrder` | Ordering within the collection |
+
+Important rules:
+
+- a recipe should be able to appear in multiple collections
+- the initial focus should be in-app thematic browsing and diary assignment
+- the model should still leave room for later public publication of curated collections without forcing that into the first implementation
+
+### Communication preferences
+
+Publication-triggered emails and similar communications should be controlled by user-level preferences, not by recipe fields.
+
+Recommended record:
+
+- `MenuUserCommunicationPreference`
+
+Suggested fields:
+
+| Field | Notes |
+|---|---|
+| `UserId` | FK to `MenuUser` |
+| `Category` | Named communication category |
+| `IsOptedIn` | Permission state |
+| `UpdatedAtUtc` | Audit |
+
+Specific category names should be finalized in a dedicated communications design, but the initial expected categories include:
+
+1. Recipe publication and editorial approvals
+2. Recipe shares and access changes
+3. Diary reminders and planned-cooking reminders
+4. Shopping list reminders or digest emails
+5. Curated collection recommendations
+6. Product updates and service announcements
+
+### Event-driven integration points
+
+This document does not define a full event-driven platform topology, but it should identify where events are the right extension point.
+
+Recommended emitted events:
+
+- `RecipeCreated`
+- `RecipeUpdated`
+- `RecipePublished`
+- `RecipeUnpublished`
+- `RecipeFavorited`
+- `RecipeUnfavorited`
+- `RecipeDiaryEntryPlanned`
+- `RecipeDiaryEntryCooked`
+- `RecipeViewed`
+- `RecipeAddedToCollection`
+
+Recommended consumers:
+
+- metrics projection updater
+- publication notification workflow
+- diary reminder workflow
+- shopping-list generation or refresh workflow
+- recommendation and curation read models
+
+Important architectural nuance:
+
+- the transactional write of the relational `RecipeSearchIndex` row should remain synchronous in the request path
+- future event-driven consumers should extend the architecture around that core write path rather than replace it prematurely
+- once a broader event-driven architecture is implemented, an outbox-style pattern is the safest way to publish these events without dual-write risk
+
+```mermaid
+flowchart LR
+    A[Recipe and related APIs] --> B[(Transactional recipe write model)]
+    B --> C[(RecipeSearchIndex)]
+    B --> D[Event outbox or domain events]
+    D --> E[(RecipeMetricsSnapshot)]
+    D --> F[Notification workflows]
+    D --> G[Diary and reminder workflows]
+    D --> H[Shopping list workflows]
+    D --> I[Collection and recommendation projections]
+```
+
 ## Target API architecture
 
-The current recipe API is too small for the target domain model. The target API should expand into four concerns:
+The current recipe API is too small for the target domain model. The target API should expand into these concerns:
 
 1. recipe create/update
 2. recipe read/search for authenticated users
 3. sharing/publication management
-4. public read for curated recipes
+4. favourites, diary, and related recipe-usage endpoints
+5. curated collection browsing
+6. public read for curated recipes
 
 ### Authenticated recipe endpoints
 
@@ -620,6 +824,13 @@ Suggested logical endpoints:
 | Update sharing | `PUT /api/recipe/{recipeId}/sharing` |
 | Remove a share | `DELETE /api/recipe/{recipeId}/sharing/{sharedWithUserId}` |
 | Update publication | `PUT /api/recipe/{recipeId}/publication` |
+| Add to favourites | `PUT /api/recipe/{recipeId}/favorite` |
+| Remove from favourites | `DELETE /api/recipe/{recipeId}/favorite` |
+| Add diary entry | `POST /api/recipe/{recipeId}/diary` |
+| Get diary entries | `GET /api/recipe/diary` |
+| Get recipe metrics | `GET /api/recipe/{recipeId}/metrics` |
+| Get communication preferences | `GET /api/user/communication-preference` |
+| Update communication preferences | `PUT /api/user/communication-preference` |
 
 Recommended `scope` values:
 
@@ -638,6 +849,17 @@ Suggested logical endpoints:
 |---|---|
 | Get public recipe by slug | `GET /public/recipe/{slug}` |
 | Search curated public recipes (optional) | `GET /public/recipe?query=` |
+
+### Collection endpoints
+
+Suggested logical endpoints:
+
+| Purpose | Route shape |
+|---|---|
+| List collections | `GET /api/collection` |
+| Get collection detail | `GET /api/collection/{collectionId}` |
+| Assign collection to diary workflow (optional) | `POST /api/collection/{collectionId}/diary` |
+| Get public collection by slug later | `GET /public/collection/{slug}` |
 
 ### DTO evolution
 
@@ -669,11 +891,11 @@ The exact DTO names can be adjusted, but the important architectural point is th
 
 ### 1. Recipe editor
 
-The current recipe editor must grow from a single name field into a full aggregate editor.
+The current recipe editor must grow from a single title field into a full aggregate editor.
 
 It should support:
 
-- recipe name
+- recipe title
 - summary
 - servings and yield
 - preparation/cook/total times
@@ -692,13 +914,14 @@ A new detail page is needed for authenticated users.
 
 It should display:
 
-- name
+- title
 - summary
 - servings and yield
 - timing metadata
 - grouped ingredients
 - ordered steps
 - visibility/share/publication badges
+- favourites and recipe-usage signals where appropriate
 
 ### 3. Search and list page
 
@@ -732,12 +955,17 @@ The frontend service layer must expand in step with the API:
   - create/update
   - share management
   - publication management
+  - favourites
+  - diary entries
+  - recipe metrics
+  - curated collection browsing
+  - communication preferences
 
 Because this frontend uses generated OpenAPI types, any target API change also implies regenerated OpenAPI client types.
 
 ## What must change in each layer
 
-## Frontend changes required
+### Frontend changes required
 
 1. Replace the one-field recipe form with a full aggregate editor.
 2. Add reusable components for ingredient rows and step rows.
@@ -745,9 +973,12 @@ Because this frontend uses generated OpenAPI types, any target API change also i
 4. Upgrade the current recipe list page into search-plus-list.
 5. Add visibility, sharing, and admin publication UI.
 6. Add a public page route by slug.
-7. Regenerate OpenAPI types so the frontend stays aligned with the backend contract.
+7. Add favourites, diary, and recipe-usage surfaces.
+8. Add curated collection browsing.
+9. Add communication-preference management where user-facing.
+10. Regenerate OpenAPI types so the frontend stays aligned with the backend contract.
 
-## API changes required
+### API changes required
 
 1. Expand recipe DTOs beyond the current `NewRecipe` and `FullRecipe` model.
 2. Introduce recipe step support in the API contract.
@@ -755,21 +986,24 @@ Because this frontend uses generated OpenAPI types, any target API change also i
 4. Introduce search endpoints with ranking-aware response shapes.
 5. Introduce share-management endpoints.
 6. Introduce admin publication endpoints.
-7. Split authenticated API routes from public routes.
-8. Resolve the caller to a local `MenuUser`.
+7. Add favourites, diary, metrics, and communication-preference endpoints.
+8. Add curated collection endpoints.
+9. Split authenticated API routes from public routes.
+10. Resolve the caller to a local `MenuUser`.
 
-## Database changes required
+### Database changes required
 
 1. Add `MenuUser`.
 2. Add ownership to `Recipe`.
-3. Replace global recipe-name uniqueness with owner-scoped uniqueness.
+3. Replace global recipe-name uniqueness with owner-scoped title uniqueness.
 4. Replace the current join-table-style `RecipeIngredient` design with a recipe-owned ingredient table.
 5. Add `RecipeStep`.
 6. Add `RecipeShare`.
 7. Add `RecipePublication` with slug and publication audit fields.
 8. Add `RecipeSearchIndex`.
-9. Add SQL Server full-text catalog and full-text index creation to migrations.
-10. Define delete behavior so recipe deletion also removes dependent ingredient, step, share, publication, and search-index rows.
+9. Add `RecipeFavorite`, `RecipeDiaryEntry`, `RecipeMetricsSnapshot`, `RecipeCollection`, `RecipeCollectionItem`, and `MenuUserCommunicationPreference`.
+10. Add SQL Server full-text catalog and full-text index creation to migrations.
+11. Define delete behavior so recipe deletion also removes dependent ingredient, step, share, publication, and search-index rows.
 
 ## Data required to display recipes well
 
@@ -777,7 +1011,7 @@ The minimum data to create a technically valid recipe is smaller than the data n
 
 ### Minimum functional data
 
-- recipe name
+- recipe title
 - ingredient list
 - ordered steps
 
@@ -797,7 +1031,7 @@ The minimum data to create a technically valid recipe is smaller than the data n
 
 For curated public recipes, the target model is stronger if it can support the commonly expected recipe fields used by structured recipe content:
 
-- name
+- name (emitted from the internal `Title` field)
 - ingredients
 - instructions
 - total time
@@ -847,11 +1081,13 @@ Rejected because recipe authoring must preserve what the author actually entered
 The target architecture should turn recipes into a first-class aggregate with:
 
 - owner-scoped storage
+- title-based authored recipe modeling
 - recipe-owned ingredient lines
 - ordered steps
 - explicit sharing
 - admin-curated public publication
 - a denormalized SQL Server full-text search index
+- adjacent favourites, diary, metrics, and collection capabilities
 - richer display metadata for authenticated and public recipe pages
 
 This architecture fits the current Menu stack, fixes the main limitations in the current implementation, and leaves room for later enhancements without forcing an early move to a separate search platform or a document-store recipe model.
