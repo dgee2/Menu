@@ -1,5 +1,7 @@
 using MenuApi.Middleware;
+using MenuApi.Services;
 using MenuApi.ValueObjects;
+using MenuApi.ViewModel;
 
 namespace MenuApi.Recipes;
 
@@ -12,19 +14,21 @@ public static class UserApi
         group.WithTags("Users");
 
         group.MapGet("/me", GetCurrentUserAsync)
-            .Produces<int>(StatusCodes.Status200OK)
+            .Produces<UserProfile>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
         return group;
     }
 
-    private static IResult GetCurrentUserAsync(HttpContext httpContext)
+    private static async Task<IResult> GetCurrentUserAsync(HttpContext httpContext, IMenuUserService menuUserService)
     {
-        if (httpContext.Items[MenuUserHttpContextKeys.MenuUserId] is MenuUserId menuUserId)
+        if (httpContext.Items[MenuUserHttpContextKeys.MenuUserId] is not MenuUserId menuUserId)
         {
-            return Results.Ok(menuUserId.Value);
+            return Results.Unauthorized();
         }
 
-        return Results.Unauthorized();
+        var profile = await menuUserService.GetCurrentUserAsync(menuUserId).ConfigureAwait(false);
+
+        return profile is not null ? Results.Ok(profile) : Results.Unauthorized();
     }
 }

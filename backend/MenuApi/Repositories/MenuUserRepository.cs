@@ -2,6 +2,7 @@ using MenuDB;
 using MenuDB.Data;
 using MenuApi.Exceptions;
 using MenuApi.ValueObjects;
+using MenuApi.ViewModel;
 using Microsoft.EntityFrameworkCore;
 
 namespace MenuApi.Repositories;
@@ -76,5 +77,23 @@ public class MenuUserRepository(MenuDbContext db) : IMenuUserRepository
         {
             user.AvatarUrl = avatarUrl;
         }
+    }
+
+    public async Task<UserProfile?> GetAsync(MenuUserId menuUserId)
+    {
+        return await db.MenuUsers
+            .Where(u => u.Id == menuUserId.Value)
+            .Select(u => new UserProfile
+            {
+                Id = MenuUserId.From(u.Id),
+                AuthSubject = u.AuthSubject,
+                DisplayName = u.DisplayName,
+                Email = u.Email,
+                AvatarUrl = u.AvatarUrl,
+                CreatedAtUtc = u.CreatedAtUtc,
+                LastSeenAtUtc = u.LastSeenAtUtc,
+            })
+            .FirstOrDefaultAsync()
+            .ConfigureAwait(false);
     }
 }
