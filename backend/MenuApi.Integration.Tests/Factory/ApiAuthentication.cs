@@ -8,7 +8,7 @@ namespace MenuApi.Integration.Tests.Factory;
 
 internal class ApiAuthentication
 {
-    private readonly TestParameters config;
+    private readonly TestParameters config = null!;
 
 
     public ApiAuthentication()
@@ -20,24 +20,24 @@ internal class ApiAuthentication
             .AddUserSecrets<ApiTestFixture>()                     // User secrets for local development.
             .Build();
 
-        config = Configuration.GetRequiredSection("Parameters").Get<TestParameters>();
+        config = Configuration.GetRequiredSection("Parameters").Get<TestParameters>()!;
     }
 
 
     public class Auth0AuthenticationRequest
     {
-        public string client_id { get; set; }
-        public string client_secret { get; set; }
-        public string audience { get; set; }
-        public string grant_type { get; set; }
+        public string client_id { get; set; } = null!;
+        public string client_secret { get; set; } = null!;
+        public string audience { get; set; } = null!;
+        public string grant_type { get; set; } = null!;
     }
 
 
 
     public class Auth0AuthenticationResponse
     {
-        public string access_token { get; set; }
-        public string token_type { get; set; }
+        public string access_token { get; set; } = null!;
+        public string token_type { get; set; } = null!;
     }
 
 
@@ -58,6 +58,6 @@ internal class ApiAuthentication
         authResponse.EnsureSuccessStatusCode();
         var responseBody = await authResponse.Content.ReadFromJsonAsync<Auth0AuthenticationResponse>();
 
-        return new AuthenticationHeaderValue(responseBody.token_type, responseBody.access_token);
+        return new AuthenticationHeaderValue(responseBody!.token_type, responseBody.access_token);
     }
 }

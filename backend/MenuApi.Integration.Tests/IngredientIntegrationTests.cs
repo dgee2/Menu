@@ -162,24 +162,24 @@ public class IngredientIntegrationTests
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
         public int Id { get; set; }
-        public string Name { get; set; }
-        public List<IngredientUnit> Units { get; set; }
+        public string Name { get; set; } = null!;
+        public List<IngredientUnit> Units { get; set; } = null!;
 #pragma warning restore S1144 // Unused private types or members should be removed
     }
 
     public class IngredientUnit
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
-        public string Name { get; set; }
-        public string Abbreviation { get; set; }
-        public string Type { get; set; }
+        public string Name { get; set; } = null!;
+        public string Abbreviation { get; set; } = null!;
+        public string Type { get; set; } = null!;
 #pragma warning restore S1144 // Unused private types or members should be removed
     }
 
     public class NewIngredient
     {
-        public string Name { get; set; }
-        public List<int> UnitIds { get; set; }
+        public string Name { get; set; } = null!;
+        public List<int> UnitIds { get; set; } = null!;
     }
 }
 
