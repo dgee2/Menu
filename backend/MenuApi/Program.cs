@@ -3,6 +3,7 @@ using FluentValidation;
 using MenuDB;
 using MenuApi;
 using MenuApi.Exceptions;
+using MenuApi.Middleware;
 using MenuApi.Recipes;
 using MenuApi.Repositories;
 using MenuApi.Services;
@@ -22,6 +23,9 @@ builder.Services.AddTransient<IIngredientService, IngredientService>();
 
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
+
+builder.Services.AddTransient<IMenuUserRepository, MenuUserRepository>();
+builder.Services.AddTransient<IMenuUserService, MenuUserService>();
 
 builder.Services.AddExceptionHandler<BusinessValidationExceptionHandler>();
 
@@ -59,6 +63,7 @@ app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<UserProvisioningMiddleware>();
 
 app.MapDefaultApiEndpoints();
 
@@ -68,6 +73,7 @@ var api = app.MapGroup("/api")
 
 api.MapRecipes();
 api.MapIngredients();
+api.MapUsers();
 
 await app.RunAsync();
 
