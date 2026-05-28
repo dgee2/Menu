@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MenuDB", "MenuDB\MenuDB.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menu.MigrationService", "Menu.MigrationService\Menu.MigrationService.csproj", "{678A54EA-9237-49D6-B4DC-ACEF67F6385E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MenuDB.Tests", "MenuDB.Tests\MenuDB.Tests.csproj", "{E780A213-994B-4759-9FC6-DB589E8C0DE2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,18 @@ Global
 		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Release|x64.Build.0 = Release|Any CPU
 		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Release|x86.ActiveCfg = Release|Any CPU
 		{678A54EA-9237-49D6-B4DC-ACEF67F6385E}.Release|x86.Build.0 = Release|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Debug|x64.Build.0 = Debug|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Debug|x86.Build.0 = Debug|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Release|x64.ActiveCfg = Release|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Release|x64.Build.0 = Release|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Release|x86.ActiveCfg = Release|Any CPU
+		{E780A213-994B-4759-9FC6-DB589E8C0DE2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

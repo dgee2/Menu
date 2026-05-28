@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Xunit;
 
-namespace MenuApi.Tests.Repositories;
+namespace MenuDB.Tests;
 
 public class MenuUserEntityConfigurationTests
 {
