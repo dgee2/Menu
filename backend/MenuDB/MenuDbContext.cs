@@ -5,6 +5,8 @@ namespace MenuDB;
 
 public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(options)
 {
+    public DbSet<MenuUserEntity> MenuUsers { get; set; }
+
     public DbSet<RecipeEntity> Recipes { get; set; }
     public DbSet<IngredientEntity> Ingredients { get; set; }
     public DbSet<UnitTypeEntity> UnitTypes { get; set; }
@@ -14,6 +16,20 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<MenuUserEntity>(e =>
+        {
+            e.ToTable("MenuUser", "identity");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityColumn();
+            e.Property(x => x.AuthSubject).HasColumnType("nvarchar(256)").IsRequired();
+            e.Property(x => x.DisplayName).HasColumnType("nvarchar(100)").IsRequired();
+            e.Property(x => x.Email).HasColumnType("nvarchar(256)");
+            e.Property(x => x.AvatarUrl).HasColumnType("nvarchar(512)");
+            e.Property(x => x.CreatedAtUtc).HasColumnType("datetime2").IsRequired();
+            e.Property(x => x.LastSeenAtUtc).HasColumnType("datetime2").IsRequired();
+            e.HasIndex(x => x.AuthSubject).IsUnique().HasDatabaseName("UX_MenuUser_AuthSubject");
+        });
+
         modelBuilder.Entity<RecipeEntity>(e =>
         {
             e.ToTable("Recipe");
