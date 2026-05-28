@@ -126,7 +126,11 @@ jobs:
         working-directory: ./backend
 
       - name: Test with the dotnet CLI
-        run: dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+        run: |
+          Get-ChildItem -Recurse -Filter "*.Tests.csproj" | Where-Object { $_.FullName -notlike "*Integration*" } | ForEach-Object {
+            dotnet test $_.FullName --configuration Release --no-build
+          }
+        shell: pwsh
         working-directory: ./backend
 
 

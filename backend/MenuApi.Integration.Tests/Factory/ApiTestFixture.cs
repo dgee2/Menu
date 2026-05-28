@@ -11,9 +11,9 @@ namespace MenuApi.Integration.Tests.Factory;
 
 public class ApiTestFixture : IAsyncLifetime
 {
-    public DistributedApplication app { get; private set; }
-    private IDistributedApplicationTestingBuilder appHost;
-    private AuthenticationHeaderValue cachedAuthHeader;
+    public DistributedApplication app { get; private set; } = null!;
+    private IDistributedApplicationTestingBuilder appHost = null!;
+    private AuthenticationHeaderValue cachedAuthHeader = null!;
 
     public async Task<HttpClient> GetHttpClient()
     {
@@ -48,7 +48,7 @@ public class ApiTestFixture : IAsyncLifetime
         // Retry app startup to handle Docker daemon health checks in CI environments
         const int maxRetries = 3;
         const int delayMs = 2000;
-        Exception lastException = null;
+        Exception? lastException = null;
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {
             try
