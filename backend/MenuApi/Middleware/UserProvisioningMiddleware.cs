@@ -15,14 +15,17 @@ public class UserProvisioningMiddleware(RequestDelegate next)
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            var authSubject = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var authSubject = Truncate(context.User.FindFirstValue(ClaimTypes.NameIdentifier), 256);
 
             if (authSubject is not null)
             {
-                var displayName = context.User.FindFirstValue("name") ?? authSubject;
-                var email = context.User.FindFirstValue(ClaimTypes.Email)
-                    ?? context.User.FindFirstValue("email");
-                var avatarUrl = context.User.FindFirstValue("picture");
+                // Pass null when the claim is absent so the repository does not
+                // overwrite existing profile data with a missing claim value.
+                var displayName = Truncate(context.User.FindFirstValue("name"), 100);
+                var email = Truncate(
+                    context.User.FindFirstValue(ClaimTypes.Email) ?? context.User.FindFirstValue("email"),
+                    256);
+                var avatarUrl = Truncate(context.User.FindFirstValue("picture"), 512);
 
                 var menuUserId = await menuUserService
                     .ProvisionAsync(authSubject, displayName, email, avatarUrl)
@@ -34,4 +37,7 @@ public class UserProvisioningMiddleware(RequestDelegate next)
 
         await next(context).ConfigureAwait(false);
     }
+
+    private static string? Truncate(string? value, int maxLength) =>
+        value is null || value.Length <= maxLength ? value : value[..maxLength];
 }

@@ -33,13 +33,13 @@ public class MenuUserServiceTests
     }
 
     [Fact]
-    public async Task ProvisionAsync_CallsRepository_WithNullOptionalFields()
+    public async Task ProvisionAsync_CallsRepository_WithNullDisplayNameAndOptionalFields()
     {
         var expected = MenuUserId.From(7);
-        A.CallTo(() => repository.UpsertAsync("auth0|456", "auth0|456", null, null))
+        A.CallTo(() => repository.UpsertAsync("auth0|456", null, null, null))
             .Returns(expected);
 
-        var result = await sut.ProvisionAsync("auth0|456", "auth0|456", null, null);
+        var result = await sut.ProvisionAsync("auth0|456", null, null, null);
 
         result.Should().Be(expected);
     }

@@ -8,34 +8,25 @@ namespace MenuApi.Repositories;
 
 public class MenuUserRepository(MenuDbContext db) : IMenuUserRepository
 {
-    public async Task<MenuUserId> UpsertAsync(string authSubject, string displayName, string? email, string? avatarUrl)
+    public async Task<MenuUserId> UpsertAsync(string authSubject, string? displayName, string? email, string? avatarUrl)
     {
         var now = DateTime.UtcNow;
 
-        var updated = await db.MenuUsers
-            .Where(u => u.AuthSubject == authSubject)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(u => u.DisplayName, displayName)
-                .SetProperty(u => u.Email, email)
-                .SetProperty(u => u.AvatarUrl, avatarUrl)
-                .SetProperty(u => u.LastSeenAtUtc, now))
+        var existing = await db.MenuUsers
+            .FirstOrDefaultAsync(u => u.AuthSubject == authSubject)
             .ConfigureAwait(false);
 
-        if (updated > 0)
+        if (existing is not null)
         {
-            var existingId = await db.MenuUsers
-                .Where(u => u.AuthSubject == authSubject)
-                .Select(u => u.Id)
-                .FirstAsync()
-                .ConfigureAwait(false);
-
-            return MenuUserId.From(existingId);
+            ApplyProfileUpdates(existing, displayName, email, avatarUrl, now);
+            await db.SaveChangesAsync().ConfigureAwait(false);
+            return MenuUserId.From(existing.Id);
         }
 
         var entity = new MenuUserEntity
         {
             AuthSubject = authSubject,
-            DisplayName = displayName,
+            DisplayName = displayName ?? authSubject,
             Email = email,
             AvatarUrl = avatarUrl,
             CreatedAtUtc = now,
@@ -53,22 +44,37 @@ public class MenuUserRepository(MenuDbContext db) : IMenuUserRepository
         {
             db.Entry(entity).State = EntityState.Detached;
 
-            await db.MenuUsers
-                .Where(u => u.AuthSubject == authSubject)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(u => u.DisplayName, displayName)
-                    .SetProperty(u => u.Email, email)
-                    .SetProperty(u => u.AvatarUrl, avatarUrl)
-                    .SetProperty(u => u.LastSeenAtUtc, now))
+            var concurrent = await db.MenuUsers
+                .FirstAsync(u => u.AuthSubject == authSubject)
                 .ConfigureAwait(false);
 
-            var concurrentId = await db.MenuUsers
-                .Where(u => u.AuthSubject == authSubject)
-                .Select(u => u.Id)
-                .FirstAsync()
-                .ConfigureAwait(false);
+            ApplyProfileUpdates(concurrent, displayName, email, avatarUrl, now);
+            await db.SaveChangesAsync().ConfigureAwait(false);
+            return MenuUserId.From(concurrent.Id);
+        }
+    }
 
-            return MenuUserId.From(concurrentId);
+    private static void ApplyProfileUpdates(
+        MenuUserEntity user,
+        string? displayName,
+        string? email,
+        string? avatarUrl,
+        DateTime now)
+    {
+        user.LastSeenAtUtc = now;
+        if (displayName is not null)
+        {
+            user.DisplayName = displayName;
+        }
+
+        if (email is not null)
+        {
+            user.Email = email;
+        }
+
+        if (avatarUrl is not null)
+        {
+            user.AvatarUrl = avatarUrl;
         }
     }
 }
