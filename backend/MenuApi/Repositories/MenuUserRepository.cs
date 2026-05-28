@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using MenuDB;
 using MenuDB.Data;
 using MenuApi.Exceptions;
@@ -7,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MenuApi.Repositories;
 
-[ExcludeFromCodeCoverage]
 public class MenuUserRepository(MenuDbContext db) : IMenuUserRepository
 {
     public async Task<MenuUserId> UpsertAsync(string authSubject, string displayName, string? email, string? avatarUrl)
