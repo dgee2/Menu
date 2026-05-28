@@ -126,7 +126,9 @@ jobs:
         working-directory: ./backend
 
       - name: Test with the dotnet CLI
-        run: dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+        run: |
+          dotnet test --project MenuApi.Tests/MenuApi.Tests.csproj --configuration Release --no-build
+          dotnet test --project MenuDB.Tests/MenuDB.Tests.csproj --configuration Release --no-build
         working-directory: ./backend
 
 
