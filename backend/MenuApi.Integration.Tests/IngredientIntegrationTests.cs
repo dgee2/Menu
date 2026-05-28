@@ -171,7 +171,7 @@ public class IngredientIntegrationTests
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
         public string Name { get; set; } = null!;
-        public string Abbreviation { get; set; } = null!;
+        public string? Abbreviation { get; set; }
         public string Type { get; set; } = null!;
 #pragma warning restore S1144 // Unused private types or members should be removed
     }
