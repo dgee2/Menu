@@ -8,7 +8,7 @@ namespace MenuApi.Integration.Tests.Factory;
 
 internal class ApiAuthentication
 {
-    private readonly TestParameters config = null!;
+    private readonly TestParameters config;
 
 
     public ApiAuthentication()
