@@ -61,11 +61,11 @@ var app = builder.Build();
 // Use CORS middleware before authentication/authorization
 app.UseCors("AllowAll");
 
+app.MapDefaultApiEndpoints();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<UserProvisioningMiddleware>();
-
-app.MapDefaultApiEndpoints();
 
 // Configure the APIs
 var api = app.MapGroup("/api")
