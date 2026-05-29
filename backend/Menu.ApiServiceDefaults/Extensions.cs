@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -26,6 +27,15 @@ public static class Extensions
         // Problem details
         builder.Services.AddProblemDetails();
 
+        // Response compression (gzip + brotli for JSON API payloads)
+        builder.Services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+            options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/problem+json"]);
+            options.Providers.Add<BrotliCompressionProvider>();
+            options.Providers.Add<GzipCompressionProvider>();
+        });
+
         return builder;
     }
 
@@ -40,6 +50,7 @@ public static class Extensions
 
     public static WebApplication MapDefaultApiEndpoints(this WebApplication app)
     {
+        app.UseResponseCompression();
 
         app.UseExceptionHandler();
 
