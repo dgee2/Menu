@@ -3,10 +3,6 @@
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<OutputType>Exe</OutputType>
-		<ProjectGuid>{1851B6C7-889F-4C05-9605-1E33BF98121D}</ProjectGuid>
-
-		<IsPackable>false</IsPackable>
-
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
@@ -20,30 +16,22 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="AutoFixture.Xunit3" Version="4.19.0" />
-		<PackageReference Include="FluentValidation" Version="12.1.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.8" />
+		<PackageReference Include="Microsoft.Testing.Platform" Version="2.2.3" />
+		<PackageReference Include="xunit.v3.mtp-v2" Version="3.2.2" />
 		<PackageReference Include="AwesomeAssertions" Version="9.4.0" />
 		<PackageReference Include="AwesomeAssertions.Analyzers" Version="9.0.8">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="GitHubActionsTestLogger" Version="3.0.4" />
 		<PackageReference Include="coverlet.collector" Version="10.0.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="FakeItEasy" Version="9.0.1" />
-		<PackageReference Include="GitHubActionsTestLogger" Version="3.0.4" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.8" />
-		<PackageReference Include="Microsoft.Testing.Platform" Version="2.2.3" />
-		<PackageReference Include="xunit.v3.mtp-v2" Version="3.2.2" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\MenuApi\MenuApi.csproj" />
 		<ProjectReference Include="..\MenuDB\MenuDB.csproj" />
 	</ItemGroup>
 

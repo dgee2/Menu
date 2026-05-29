@@ -12,7 +12,7 @@ internal class ValueObjectSpecimenBuilder : ISpecimenBuilder
         {
             var value = context.Resolve(GetUnderlyingType(type));
 
-            return type.GetMethod("From").Invoke(null, [value]);
+            return type.GetMethod("From")!.Invoke(null, [value])!;
         }
 
         return new NoSpecimen();

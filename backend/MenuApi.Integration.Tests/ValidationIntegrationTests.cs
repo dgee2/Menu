@@ -166,19 +166,19 @@ public class ValidationIntegrationTests
     public class NewRecipe
     {
         public List<RecipeIngredient> Ingredients { get; set; } = [];
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
     }
 
     public class RecipeIngredient
     {
-        public string Name { get; set; }
-        public string Unit { get; set; }
+        public string Name { get; set; } = null!;
+        public string Unit { get; set; } = null!;
         public decimal Amount { get; set; }
     }
 
     public class NewIngredient
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
         public List<int> UnitIds { get; set; } = [];
     }
 }

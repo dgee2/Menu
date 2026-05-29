@@ -218,7 +218,7 @@ public class RecipeIntegrationTests
         var rootElement = doc.RootElement;
         return (
             rootElement.GetProperty("id").GetInt32(),
-            rootElement.GetProperty("name").GetString()
+            rootElement.GetProperty("name").GetString()!
         );
     }
 
@@ -227,7 +227,7 @@ public class RecipeIntegrationTests
 #pragma warning disable S1144 // Unused private types or members should be removed
         public int Id { get; set; }
 
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 #pragma warning restore S1144 // Unused private types or members should be removed
     }
 
@@ -235,14 +235,14 @@ public class RecipeIntegrationTests
     {
         public List<RecipeIngredient> Ingredients { get; set; } = [];
 
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
     }
 
     public class RecipeIngredient
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
-        public string Unit { get; set; }
+        public string Unit { get; set; } = null!;
 
         public decimal Amount { get; set; }
     }

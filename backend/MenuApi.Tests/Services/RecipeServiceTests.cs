@@ -45,7 +45,7 @@ public class RecipeServiceTests
 
         var result = await sut.GetRecipeAsync(recipe.Id);
 
-        result.Name.Should().Be(recipe.Name);
+        result!.Name.Should().Be(recipe.Name);
         result.Id.Should().Be(recipe.Id);
         result.Ingredients.Should().BeEquivalentTo(expected);
     }
@@ -185,7 +185,7 @@ public class RecipeServiceTests
     [Theory, CustomAutoData]
     public async Task UpdateRecipe_Should_Throw_Exception_For_null_newRecipeAsync(RecipeId recipeId)
     {
-        Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, null);
+        Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, null!);
 
         var result = await fun.Should().ThrowAsync<ArgumentNullException>();
         result.And.ParamName.Should().Be("newRecipe");
