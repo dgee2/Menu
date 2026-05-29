@@ -31,6 +31,7 @@ public static class Extensions
         builder.Services.AddResponseCompression(options =>
         {
             options.EnableForHttps = true;
+            options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/problem+json"]);
             options.Providers.Add<BrotliCompressionProvider>();
             options.Providers.Add<GzipCompressionProvider>();
         });
