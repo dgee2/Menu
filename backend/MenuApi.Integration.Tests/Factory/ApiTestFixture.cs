@@ -27,6 +27,9 @@ public class ApiTestFixture : IAsyncLifetime
 
     async ValueTask IAsyncLifetime.InitializeAsync()
     {
+        // Set test mode to skip UI installation
+        Environment.SetEnvironmentVariable("ASPIRE_TEST_MODE", "true");
+
         appHost = await DistributedApplicationTestingBuilder
             .CreateAsync<Projects.Menu_AppHost>();
 

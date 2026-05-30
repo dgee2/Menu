@@ -21,12 +21,16 @@ var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
        .WithEnvironment("Auth0Domain", auth0Domain)
        .WithEnvironment("Auth0Audience", auth0Audience);
 
-builder.AddJavaScriptApp("menu-ui", "../ui/menu-website", "aspire")
-    .WithPnpm()
-    .WithReference(menuApi)
-    .WithEnvironment("VITE_MENU_API_URL", menuApi.GetEndpoint("menuApiHttp"))
-    .WaitFor(menuApi)
-    .WithHttpEndpoint(name: "menuUI", env: "PORT", port: 65276, targetPort: 5173)
-    .PublishAsDockerFile();
+var isTestMode = Environment.GetEnvironmentVariable("ASPIRE_TEST_MODE") == "true";
+if (!isTestMode)
+{
+    builder.AddJavaScriptApp("menu-ui", "../ui/menu-website", "aspire")
+        .WithPnpm()
+        .WithReference(menuApi)
+        .WithEnvironment("VITE_MENU_API_URL", menuApi.GetEndpoint("menuApiHttp"))
+        .WaitFor(menuApi)
+        .WithHttpEndpoint(name: "menuUI", env: "PORT", port: 65276, targetPort: 5173)
+        .PublishAsDockerFile();
+}
 
 await builder.Build().RunAsync();
