@@ -15,7 +15,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     public async Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync()
     {
         return await db.Recipes
-            .Select(r => new DBModel.Recipe { Id = RecipeId.From(r.Id), Name = RecipeName.From(r.Name) })
+            .Select(r => new DBModel.Recipe { Id = RecipeId.From(r.Id), Title = RecipeTitle.From(r.Title) })
             .ToListAsync()
             .ConfigureAwait(false);
     }
@@ -24,7 +24,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         return await db.Recipes
             .Where(r => r.Id == recipeId.Value)
-            .Select(r => new DBModel.Recipe { Id = RecipeId.From(r.Id), Name = RecipeName.From(r.Name) })
+            .Select(r => new DBModel.Recipe { Id = RecipeId.From(r.Id), Title = RecipeTitle.From(r.Title) })
             .FirstOrDefaultAsync()
             .ConfigureAwait(false);
     }
@@ -44,9 +44,9 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             .ConfigureAwait(false);
     }
 
-    public async Task<RecipeId> CreateRecipeAsync(RecipeName name)
+    public async Task<RecipeId> CreateRecipeAsync(RecipeTitle title)
     {
-        var entity = new RecipeEntity { Name = name.Value };
+        var entity = new RecipeEntity { Title = title.Value, AccessScope = "Private" };
         db.Recipes.Add(entity);
         try
         {
@@ -54,7 +54,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         }
         catch (DbUpdateException ex) when (ex.IsUniqueConstraintViolation())
         {
-            throw new BusinessValidationException($"A recipe named '{name.Value}' already exists.");
+            throw new BusinessValidationException($"A recipe titled '{title.Value}' already exists.");
         }
 
         return RecipeId.From(entity.Id);
@@ -121,18 +121,18 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         await db.SaveChangesAsync().ConfigureAwait(false);
     }
 
-    public async Task UpdateRecipeAsync(RecipeId recipeId, RecipeName name)
+    public async Task UpdateRecipeAsync(RecipeId recipeId, RecipeTitle title)
     {
         try
         {
             await db.Recipes
                 .Where(r => r.Id == recipeId.Value)
-                .ExecuteUpdateAsync(s => s.SetProperty(r => r.Name, name.Value))
+                .ExecuteUpdateAsync(s => s.SetProperty(r => r.Title, title.Value))
                 .ConfigureAwait(false);
         }
         catch (SqlException ex) when (ex.IsUniqueConstraintViolation())
         {
-            throw new BusinessValidationException($"A recipe named '{name.Value}' already exists.");
+            throw new BusinessValidationException($"A recipe titled '{title.Value}' already exists.");
         }
     }
 }

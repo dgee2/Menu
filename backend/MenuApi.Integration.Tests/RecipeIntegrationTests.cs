@@ -43,69 +43,69 @@ public class RecipeIntegrationTests
     [Theory, AutoData]
     public async Task Create_Recipe(
         [NoAutoProperties] NewRecipe recipe,
-        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(200, MinimumLength = 1)] string recipeTitle,
         [StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
-        recipe.Name = recipeName;
+        recipe.Title = recipeTitle;
         recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
-        var (_, name) = await PostRecipeAsync(client, recipe);
+        var (_, title) = await PostRecipeAsync(client, recipe);
 
-        name.Should().Be(recipe.Name);
+        title.Should().Be(recipe.Title);
     }
 
     [Theory, AutoData]
     public async Task Create_and_Update_Recipe(
         [NoAutoProperties] NewRecipe recipe,
-        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(200, MinimumLength = 1)] string recipeTitle,
         [NoAutoProperties] NewRecipe updatedRecipe,
-        [StringLength(500, MinimumLength = 1)] string updatedRecipeName,
+        [StringLength(200, MinimumLength = 1)] string updatedRecipeTitle,
         [StringLength(50, MinimumLength = 1)] string ingredientName,
         [StringLength(50, MinimumLength = 1)] string ingredientName2)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
         await PostIngredientAsync(client, ingredientName2);
-        recipe.Name = recipeName;
-        updatedRecipe.Name = updatedRecipeName;
+        recipe.Title = recipeTitle;
+        updatedRecipe.Title = updatedRecipeTitle;
         recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
         updatedRecipe.Ingredients = [new RecipeIngredient { Name = ingredientName2, Unit = Grams, Amount = 200 }];
 
         var (id, _) = await PostRecipeAsync(client, recipe);
 
-        var (_, name) = await PutRecipeAsync(client, id, updatedRecipe);
+        var (_, title) = await PutRecipeAsync(client, id, updatedRecipe);
 
-        name.Should().Be(updatedRecipe.Name);
+        title.Should().Be(updatedRecipe.Title);
     }
 
     [Theory, AutoData]
     public async Task Create_And_Get_Recipe(
         [NoAutoProperties] NewRecipe recipe,
-        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(200, MinimumLength = 1)] string recipeTitle,
         [StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
-        recipe.Name = recipeName;
+        recipe.Title = recipeTitle;
         recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
 
         var (id, _) = await PostRecipeAsync(client, recipe);
-        var (getId, name) = await GetRecipeAsync(client, id);
+        var (getId, title) = await GetRecipeAsync(client, id);
 
         getId.Should().Be(id);
-        name.Should().Be(recipe.Name);
+        title.Should().Be(recipe.Title);
     }
 
     [Theory, AutoData]
     public async Task Create_Recipe_And_Get_Ingredients(
         [NoAutoProperties] NewRecipe recipe,
-        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(200, MinimumLength = 1)] string recipeTitle,
         [StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
-        recipe.Name = recipeName;
+        recipe.Title = recipeTitle;
         recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
 
         var (id, _) = await PostRecipeAsync(client, recipe);
@@ -121,14 +121,14 @@ public class RecipeIntegrationTests
     }
 
     [Theory, AutoData]
-    public async Task Create_Recipe_With_Duplicate_Name_Returns_UnprocessableEntity(
+    public async Task Create_Recipe_With_Duplicate_Title_Returns_UnprocessableEntity(
         [NoAutoProperties] NewRecipe recipe,
-        [StringLength(500, MinimumLength = 1)] string recipeName,
+        [StringLength(200, MinimumLength = 1)] string recipeTitle,
         [StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
-        recipe.Name = recipeName;
+        recipe.Title = recipeTitle;
         recipe.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
 
         await PostRecipeAsync(client, recipe);
@@ -140,25 +140,25 @@ public class RecipeIntegrationTests
     }
 
     [Theory, AutoData]
-    public async Task Update_Recipe_To_Duplicate_Name_Returns_UnprocessableEntity(
+    public async Task Update_Recipe_To_Duplicate_Title_Returns_UnprocessableEntity(
         [NoAutoProperties] NewRecipe recipe1,
-        [StringLength(500, MinimumLength = 1)] string recipeName1,
+        [StringLength(200, MinimumLength = 1)] string recipeTitle1,
         [NoAutoProperties] NewRecipe recipe2,
-        [StringLength(500, MinimumLength = 1)] string recipeName2,
+        [StringLength(200, MinimumLength = 1)] string recipeTitle2,
         [StringLength(50, MinimumLength = 1)] string ingredientName)
     {
         using var client = await fixture.GetHttpClient();
         await PostIngredientAsync(client, ingredientName);
-        recipe1.Name = recipeName1;
+        recipe1.Title = recipeTitle1;
         recipe1.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }];
-        recipe2.Name = recipeName2;
+        recipe2.Title = recipeTitle2;
         recipe2.Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 200 }];
 
         await PostRecipeAsync(client, recipe1);
         var (id2, _) = await PostRecipeAsync(client, recipe2);
 
-        // Try to rename recipe2 to recipe1's name - should be 422
-        recipe2.Name = recipeName1;
+        // Try to rename recipe2 to recipe1's title - should be 422
+        recipe2.Title = recipeTitle1;
         using var requestContent = new StringContent(JsonSerializer.Serialize(recipe2), Encoding.UTF8, "application/json");
         using var response = await client.PutAsync($"/api/recipe/{id2}", requestContent);
 
@@ -173,7 +173,7 @@ public class RecipeIntegrationTests
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
     }
 
-    private static async Task<(int Id, string Name)> PostRecipeAsync(HttpClient client, NewRecipe recipe)
+    private static async Task<(int Id, string Title)> PostRecipeAsync(HttpClient client, NewRecipe recipe)
     {
         using var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
         using var response = await client.PostAsync("/api/recipe", requestContent);
@@ -186,7 +186,7 @@ public class RecipeIntegrationTests
         return GetRecipeFromJson(jsonDoc);
     }
 
-    private static async Task<(int Id, string Name)> PutRecipeAsync(HttpClient client, int id, NewRecipe recipe)
+    private static async Task<(int Id, string Title)> PutRecipeAsync(HttpClient client, int id, NewRecipe recipe)
     {
         using var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
         using var response = await client.PutAsync($"/api/recipe/{id}", requestContent);
@@ -199,7 +199,7 @@ public class RecipeIntegrationTests
         return GetRecipeFromJson(jsonDoc);
     }
 
-    private static async Task<(int Id, string Name)> GetRecipeAsync(HttpClient client, int id)
+    private static async Task<(int Id, string Title)> GetRecipeAsync(HttpClient client, int id)
     {
         using var response = await client.GetAsync($"/api/recipe/{id}");
 
@@ -213,12 +213,12 @@ public class RecipeIntegrationTests
 
 
 
-    private static (int Id, string Name) GetRecipeFromJson(JsonDocument doc)
+    private static (int Id, string Title) GetRecipeFromJson(JsonDocument doc)
     {
         var rootElement = doc.RootElement;
         return (
             rootElement.GetProperty("id").GetInt32(),
-            rootElement.GetProperty("name").GetString()!
+            rootElement.GetProperty("title").GetString()!
         );
     }
 
@@ -227,7 +227,7 @@ public class RecipeIntegrationTests
 #pragma warning disable S1144 // Unused private types or members should be removed
         public int Id { get; set; }
 
-        public string Name { get; set; } = null!;
+        public string Title { get; set; } = null!;
 #pragma warning restore S1144 // Unused private types or members should be removed
     }
 
@@ -235,7 +235,7 @@ public class RecipeIntegrationTests
     {
         public List<RecipeIngredient> Ingredients { get; set; } = [];
 
-        public string Name { get; set; } = null!;
+        public string Title { get; set; } = null!;
     }
 
     public class RecipeIngredient

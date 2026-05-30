@@ -46,7 +46,7 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
         return await strategy.ExecuteAsync(async () =>
         {
             await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
-            var recipeId = await recipeRepository.CreateRecipeAsync(newRecipe.Name).ConfigureAwait(false);
+            var recipeId = await recipeRepository.CreateRecipeAsync(newRecipe.Title).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
             await tran.CommitAsync().ConfigureAwait(false);
             return recipeId;
@@ -63,7 +63,7 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
         await strategy.ExecuteAsync(async () =>
         {
             await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
-            await recipeRepository.UpdateRecipeAsync(recipeId, newRecipe.Name).ConfigureAwait(false);
+            await recipeRepository.UpdateRecipeAsync(recipeId, newRecipe.Title).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
             await tran.CommitAsync().ConfigureAwait(false);
         }).ConfigureAwait(false);

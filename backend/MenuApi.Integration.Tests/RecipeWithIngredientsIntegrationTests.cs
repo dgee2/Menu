@@ -27,7 +27,7 @@ public class RecipeWithIngredientsIntegrationTests
     [Theory, AutoData]
     public async Task Create_Recipe_With_Ingredients(
         [StringLength(50, MinimumLength = 1)] string ingredientName,
-        [StringLength(500, MinimumLength = 1)] string recipeName)
+        [StringLength(200, MinimumLength = 1)] string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -37,17 +37,17 @@ public class RecipeWithIngredientsIntegrationTests
         // Create a recipe that references the ingredient
         var newRecipe = new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 250.5m }
             ]
         };
 
-        var (recipeId, returnedName, returnedIngredients) = await PostRecipeAsync(client, newRecipe);
+        var (recipeId, returnedTitle, returnedIngredients) = await PostRecipeAsync(client, newRecipe);
 
         recipeId.Should().BeGreaterThan(0);
-        returnedName.Should().Be(recipeName);
+        returnedTitle.Should().Be(recipeTitle);
         returnedIngredients.Should().HaveCount(1);
         returnedIngredients[0].Name.Should().Be(ingredientName);
         returnedIngredients[0].Unit.Should().Be("Grams");
@@ -57,7 +57,7 @@ public class RecipeWithIngredientsIntegrationTests
     [Theory, AutoData]
     public async Task Create_Recipe_With_Duplicate_Equivalent_Ingredients_Returns_Single_Link(
         [StringLength(50, MinimumLength = 1)] string ingredientName,
-        [StringLength(500, MinimumLength = 1)] string recipeName)
+        [StringLength(200, MinimumLength = 1)] string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -65,7 +65,7 @@ public class RecipeWithIngredientsIntegrationTests
 
         var newRecipe = new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 250.5m },
@@ -73,9 +73,9 @@ public class RecipeWithIngredientsIntegrationTests
             ]
         };
 
-        var (_, returnedName, returnedIngredients) = await PostRecipeAsync(client, newRecipe);
+        var (_, returnedTitle, returnedIngredients) = await PostRecipeAsync(client, newRecipe);
 
-        returnedName.Should().Be(recipeName);
+        returnedTitle.Should().Be(recipeTitle);
         returnedIngredients.Should().HaveCount(1);
         returnedIngredients[0].Name.Should().Be(ingredientName);
         returnedIngredients[0].Unit.Should().Be("Grams");
@@ -85,7 +85,7 @@ public class RecipeWithIngredientsIntegrationTests
     [Theory, AutoData]
     public async Task Create_Recipe_With_Ingredients_Then_Get_Recipe_Returns_Ingredients(
         [StringLength(50, MinimumLength = 1)] string ingredientName,
-        [StringLength(500, MinimumLength = 1)] string recipeName)
+        [StringLength(200, MinimumLength = 1)] string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -93,7 +93,7 @@ public class RecipeWithIngredientsIntegrationTests
 
         var newRecipe = new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = ingredientName, Unit = "Millilitres", Amount = 500m }
@@ -110,7 +110,7 @@ public class RecipeWithIngredientsIntegrationTests
         using var getDoc = await JsonDocument.ParseAsync(getStream);
         var root = getDoc.RootElement;
 
-        root.GetProperty("name").GetString().Should().Be(recipeName);
+        root.GetProperty("title").GetString().Should().Be(recipeTitle);
         var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(
             root.GetProperty("ingredients").GetRawText(), jsonOptions)!;
         ingredients.Should().HaveCount(1);
@@ -122,7 +122,7 @@ public class RecipeWithIngredientsIntegrationTests
     [Theory, AutoData]
     public async Task Create_Recipe_With_Ingredients_Then_Get_Recipe_Ingredients_Endpoint(
         [StringLength(50, MinimumLength = 1)] string ingredientName,
-        [StringLength(500, MinimumLength = 1)] string recipeName)
+        [StringLength(200, MinimumLength = 1)] string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -130,7 +130,7 @@ public class RecipeWithIngredientsIntegrationTests
 
         var newRecipe = new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = ingredientName, Unit = "Kilograms", Amount = 2m }
@@ -155,8 +155,8 @@ public class RecipeWithIngredientsIntegrationTests
     public async Task Update_Recipe_With_Different_Ingredients(
         [StringLength(50, MinimumLength = 1)] string ingredientName1,
         [StringLength(50, MinimumLength = 1)] string ingredientName2,
-        [StringLength(500, MinimumLength = 1)] string recipeName,
-        [StringLength(500, MinimumLength = 1)] string updatedRecipeName)
+        [StringLength(200, MinimumLength = 1)] string recipeTitle,
+        [StringLength(200, MinimumLength = 1)] string updatedRecipeTitle)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -167,7 +167,7 @@ public class RecipeWithIngredientsIntegrationTests
         // Create a recipe with the first ingredient
         var newRecipe = new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = ingredientName1, Unit = "Grams", Amount = 100m }
@@ -179,16 +179,16 @@ public class RecipeWithIngredientsIntegrationTests
         // Update the recipe with a different ingredient
         var updatedRecipe = new NewRecipe
         {
-            Name = updatedRecipeName,
+            Title = updatedRecipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = ingredientName2, Unit = "Millilitres", Amount = 200m }
             ]
         };
 
-        var (_, returnedName, returnedIngredients) = await PutRecipeAsync(client, recipeId, updatedRecipe);
+        var (_, returnedTitle, returnedIngredients) = await PutRecipeAsync(client, recipeId, updatedRecipe);
 
-        returnedName.Should().Be(updatedRecipeName);
+        returnedTitle.Should().Be(updatedRecipeTitle);
         returnedIngredients.Should().HaveCount(1);
         returnedIngredients[0].Name.Should().Be(ingredientName2);
         returnedIngredients[0].Unit.Should().Be("Millilitres");
@@ -198,8 +198,8 @@ public class RecipeWithIngredientsIntegrationTests
     [Theory, AutoData]
     public async Task Update_Recipe_With_Duplicate_Equivalent_Existing_Ingredient_Remains_Single_Link(
         [StringLength(50, MinimumLength = 1)] string ingredientName,
-        [StringLength(500, MinimumLength = 1)] string recipeName,
-        [StringLength(500, MinimumLength = 1)] string updatedRecipeName)
+        [StringLength(200, MinimumLength = 1)] string recipeTitle,
+        [StringLength(200, MinimumLength = 1)] string updatedRecipeTitle)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -207,7 +207,7 @@ public class RecipeWithIngredientsIntegrationTests
 
         var newRecipe = new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m }
@@ -218,7 +218,7 @@ public class RecipeWithIngredientsIntegrationTests
 
         var updatedRecipe = new NewRecipe
         {
-            Name = updatedRecipeName,
+            Title = updatedRecipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 125m },
@@ -226,9 +226,9 @@ public class RecipeWithIngredientsIntegrationTests
             ]
         };
 
-        var (_, returnedName, returnedIngredients) = await PutRecipeAsync(client, recipeId, updatedRecipe);
+        var (_, returnedTitle, returnedIngredients) = await PutRecipeAsync(client, recipeId, updatedRecipe);
 
-        returnedName.Should().Be(updatedRecipeName);
+        returnedTitle.Should().Be(updatedRecipeTitle);
         returnedIngredients.Should().HaveCount(1);
         returnedIngredients[0].Name.Should().Be(ingredientName);
         returnedIngredients[0].Unit.Should().Be("Grams");
@@ -238,7 +238,7 @@ public class RecipeWithIngredientsIntegrationTests
     [Theory, AutoData]
     public async Task Create_Recipe_With_Conflicting_Ingredient_Amounts_Returns_UnprocessableEntity(
         [StringLength(50, MinimumLength = 1)] string ingredientName,
-        [StringLength(500, MinimumLength = 1)] string recipeName)
+        [StringLength(200, MinimumLength = 1)] string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -246,7 +246,7 @@ public class RecipeWithIngredientsIntegrationTests
 
         var newRecipe = new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m },
@@ -267,8 +267,8 @@ public class RecipeWithIngredientsIntegrationTests
     [Theory, AutoData]
     public async Task Update_Recipe_With_Conflicting_Ingredient_Amounts_Returns_UnprocessableEntity(
         [StringLength(50, MinimumLength = 1)] string ingredientName,
-        [StringLength(500, MinimumLength = 1)] string recipeName,
-        [StringLength(500, MinimumLength = 1)] string updatedRecipeName)
+        [StringLength(200, MinimumLength = 1)] string recipeTitle,
+        [StringLength(200, MinimumLength = 1)] string updatedRecipeTitle)
     {
         using var client = await fixture.GetHttpClient();
 
@@ -276,13 +276,13 @@ public class RecipeWithIngredientsIntegrationTests
 
         var (recipeId, _, _) = await PostRecipeAsync(client, new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m }]
         });
 
         var updateBody = new NewRecipe
         {
-            Name = updatedRecipeName,
+            Title = updatedRecipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = ingredientName, Unit = "Grams", Amount = 100m },
@@ -308,7 +308,7 @@ public class RecipeWithIngredientsIntegrationTests
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
     }
 
-    private async Task<(int Id, string Name, List<RecipeIngredient> Ingredients)> PostRecipeAsync(
+    private async Task<(int Id, string Title, List<RecipeIngredient> Ingredients)> PostRecipeAsync(
         HttpClient client, NewRecipe recipe)
     {
         using var content = new StringContent(JsonSerializer.Serialize(recipe, jsonOptions), Encoding.UTF8, "application/json");
@@ -321,14 +321,14 @@ public class RecipeWithIngredientsIntegrationTests
         var root = jsonDoc.RootElement;
 
         var id = root.GetProperty("id").GetInt32();
-        var name = root.GetProperty("name").GetString()!;
+        var title = root.GetProperty("title").GetString()!;
         var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(
             root.GetProperty("ingredients").GetRawText(), jsonOptions) ?? [];
 
-        return (id, name, ingredients);
+        return (id, title, ingredients);
     }
 
-    private async Task<(int Id, string Name, List<RecipeIngredient> Ingredients)> PutRecipeAsync(
+    private async Task<(int Id, string Title, List<RecipeIngredient> Ingredients)> PutRecipeAsync(
         HttpClient client, int id, NewRecipe recipe)
     {
         using var content = new StringContent(JsonSerializer.Serialize(recipe, jsonOptions), Encoding.UTF8, "application/json");
@@ -341,11 +341,11 @@ public class RecipeWithIngredientsIntegrationTests
         var root = jsonDoc.RootElement;
 
         var updatedId = root.GetProperty("id").GetInt32();
-        var name = root.GetProperty("name").GetString()!;
+        var title = root.GetProperty("title").GetString()!;
         var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(
             root.GetProperty("ingredients").GetRawText(), jsonOptions) ?? [];
 
-        return (updatedId, name, ingredients);
+        return (updatedId, title, ingredients);
     }
 
     private class NewIngredient
@@ -359,7 +359,7 @@ public class RecipeWithIngredientsIntegrationTests
     public class NewRecipe
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
-        public string Name { get; set; } = null!;
+        public string Title { get; set; } = null!;
         public List<RecipeIngredient> Ingredients { get; set; } = [];
 #pragma warning restore S1144 // Unused private types or members should be removed
     }

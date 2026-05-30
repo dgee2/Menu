@@ -45,7 +45,7 @@ public class RecipeServiceTests
 
         var result = await sut.GetRecipeAsync(recipe.Id);
 
-        result!.Name.Should().Be(recipe.Name);
+        result!.Title.Should().Be(recipe.Title);
         result.Id.Should().Be(recipe.Id);
         result.Ingredients.Should().BeEquivalentTo(expected);
     }
@@ -56,7 +56,7 @@ public class RecipeServiceTests
         var expected = recipes.Select(x => new Recipe
         {
             Id = x.Id,
-            Name = x.Name
+            Title = x.Title
         });
         A.CallTo(() => recipeRepository.GetRecipesAsync()).Returns(recipes.AsEnumerable());
 
@@ -83,11 +83,11 @@ public class RecipeServiceTests
     [Theory, CustomAutoData]
     public async Task CreateRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
-        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).Returns(recipe.Id);
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Title)).Returns(recipe.Id);
 
         var newRecipe = new NewRecipe
         {
-            Name = recipe.Name,
+            Title = recipe.Title,
             Ingredients = ingredients.Select(x => new RecipeIngredient
             {
                 Amount = x.Amount,
@@ -98,7 +98,7 @@ public class RecipeServiceTests
 
         await sut.CreateRecipeAsync(newRecipe);
 
-        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Name)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Title)).MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
     }
 
@@ -106,7 +106,7 @@ public class RecipeServiceTests
     public async Task CreateRecipeAsync_Deduplicates_Exact_Duplicate_Ingredients_Before_Upsert()
     {
         var recipeId = RecipeId.From(1);
-        var recipeName = RecipeName.From("Cake");
+        var recipeTitle = RecipeTitle.From("Cake");
         var duplicateIngredient = new RecipeIngredient
         {
             Name = IngredientName.From("Sugar"),
@@ -114,11 +114,11 @@ public class RecipeServiceTests
             Amount = IngredientAmount.From(100m),
         };
 
-        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipeName)).Returns(recipeId);
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipeTitle)).Returns(recipeId);
 
         await sut.CreateRecipeAsync(new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients = [duplicateIngredient, duplicateIngredient],
         });
 
@@ -134,11 +134,11 @@ public class RecipeServiceTests
     }
 
     [Theory, CustomAutoData]
-    public async Task UpdateRecipeSuccess(RecipeId recipeId, RecipeName recipeName, IEnumerable<DBModel.RecipeIngredient> ingredients)
+    public async Task UpdateRecipeSuccess(RecipeId recipeId, RecipeTitle recipeTitle, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
         var newRecipe = new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients = ingredients.Select(x => new RecipeIngredient
             {
                 Amount = x.Amount,
@@ -149,7 +149,7 @@ public class RecipeServiceTests
 
         await sut.UpdateRecipeAsync(recipeId, newRecipe);
 
-        A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeName)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeTitle)).MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
     }
 
@@ -157,7 +157,7 @@ public class RecipeServiceTests
     public async Task UpdateRecipeAsync_Deduplicates_Exact_Duplicate_Ingredients_Before_Upsert()
     {
         var recipeId = RecipeId.From(1);
-        var recipeName = RecipeName.From("Cake");
+        var recipeTitle = RecipeTitle.From("Cake");
         var duplicateIngredient = new RecipeIngredient
         {
             Name = IngredientName.From("Sugar"),
@@ -167,7 +167,7 @@ public class RecipeServiceTests
 
         await sut.UpdateRecipeAsync(recipeId, new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients = [duplicateIngredient, duplicateIngredient],
         });
 
@@ -194,11 +194,11 @@ public class RecipeServiceTests
     [Fact]
     public async Task CreateRecipeAsync_Throws_BusinessValidationException_When_Same_IngredientUnit_Has_Conflicting_Amounts()
     {
-        var recipeName = RecipeName.From("Cake");
+        var recipeTitle = RecipeTitle.From("Cake");
 
         await sut.Invoking(s => s.CreateRecipeAsync(new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(100m) },
@@ -206,7 +206,7 @@ public class RecipeServiceTests
             ],
         })).Should().ThrowAsync<BusinessValidationException>();
 
-        A.CallTo(() => recipeRepository.CreateRecipeAsync(A<RecipeName>._)).MustNotHaveHappened();
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(A<RecipeTitle>._)).MustNotHaveHappened();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(A<RecipeId>._, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustNotHaveHappened();
     }
 
@@ -214,11 +214,11 @@ public class RecipeServiceTests
     public async Task UpdateRecipeAsync_Throws_BusinessValidationException_When_Same_IngredientUnit_Has_Conflicting_Amounts()
     {
         var recipeId = RecipeId.From(1);
-        var recipeName = RecipeName.From("Cake");
+        var recipeTitle = RecipeTitle.From("Cake");
 
         await sut.Invoking(s => s.UpdateRecipeAsync(recipeId, new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(100m) },
@@ -226,18 +226,18 @@ public class RecipeServiceTests
             ],
         })).Should().ThrowAsync<BusinessValidationException>();
 
-        A.CallTo(() => recipeRepository.UpdateRecipeAsync(A<RecipeId>._, A<RecipeName>._)).MustNotHaveHappened();
+        A.CallTo(() => recipeRepository.UpdateRecipeAsync(A<RecipeId>._, A<RecipeTitle>._)).MustNotHaveHappened();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(A<RecipeId>._, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustNotHaveHappened();
     }
 
     [Fact]
     public async Task CreateRecipeAsync_Reports_All_Conflicting_IngredientUnit_Pairs()
     {
-        var recipeName = RecipeName.From("Cake");
+        var recipeTitle = RecipeTitle.From("Cake");
 
         var ex = await sut.Invoking(s => s.CreateRecipeAsync(new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(100m) },
@@ -255,11 +255,11 @@ public class RecipeServiceTests
     public async Task CreateRecipeAsync_Exact_Duplicate_Then_Conflicting_Detects_Conflict()
     {
         // Three entries: two exact duplicates (silently absorbed) + one with different amount = conflict
-        var recipeName = RecipeName.From("Cake");
+        var recipeTitle = RecipeTitle.From("Cake");
 
         await sut.Invoking(s => s.CreateRecipeAsync(new NewRecipe
         {
-            Name = recipeName,
+            Title = recipeTitle,
             Ingredients =
             [
                 new RecipeIngredient { Name = IngredientName.From("Sugar"), Unit = IngredientUnitName.From("Grams"), Amount = IngredientAmount.From(100m) },

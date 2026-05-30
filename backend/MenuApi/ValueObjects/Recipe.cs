@@ -6,4 +6,7 @@ namespace MenuApi.ValueObjects;
 public readonly partial struct RecipeId { }
 
 [ValueObject<string>]
-public readonly partial struct RecipeName { }
+public readonly partial struct RecipeTitle { }
+
+[ValueObject<string>]
+public readonly partial struct AccessScope { }

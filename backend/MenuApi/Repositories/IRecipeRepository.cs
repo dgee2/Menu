@@ -4,7 +4,7 @@ namespace MenuApi.Repositories;
 
 public interface IRecipeRepository
 {
-    Task<RecipeId> CreateRecipeAsync(RecipeName name);
+    Task<RecipeId> CreateRecipeAsync(RecipeTitle title);
 
     Task<DBModel.Recipe?> GetRecipeAsync(RecipeId recipeId);
 
@@ -14,5 +14,5 @@ public interface IRecipeRepository
 
     Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync();
 
-    Task UpdateRecipeAsync(RecipeId recipeId, RecipeName name);
+    Task UpdateRecipeAsync(RecipeId recipeId, RecipeTitle title);
 }

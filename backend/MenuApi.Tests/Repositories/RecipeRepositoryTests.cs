@@ -79,7 +79,7 @@ public class RecipeRepositoryTests
         var unitType = new UnitTypeEntity { Id = 1, Name = "Weight" };
         var unit = new UnitEntity { Id = 4, Name = "Grams", UnitTypeId = unitType.Id, UnitType = unitType };
         var ingredient = new IngredientEntity { Id = 10, Name = "Sugar" };
-        var recipe = new RecipeEntity { Id = 1, Name = "Cake" };
+        var recipe = new RecipeEntity { Id = 1, Title = "Cake", AccessScope = "Private" };
 
         db.UnitTypes.Add(unitType);
         db.Units.Add(unit);
