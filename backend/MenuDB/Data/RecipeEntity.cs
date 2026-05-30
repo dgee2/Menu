@@ -16,4 +16,6 @@ public class RecipeEntity
     public DateTime? CreatedAtUtc { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
     public ICollection<RecipeIngredientEntity> RecipeIngredients { get; set; } = [];
+
+    public ICollection<RecipeStepEntity> RecipeSteps { get; set; } = [];
 }

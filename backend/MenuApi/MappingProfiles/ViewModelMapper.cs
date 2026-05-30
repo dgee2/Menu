@@ -17,6 +17,14 @@ public static partial class ViewModelMapper
 
     public static partial IEnumerable<DBModel.RecipeIngredient> Map(IEnumerable<ViewModel.RecipeIngredient> recipeIngredients);
 
+    public static partial ViewModel.RecipeStep Map(DBModel.RecipeStep recipeStep);
+
+    public static partial IEnumerable<ViewModel.RecipeStep> Map(IEnumerable<DBModel.RecipeStep> recipeSteps);
+
+    public static partial DBModel.RecipeStep Map(ViewModel.RecipeStep recipeStep);
+
+    public static partial IEnumerable<DBModel.RecipeStep> Map(IEnumerable<ViewModel.RecipeStep> recipeSteps);
+
     [MapProperty(nameof(DBModel.IngredientUnit.UnitType), nameof(ViewModel.IngredientUnit.Type))]
     public static partial ViewModel.IngredientUnit Map(DBModel.IngredientUnit ingredientUnit);
 

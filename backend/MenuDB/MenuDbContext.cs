@@ -14,6 +14,8 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
     public DbSet<IngredientUnitEntity> IngredientUnits { get; set; }
     public DbSet<RecipeIngredientEntity> RecipeIngredients { get; set; }
 
+    public DbSet<RecipeStepEntity> RecipeSteps { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MenuDbContext).Assembly);
