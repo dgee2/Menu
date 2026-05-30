@@ -1,7 +1,5 @@
-using AutoFixture.Xunit3;
 using AwesomeAssertions;
 using MenuApi.Integration.Tests.Factory;
-using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -14,7 +12,6 @@ public class ValidationIntegrationTests
 {
     private const string ApplicationJson = "application/json";
     private const string ApiRecipeRoute = "/api/recipe";
-    private const string Grams = "Grams";
 
     private readonly JsonSerializerOptions jsonOptions;
     private readonly ApiTestFixture fixture;
@@ -35,10 +32,10 @@ public class ValidationIntegrationTests
     }
 
     [Fact]
-    public async Task CreateRecipe_EmptyName_Returns400WithProblemDetails()
+    public async Task CreateRecipe_EmptyTitle_Returns400WithProblemDetails()
     {
         using var client = await fixture.GetHttpClient();
-        var body = new NewRecipe { Name = "", Ingredients = [] };
+        var body = new NewRecipe { Title = "", Ingredients = [] };
         using var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, ApplicationJson);
         using var response = await client.PostAsync(ApiRecipeRoute, content);
 
@@ -54,22 +51,33 @@ public class ValidationIntegrationTests
     }
 
     [Fact]
-    public async Task CreateRecipe_NonExistentIngredient_Returns422()
+    public async Task CreateRecipe_EmptyIngredientText_Returns400()
     {
         using var client = await fixture.GetHttpClient();
         var body = new NewRecipe
         {
-            Name = "Test Recipe",
-            Ingredients = [new RecipeIngredient { Name = "NonExistentIngredient", Unit = Grams, Amount = 100 }]
+            Title = "Test Recipe",
+            Ingredients = [new RecipeIngredient { SortOrder = 0, IngredientText = "", MeasureText = "1", IsOptional = false }]
         };
         using var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, ApplicationJson);
         using var response = await client.PostAsync(ApiRecipeRoute, content);
 
-        await response.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
+        await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
+    }
 
-        var responseBody = await response.Content.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(responseBody);
-        doc.RootElement.GetProperty("status").GetInt32().Should().Be(422);
+    [Fact]
+    public async Task CreateRecipe_EmptyMeasureText_Returns400()
+    {
+        using var client = await fixture.GetHttpClient();
+        var body = new NewRecipe
+        {
+            Title = "Test Recipe",
+            Ingredients = [new RecipeIngredient { SortOrder = 0, IngredientText = "Flour", MeasureText = "", IsOptional = false }]
+        };
+        using var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, ApplicationJson);
+        using var response = await client.PostAsync(ApiRecipeRoute, content);
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -107,45 +115,43 @@ public class ValidationIntegrationTests
         await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
     }
 
-    [Theory, AutoData]
-    public async Task UpdateRecipe_EmptyName_Returns400(
-        [StringLength(500, MinimumLength = 1)] string recipeName,
-        [StringLength(50, MinimumLength = 1)] string ingredientName)
+    [Fact]
+    public async Task UpdateRecipe_EmptyTitle_Returns400()
     {
         using var client = await fixture.GetHttpClient();
-        var recipeId = await CreateRecipeAsync(client, recipeName, ingredientName);
+        var recipeId = await CreateRecipeAsync(client, "Original Recipe");
 
-        var updateBody = new NewRecipe { Name = "", Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }] };
+        var updateBody = new NewRecipe { Title = "", Ingredients = [new RecipeIngredient { SortOrder = 0, IngredientText = "Flour", MeasureText = "1", IsOptional = false }] };
         using var updateContent = new StringContent(JsonSerializer.Serialize(updateBody, jsonOptions), Encoding.UTF8, ApplicationJson);
         using var updateResponse = await client.PutAsync($"/api/recipe/{recipeId}", updateContent);
 
         await updateResponse.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
     }
 
-    [Theory, AutoData]
-    public async Task UpdateRecipe_NonExistentIngredient_Returns422(
-        [StringLength(500, MinimumLength = 1)] string recipeName,
-        [StringLength(50, MinimumLength = 1)] string ingredientName)
+    [Fact]
+    public async Task UpdateRecipe_EmptyIngredientText_Returns400()
     {
         using var client = await fixture.GetHttpClient();
-        var recipeId = await CreateRecipeAsync(client, recipeName, ingredientName);
+        var recipeId = await CreateRecipeAsync(client, "Original Recipe");
 
         var updateBody = new NewRecipe
         {
-            Name = recipeName,
-            Ingredients = [new RecipeIngredient { Name = "NonExistentIngredient", Unit = Grams, Amount = 100 }]
+            Title = "Updated Recipe",
+            Ingredients = [new RecipeIngredient { SortOrder = 0, IngredientText = "", MeasureText = "1", IsOptional = false }]
         };
         using var updateContent = new StringContent(JsonSerializer.Serialize(updateBody, jsonOptions), Encoding.UTF8, ApplicationJson);
         using var updateResponse = await client.PutAsync($"/api/recipe/{recipeId}", updateContent);
 
-        await updateResponse.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
+        await updateResponse.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
     }
 
-    private async Task<int> CreateRecipeAsync(HttpClient client, string recipeName, string ingredientName)
+    private async Task<int> CreateRecipeAsync(HttpClient client, string recipeTitle)
     {
-        await PostIngredientAsync(client, ingredientName);
-
-        var createBody = new NewRecipe { Name = recipeName, Ingredients = [new RecipeIngredient { Name = ingredientName, Unit = Grams, Amount = 100 }] };
+        var createBody = new NewRecipe
+        {
+            Title = recipeTitle,
+            Ingredients = [new RecipeIngredient { SortOrder = 0, IngredientText = "Sugar", MeasureText = "1 cup", IsOptional = false }]
+        };
         using var createContent = new StringContent(JsonSerializer.Serialize(createBody, jsonOptions), Encoding.UTF8, ApplicationJson);
         using var createResponse = await client.PostAsync(ApiRecipeRoute, createContent);
         await createResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
@@ -155,25 +161,18 @@ public class ValidationIntegrationTests
         return createDoc.RootElement.GetProperty("id").GetInt32();
     }
 
-    private async Task PostIngredientAsync(HttpClient client, string name)
-    {
-        var body = new NewIngredient { Name = name, UnitIds = [4] }; // Grams
-        using var content = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, ApplicationJson);
-        using var response = await client.PostAsync("/api/ingredient", content);
-        await response.ShouldHaveStatusCode(HttpStatusCode.OK);
-    }
-
     public class NewRecipe
     {
         public List<RecipeIngredient> Ingredients { get; set; } = [];
-        public string Name { get; set; } = null!;
+        public string Title { get; set; } = null!;
     }
 
     public class RecipeIngredient
     {
-        public string Name { get; set; } = null!;
-        public string Unit { get; set; } = null!;
-        public decimal Amount { get; set; }
+        public int SortOrder { get; set; }
+        public string IngredientText { get; set; } = null!;
+        public string MeasureText { get; set; } = null!;
+        public bool IsOptional { get; set; }
     }
 
     public class NewIngredient
