@@ -58,9 +58,10 @@ public class ValidationFilterTests
             [
                 new RecipeIngredient
                 {
-                    Name = IngredientName.From("Flour"),
-                    Unit = IngredientUnitName.From("Grams"),
-                    Amount = IngredientAmount.From(100m)
+                    SortOrder = 0,
+                    IngredientText = "Flour",
+                    MeasureText = "200g",
+                    IsOptional = false,
                 }
             ]
         };

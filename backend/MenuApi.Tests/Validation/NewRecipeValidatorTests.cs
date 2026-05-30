@@ -12,9 +12,10 @@ public class NewRecipeValidatorTests
 
     private static RecipeIngredient CreateValidIngredient() => new()
     {
-        Name = IngredientName.From("Flour"),
-        Unit = IngredientUnitName.From("Grams"),
-        Amount = IngredientAmount.From(100m)
+        SortOrder = 0,
+        IngredientText = "Flour",
+        MeasureText = "200g",
+        IsOptional = false,
     };
 
     [Fact]

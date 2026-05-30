@@ -10,7 +10,7 @@ public interface IRecipeRepository
 
     Task UpsertRecipeIngredientsAsync(RecipeId recipeId, IEnumerable<DBModel.RecipeIngredient> recipeIngredients);
 
-    Task<IEnumerable<DBModel.GetRecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId);
+    Task<IEnumerable<DBModel.RecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId);
 
     Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync();
 

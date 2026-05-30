@@ -1,7 +1,6 @@
 using AwesomeAssertions;
 using FluentValidation.TestHelper;
 using MenuApi.Validation;
-using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
 using Xunit;
 
@@ -16,9 +15,10 @@ public class RecipeIngredientValidatorTests
     {
         var ingredient = new RecipeIngredient
         {
-            Name = IngredientName.From("Flour"),
-            Unit = IngredientUnitName.From("Grams"),
-            Amount = IngredientAmount.From(100m)
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = "200g",
+            IsOptional = false,
         };
 
         var result = validator.TestValidate(ingredient);
@@ -26,70 +26,117 @@ public class RecipeIngredientValidatorTests
         result.ShouldNotHaveAnyValidationErrors();
     }
 
-    [Fact]
-    public void UninitializedName_Fails()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void NullOrEmptyIngredientText_Fails(string? text)
     {
-#pragma warning disable VOG009
         var ingredient = new RecipeIngredient
         {
-            Name = default,
-            Unit = IngredientUnitName.From("Grams"),
-            Amount = IngredientAmount.From(100m)
+            SortOrder = 0,
+            IngredientText = text!,
+            MeasureText = "200g",
         };
-#pragma warning restore VOG009
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor("Name");
+        result.ShouldHaveValidationErrorFor("IngredientText");
+    }
+
+    [Theory]
+    [InlineData(" ")]
+    [InlineData("  \t  ")]
+    public void WhitespaceIngredientText_Fails(string text)
+    {
+        var ingredient = new RecipeIngredient
+        {
+            SortOrder = 0,
+            IngredientText = text,
+            MeasureText = "200g",
+        };
+
+        var result = validator.TestValidate(ingredient);
+
+        result.ShouldHaveValidationErrorFor("IngredientText");
     }
 
     [Fact]
-    public void UninitializedUnit_Fails()
+    public void IngredientTextTooLong_Fails()
     {
-#pragma warning disable VOG009
         var ingredient = new RecipeIngredient
         {
-            Name = IngredientName.From("Flour"),
-            Unit = default,
-            Amount = IngredientAmount.From(100m)
+            SortOrder = 0,
+            IngredientText = new string('a', 201),
+            MeasureText = "200g",
         };
-#pragma warning restore VOG009
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor("Unit");
+        result.ShouldHaveValidationErrorFor("IngredientText");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void NullOrEmptyMeasureText_Fails(string? text)
+    {
+        var ingredient = new RecipeIngredient
+        {
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = text!,
+        };
+
+        var result = validator.TestValidate(ingredient);
+
+        result.ShouldHaveValidationErrorFor("MeasureText");
+    }
+
+    [Theory]
+    [InlineData(" ")]
+    [InlineData("  \t  ")]
+    public void WhitespaceMeasureText_Fails(string text)
+    {
+        var ingredient = new RecipeIngredient
+        {
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = text,
+        };
+
+        var result = validator.TestValidate(ingredient);
+
+        result.ShouldHaveValidationErrorFor("MeasureText");
     }
 
     [Fact]
-    public void UninitializedAmount_Fails()
+    public void MeasureTextTooLong_Fails()
     {
-#pragma warning disable VOG009
         var ingredient = new RecipeIngredient
         {
-            Name = IngredientName.From("Flour"),
-            Unit = IngredientUnitName.From("Grams"),
-            Amount = default
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = new string('a', 101),
         };
-#pragma warning restore VOG009
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor("Amount");
+        result.ShouldHaveValidationErrorFor("MeasureText");
     }
 
     [Fact]
-    public void NameTooLong_Fails()
+    public void NegativeSortOrder_Fails()
     {
         var ingredient = new RecipeIngredient
         {
-            Name = IngredientName.From(new string('a', 51)),
-            Unit = IngredientUnitName.From("Grams"),
-            Amount = IngredientAmount.From(100m)
+            SortOrder = -1,
+            IngredientText = "Flour",
+            MeasureText = "200g",
         };
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor("Name");
+        result.ShouldHaveValidationErrorFor("SortOrder");
     }
 
     [Theory]
@@ -99,9 +146,10 @@ public class RecipeIngredientValidatorTests
     {
         var ingredient = new RecipeIngredient
         {
-            Name = IngredientName.From("Flour"),
-            Unit = IngredientUnitName.From("Grams"),
-            Amount = IngredientAmount.From(amount)
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = "200g",
+            Amount = amount,
         };
 
         var result = validator.TestValidate(ingredient);
@@ -114,9 +162,10 @@ public class RecipeIngredientValidatorTests
     {
         var ingredient = new RecipeIngredient
         {
-            Name = IngredientName.From("Flour"),
-            Unit = IngredientUnitName.From("Grams"),
-            Amount = IngredientAmount.From(1.12345m)
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = "200g",
+            Amount = 1.12345m,
         };
 
         var result = validator.TestValidate(ingredient);
@@ -129,9 +178,10 @@ public class RecipeIngredientValidatorTests
     {
         var ingredient = new RecipeIngredient
         {
-            Name = IngredientName.From("Flour"),
-            Unit = IngredientUnitName.From("Grams"),
-            Amount = IngredientAmount.From(1234567m)
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = "200g",
+            Amount = 1234567m,
         };
 
         var result = validator.TestValidate(ingredient);
@@ -139,35 +189,35 @@ public class RecipeIngredientValidatorTests
         result.ShouldHaveValidationErrorFor("Amount");
     }
 
-    [Theory]
-    [InlineData(" ")]
-    [InlineData("  \t  ")]
-    public void WhitespaceName_Fails(string name)
+    [Fact]
+    public void NullAmount_Passes()
     {
         var ingredient = new RecipeIngredient
         {
-            Name = IngredientName.From(name),
-            Unit = IngredientUnitName.From("Grams"),
-            Amount = IngredientAmount.From(100m)
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = "to taste",
+            Amount = null,
         };
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor("Name");
+        result.ShouldNotHaveValidationErrorFor("Amount");
     }
 
     [Fact]
-    public void UnitTooLong_Fails()
+    public void ValidAmountWithDecimals_Passes()
     {
         var ingredient = new RecipeIngredient
         {
-            Name = IngredientName.From("Flour"),
-            Unit = IngredientUnitName.From(new string('a', 51)),
-            Amount = IngredientAmount.From(100m)
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = "200g",
+            Amount = 1.5m,
         };
 
         var result = validator.TestValidate(ingredient);
 
-        result.ShouldHaveValidationErrorFor("Unit");
+        result.ShouldNotHaveAnyValidationErrors();
     }
 }

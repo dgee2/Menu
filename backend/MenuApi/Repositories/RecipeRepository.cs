@@ -29,17 +29,22 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             .ConfigureAwait(false);
     }
 
-    public async Task<IEnumerable<GetRecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId)
+    public async Task<IEnumerable<DBModel.RecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId)
     {
         return await db.RecipeIngredients
             .Where(ri => ri.RecipeId == recipeId.Value)
-            .Select(ri => new GetRecipeIngredient
-            {
-                IngredientName = IngredientName.From(ri.Ingredient.Name),
-                Amount = IngredientAmount.From(ri.Amount),
-                UnitName = IngredientUnitName.From(ri.Unit.Name),
-                UnitAbbreviation = IngredientUnitAbbreviation.From(ri.Unit.Abbreviation ?? string.Empty),
-            })
+            .OrderBy(ri => ri.SortOrder)
+            .Select(ri => new DBModel.RecipeIngredient(
+                ri.SortOrder,
+                ri.IngredientText,
+                ri.MeasureText,
+                ri.SectionTitle,
+                ri.Amount,
+                ri.UnitText,
+                ri.PreparationText,
+                ri.IsOptional,
+                ri.CanonicalIngredientId,
+                ri.CanonicalUnitId))
             .ToListAsync()
             .ConfigureAwait(false);
     }
@@ -64,60 +69,29 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         ArgumentNullException.ThrowIfNull(recipeIngredients);
 
-        var incoming = recipeIngredients.Distinct().ToList();
-        var incomingKeys = incoming
-            .Select(i => new { IngredientName = i.IngredientName.Value, UnitName = i.UnitName.Value })
-            .ToHashSet();
-
-        var existing = await db.RecipeIngredients
+        await db.RecipeIngredients
             .Where(ri => ri.RecipeId == recipeId.Value)
-            .Include(ri => ri.Ingredient)
-            .Include(ri => ri.Unit)
-            .ToListAsync()
+            .ExecuteDeleteAsync()
             .ConfigureAwait(false);
 
-        var toDelete = existing
-            .Where(e => !incomingKeys.Contains(new { IngredientName = e.Ingredient.Name, UnitName = e.Unit.Name }))
+        var entities = recipeIngredients
+            .Select(i => new RecipeIngredientEntity
+            {
+                RecipeId = recipeId.Value,
+                SortOrder = i.SortOrder,
+                IngredientText = i.IngredientText,
+                MeasureText = i.MeasureText,
+                SectionTitle = i.SectionTitle,
+                Amount = i.Amount,
+                UnitText = i.UnitText,
+                PreparationText = i.PreparationText,
+                IsOptional = i.IsOptional,
+                CanonicalIngredientId = i.CanonicalIngredientId,
+                CanonicalUnitId = i.CanonicalUnitId,
+            })
             .ToList();
-        db.RecipeIngredients.RemoveRange(toDelete);
 
-        var ingredientNames = incoming.Select(i => i.IngredientName.Value).Distinct().ToList();
-        var unitNames = incoming.Select(i => i.UnitName.Value).Distinct().ToList();
-
-        var ingredientLookup = await db.Ingredients
-            .Where(i => ingredientNames.Contains(i.Name))
-            .ToDictionaryAsync(i => i.Name, i => i.Id)
-            .ConfigureAwait(false);
-
-        var unitLookup = await db.Units
-            .Where(u => unitNames.Contains(u.Name))
-            .ToDictionaryAsync(u => u.Name, u => u.Id)
-            .ConfigureAwait(false);
-
-        foreach (var item in incoming)
-        {
-            if (!ingredientLookup.TryGetValue(item.IngredientName.Value, out var ingredientId))
-                throw new BusinessValidationException($"Ingredient '{item.IngredientName.Value}' does not exist.");
-            if (!unitLookup.TryGetValue(item.UnitName.Value, out var unitId))
-                throw new BusinessValidationException($"Unit '{item.UnitName.Value}' does not exist.");
-
-            var existingRow = existing.FirstOrDefault(e => e.IngredientId == ingredientId && e.UnitId == unitId);
-            if (existingRow is not null)
-            {
-                existingRow.Amount = item.Amount.Value;
-            }
-            else
-            {
-                db.RecipeIngredients.Add(new RecipeIngredientEntity
-                {
-                    RecipeId = recipeId.Value,
-                    IngredientId = ingredientId,
-                    UnitId = unitId,
-                    Amount = item.Amount.Value,
-                });
-            }
-        }
-
+        db.RecipeIngredients.AddRange(entities);
         await db.SaveChangesAsync().ConfigureAwait(false);
     }
 
