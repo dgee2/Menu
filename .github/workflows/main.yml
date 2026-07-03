@@ -29,11 +29,11 @@ jobs:
     steps:
       - name: Checkout
         if: github.event_name == 'pull_request'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check for file changes
         if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: filter
         with:
           filters: |
@@ -57,10 +57,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Dependency Review
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@v5
 
   backend-build:
     name: Create OpenAPI spec
@@ -75,10 +75,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup dotnet 10.x
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v5.4.0
         with:
           dotnet-version: "10.0.x"
 
@@ -91,7 +91,7 @@ jobs:
         working-directory: ./backend
 
       - name: Upload OpenAPI document
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: openapi-spec
           path: open-api/menu-api.json
@@ -110,10 +110,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup dotnet 10.x
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v5.4.0
         with:
           dotnet-version: "10.0.x"
 
@@ -147,10 +147,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup dotnet 10.x
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v5.4.0
         with:
           dotnet-version: "10.0.x"
 
@@ -197,18 +197,18 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Download OpenAPI document
         if: needs.backend-build.result == 'success'
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v8.0.1
         with:
           name: openapi-spec
           path: open-api
           merge-multiple: true
 
       - name: Use Node.js 22.x
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: 22.x
 
@@ -221,7 +221,7 @@ jobs:
         working-directory: ./ui/menu-website
 
       - name: Cache pnpm store
-        uses: actions/cache@v5
+        uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('ui/menu-website/pnpm-lock.yaml', 'ui/menu-website/package.json') }}
@@ -252,7 +252,7 @@ jobs:
         working-directory: ./ui/menu-website
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@v6.1.0
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
