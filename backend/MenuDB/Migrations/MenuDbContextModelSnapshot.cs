@@ -144,8 +144,7 @@ namespace MenuDB.Migrations
 
                     b.HasIndex("OwnerUserId", "Title")
                         .IsUnique()
-                        .HasDatabaseName("UX_Recipe_OwnerUserId_Title")
-                        .HasFilter("[OwnerUserId] IS NOT NULL");
+                        .HasDatabaseName("UX_Recipe_OwnerUserId_Title");
 
                     b.ToTable("Recipe", (string)null);
                 });
@@ -179,13 +178,13 @@ namespace MenuDB.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("PreparationText")
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("RecipeId")
                         .HasColumnType("int");
 
                     b.Property<string>("SectionTitle")
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");

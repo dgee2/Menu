@@ -22,7 +22,10 @@ public class RecipeEntityConfiguration : IEntityTypeConfiguration<RecipeEntity>
         builder.Property(x => x.TotalTimeMinutes).IsRequired(false);
         builder.Property(x => x.CreatedAtUtc).HasColumnType("datetime2").IsRequired(false);
         builder.Property(x => x.UpdatedAtUtc).HasColumnType("datetime2").IsRequired(false);
-        builder.HasIndex(x => new { x.OwnerUserId, x.Title }).IsUnique().HasDatabaseName("UX_Recipe_OwnerUserId_Title");
+        builder.HasIndex(x => new { x.OwnerUserId, x.Title })
+            .IsUnique()
+            .HasDatabaseName("UX_Recipe_OwnerUserId_Title")
+            .HasFilter(null);
         builder.HasOne(x => x.Owner)
             .WithMany()
             .HasForeignKey(x => x.OwnerUserId)

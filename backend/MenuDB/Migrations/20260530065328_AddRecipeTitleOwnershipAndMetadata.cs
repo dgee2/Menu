@@ -11,13 +11,34 @@ namespace MenuDB.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql(
+                """
+                IF EXISTS (
+                    SELECT 1
+                    FROM [Recipe]
+                    WHERE LEN([Name]) > 200
+                )
+                BEGIN
+                    THROW 51000, 'Migration aborted: Recipe.Name contains values longer than 200 characters. Clean data before applying migration 20260530065328.', 1;
+                END
+                """);
+
             migrationBuilder.DropIndex(
                 name: "UX_Recipe_Name",
                 table: "Recipe");
 
-            migrationBuilder.DropColumn(
+            migrationBuilder.RenameColumn(
                 name: "Name",
-                table: "Recipe");
+                table: "Recipe",
+                newName: "Title");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "Title",
+                table: "Recipe",
+                type: "nvarchar(200)",
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "varchar(500)");
 
             migrationBuilder.AddColumn<string>(
                 name: "AccessScope",
@@ -62,13 +83,6 @@ namespace MenuDB.Migrations
                 type: "nvarchar(max)",
                 nullable: true);
 
-            migrationBuilder.AddColumn<string>(
-                name: "Title",
-                table: "Recipe",
-                type: "nvarchar(200)",
-                nullable: false,
-                defaultValue: "");
-
             migrationBuilder.AddColumn<int>(
                 name: "TotalTimeMinutes",
                 table: "Recipe",
@@ -91,8 +105,7 @@ namespace MenuDB.Migrations
                 name: "UX_Recipe_OwnerUserId_Title",
                 table: "Recipe",
                 columns: new[] { "OwnerUserId", "Title" },
-                unique: true,
-                filter: "[OwnerUserId] IS NOT NULL");
+                unique: true);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Recipe_ToMenuUser",
@@ -107,6 +120,19 @@ namespace MenuDB.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql(
+                """
+                IF EXISTS (
+                    SELECT [Title]
+                    FROM [Recipe]
+                    GROUP BY [Title]
+                    HAVING COUNT(*) > 1
+                )
+                BEGIN
+                    THROW 51002, 'Migration rollback aborted: Recipe.Title contains duplicate values that would violate the legacy UX_Recipe_Name unique constraint. Deduplicate titles before rolling back migration 20260530065328.', 1;
+                END
+                """);
+
             migrationBuilder.DropForeignKey(
                 name: "FK_Recipe_ToMenuUser",
                 table: "Recipe");
@@ -143,9 +169,13 @@ namespace MenuDB.Migrations
                 name: "Summary",
                 table: "Recipe");
 
-            migrationBuilder.DropColumn(
+            migrationBuilder.AlterColumn<string>(
                 name: "Title",
-                table: "Recipe");
+                table: "Recipe",
+                type: "varchar(500)",
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(200)");
 
             migrationBuilder.DropColumn(
                 name: "TotalTimeMinutes",
@@ -159,12 +189,10 @@ namespace MenuDB.Migrations
                 name: "YieldText",
                 table: "Recipe");
 
-            migrationBuilder.AddColumn<string>(
-                name: "Name",
+            migrationBuilder.RenameColumn(
+                name: "Title",
                 table: "Recipe",
-                type: "varchar(500)",
-                nullable: false,
-                defaultValue: "");
+                newName: "Name");
 
             migrationBuilder.CreateIndex(
                 name: "UX_Recipe_Name",

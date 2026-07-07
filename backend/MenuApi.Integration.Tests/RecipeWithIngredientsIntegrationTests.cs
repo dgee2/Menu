@@ -12,6 +12,9 @@ namespace MenuApi.Integration.Tests;
 [Collection("API Host Collection")]
 public class RecipeWithIngredientsIntegrationTests
 {
+    private const string ApplicationJson = "application/json";
+    private const string ApiRecipeRoute = "/api/recipe";
+
     private readonly JsonSerializerOptions jsonOptions;
     private readonly ApiTestFixture fixture;
 
@@ -32,14 +35,7 @@ public class RecipeWithIngredientsIntegrationTests
     {
         using var client = await fixture.GetHttpClient();
 
-        var newRecipe = new NewRecipe
-        {
-            Title = recipeTitle,
-            Ingredients =
-            [
-                new RecipeIngredient { SortOrder = 0, IngredientText = ingredientText, MeasureText = measureText, IsOptional = false }
-            ]
-        };
+        var newRecipe = CreateRecipe(recipeTitle, ingredientText, measureText);
 
         var (recipeId, returnedTitle, returnedIngredients) = await PostRecipeAsync(client, newRecipe);
 
@@ -58,14 +54,7 @@ public class RecipeWithIngredientsIntegrationTests
     {
         using var client = await fixture.GetHttpClient();
 
-        var newRecipe = new NewRecipe
-        {
-            Title = recipeTitle,
-            Ingredients =
-            [
-                new RecipeIngredient { SortOrder = 0, IngredientText = ingredientText, MeasureText = measureText, IsOptional = false }
-            ]
-        };
+        var newRecipe = CreateRecipe(recipeTitle, ingredientText, measureText);
 
         var (recipeId, _, _) = await PostRecipeAsync(client, newRecipe);
 
@@ -92,14 +81,7 @@ public class RecipeWithIngredientsIntegrationTests
     {
         using var client = await fixture.GetHttpClient();
 
-        var newRecipe = new NewRecipe
-        {
-            Title = recipeTitle,
-            Ingredients =
-            [
-                new RecipeIngredient { SortOrder = 0, IngredientText = ingredientText, MeasureText = measureText, IsOptional = false }
-            ]
-        };
+        var newRecipe = CreateRecipe(recipeTitle, ingredientText, measureText);
 
         var (recipeId, _, _) = await PostRecipeAsync(client, newRecipe);
 
@@ -123,25 +105,11 @@ public class RecipeWithIngredientsIntegrationTests
     {
         using var client = await fixture.GetHttpClient();
 
-        var newRecipe = new NewRecipe
-        {
-            Title = recipeTitle,
-            Ingredients =
-            [
-                new RecipeIngredient { SortOrder = 0, IngredientText = ingredientText1, MeasureText = measureText, IsOptional = false }
-            ]
-        };
+        var newRecipe = CreateRecipe(recipeTitle, ingredientText1, measureText);
 
         var (recipeId, _, _) = await PostRecipeAsync(client, newRecipe);
 
-        var updatedRecipe = new NewRecipe
-        {
-            Title = updatedRecipeTitle,
-            Ingredients =
-            [
-                new RecipeIngredient { SortOrder = 0, IngredientText = ingredientText2, MeasureText = measureText, IsOptional = false }
-            ]
-        };
+        var updatedRecipe = CreateRecipe(updatedRecipeTitle, ingredientText2, measureText);
 
         var (_, returnedTitle, returnedIngredients) = await PutRecipeAsync(client, recipeId, updatedRecipe);
 
@@ -153,41 +121,48 @@ public class RecipeWithIngredientsIntegrationTests
     private async Task<(int Id, string Title, List<RecipeIngredient> Ingredients)> PostRecipeAsync(
         HttpClient client, NewRecipe recipe)
     {
-        using var content = new StringContent(JsonSerializer.Serialize(recipe, jsonOptions), Encoding.UTF8, "application/json");
-        using var response = await client.PostAsync("/api/recipe", content);
-
-        await response.ShouldHaveStatusCode(HttpStatusCode.OK);
-
-        using var stream = await response.Content.ReadAsStreamAsync();
-        using var jsonDoc = await JsonDocument.ParseAsync(stream);
-        var root = jsonDoc.RootElement;
-
-        var id = root.GetProperty("id").GetInt32();
-        var title = root.GetProperty("title").GetString()!;
-        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(
-            root.GetProperty("ingredients").GetRawText(), jsonOptions) ?? [];
-
-        return (id, title, ingredients);
+        using var response = await SendRecipeAsync(client, HttpMethod.Post, ApiRecipeRoute, recipe);
+        return await DeserializeRecipeResponseAsync(response);
     }
 
     private async Task<(int Id, string Title, List<RecipeIngredient> Ingredients)> PutRecipeAsync(
         HttpClient client, int id, NewRecipe recipe)
     {
-        using var content = new StringContent(JsonSerializer.Serialize(recipe, jsonOptions), Encoding.UTF8, "application/json");
-        using var response = await client.PutAsync($"/api/recipe/{id}", content);
+        using var response = await SendRecipeAsync(client, HttpMethod.Put, $"{ApiRecipeRoute}/{id}", recipe);
+        return await DeserializeRecipeResponseAsync(response);
+    }
 
+    private static NewRecipe CreateRecipe(string title, string ingredientText, string measureText)
+    {
+        return new NewRecipe
+        {
+            Title = title,
+            Ingredients = [new RecipeIngredient { SortOrder = 0, IngredientText = ingredientText, MeasureText = measureText, IsOptional = false }]
+        };
+    }
+
+    private async Task<HttpResponseMessage> SendRecipeAsync(HttpClient client, HttpMethod method, string url, NewRecipe recipe)
+    {
+        using var request = new HttpRequestMessage(method, url)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(recipe, jsonOptions), Encoding.UTF8, ApplicationJson)
+        };
+        var response = await client.SendAsync(request);
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
+        return response;
+    }
 
+    private async Task<(int Id, string Title, List<RecipeIngredient> Ingredients)> DeserializeRecipeResponseAsync(
+        HttpResponseMessage response)
+    {
         using var stream = await response.Content.ReadAsStreamAsync();
         using var jsonDoc = await JsonDocument.ParseAsync(stream);
         var root = jsonDoc.RootElement;
 
-        var updatedId = root.GetProperty("id").GetInt32();
-        var title = root.GetProperty("title").GetString()!;
-        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(
-            root.GetProperty("ingredients").GetRawText(), jsonOptions) ?? [];
-
-        return (updatedId, title, ingredients);
+        return (
+            root.GetProperty("id").GetInt32(),
+            root.GetProperty("title").GetString()!,
+            JsonSerializer.Deserialize<List<RecipeIngredient>>(root.GetProperty("ingredients").GetRawText(), jsonOptions) ?? []);
     }
 
     public class NewRecipe
@@ -208,7 +183,6 @@ public class RecipeWithIngredientsIntegrationTests
 #pragma warning restore S1144 // Unused private types or members should be removed
     }
 }
-
 
 
 

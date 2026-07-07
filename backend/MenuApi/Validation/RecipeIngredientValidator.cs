@@ -22,6 +22,24 @@ public class RecipeIngredientValidator : AbstractValidator<RecipeIngredient>
         RuleFor(x => x.SortOrder)
             .GreaterThanOrEqualTo(0).WithMessage("'SortOrder' must be a non-negative number.");
 
+        When(x => x.SectionTitle is not null, () =>
+        {
+            RuleFor(x => x.SectionTitle)
+                .MaximumLength(100).WithMessage("'SectionTitle' must be at most 100 characters.");
+        });
+
+        When(x => x.UnitText is not null, () =>
+        {
+            RuleFor(x => x.UnitText)
+                .MaximumLength(50).WithMessage("'UnitText' must be at most 50 characters.");
+        });
+
+        When(x => x.PreparationText is not null, () =>
+        {
+            RuleFor(x => x.PreparationText)
+                .MaximumLength(100).WithMessage("'PreparationText' must be at most 100 characters.");
+        });
+
         When(x => x.Amount.HasValue, () =>
         {
             RuleFor(x => x.Amount!.Value)

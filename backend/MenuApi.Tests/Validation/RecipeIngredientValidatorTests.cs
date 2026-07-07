@@ -125,6 +125,54 @@ public class RecipeIngredientValidatorTests
     }
 
     [Fact]
+    public void SectionTitleTooLong_Fails()
+    {
+        var ingredient = new RecipeIngredient
+        {
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = "200g",
+            SectionTitle = new string('a', 101),
+        };
+
+        var result = validator.TestValidate(ingredient);
+
+        result.ShouldHaveValidationErrorFor("SectionTitle");
+    }
+
+    [Fact]
+    public void UnitTextTooLong_Fails()
+    {
+        var ingredient = new RecipeIngredient
+        {
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = "200g",
+            UnitText = new string('a', 51),
+        };
+
+        var result = validator.TestValidate(ingredient);
+
+        result.ShouldHaveValidationErrorFor("UnitText");
+    }
+
+    [Fact]
+    public void PreparationTextTooLong_Fails()
+    {
+        var ingredient = new RecipeIngredient
+        {
+            SortOrder = 0,
+            IngredientText = "Flour",
+            MeasureText = "200g",
+            PreparationText = new string('a', 101),
+        };
+
+        var result = validator.TestValidate(ingredient);
+
+        result.ShouldHaveValidationErrorFor("PreparationText");
+    }
+
+    [Fact]
     public void NegativeSortOrder_Fails()
     {
         var ingredient = new RecipeIngredient

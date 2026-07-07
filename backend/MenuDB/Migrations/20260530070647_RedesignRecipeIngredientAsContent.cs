@@ -10,108 +10,135 @@ namespace MenuDB.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_RecipeIngredient_Ingredient_IngredientId",
-                table: "RecipeIngredient");
+            migrationBuilder.Sql(
+                """
+                CREATE TABLE [RecipeIngredient_Staging] (
+                    [RecipeId] int NOT NULL,
+                    [SortOrder] int NOT NULL,
+                    [IngredientText] nvarchar(200) NOT NULL,
+                    [MeasureText] nvarchar(100) NOT NULL,
+                    [SectionTitle] nvarchar(100) NULL,
+                    [Amount] decimal(10,4) NULL,
+                    [UnitText] nvarchar(50) NULL,
+                    [PreparationText] nvarchar(100) NULL,
+                    [IsOptional] bit NOT NULL,
+                    [CanonicalIngredientId] int NULL,
+                    [CanonicalUnitId] int NULL
+                );
+                """);
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_RecipeIngredient_Unit_UnitId",
-                table: "RecipeIngredient");
+            migrationBuilder.Sql(
+                """
+                INSERT INTO [RecipeIngredient_Staging] (
+                    [RecipeId],
+                    [SortOrder],
+                    [IngredientText],
+                    [MeasureText],
+                    [SectionTitle],
+                    [Amount],
+                    [UnitText],
+                    [PreparationText],
+                    [IsOptional],
+                    [CanonicalIngredientId],
+                    [CanonicalUnitId])
+                SELECT
+                    [ri].[RecipeId],
+                    ROW_NUMBER() OVER (PARTITION BY [ri].[RecipeId] ORDER BY [ri].[IngredientId], [ri].[UnitId]) - 1,
+                    COALESCE([i].[Name], N''),
+                    LEFT(LTRIM(RTRIM(CONCAT(CONVERT(nvarchar(32), [ri].[Amount]), N' ', COALESCE(NULLIF([u].[Abbreviation], N''), [u].[Name], N'')))), 100),
+                    NULL,
+                    [ri].[Amount],
+                    LEFT(COALESCE(NULLIF([u].[Abbreviation], N''), [u].[Name]), 50),
+                    NULL,
+                    CAST(0 AS bit),
+                    [ri].[IngredientId],
+                    [ri].[UnitId]
+                FROM [RecipeIngredient] AS [ri]
+                LEFT JOIN [Ingredient] AS [i] ON [i].[Id] = [ri].[IngredientId]
+                LEFT JOIN [Unit] AS [u] ON [u].[Id] = [ri].[UnitId];
+                """);
 
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_RecipeIngredient",
-                table: "RecipeIngredient");
+            migrationBuilder.DropTable(
+                name: "RecipeIngredient");
 
-            migrationBuilder.DropIndex(
-                name: "IX_RecipeIngredient_IngredientId",
-                table: "RecipeIngredient");
+            migrationBuilder.CreateTable(
+                name: "RecipeIngredient",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RecipeId = table.Column<int>(type: "int", nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
+                    IngredientText = table.Column<string>(type: "nvarchar(200)", nullable: false),
+                    MeasureText = table.Column<string>(type: "nvarchar(100)", nullable: false),
+                    SectionTitle = table.Column<string>(type: "nvarchar(100)", nullable: true),
+                    Amount = table.Column<decimal>(type: "decimal(10,4)", nullable: true),
+                    UnitText = table.Column<string>(type: "nvarchar(50)", nullable: true),
+                    PreparationText = table.Column<string>(type: "nvarchar(100)", nullable: true),
+                    IsOptional = table.Column<bool>(type: "bit", nullable: false),
+                    CanonicalIngredientId = table.Column<int>(type: "int", nullable: true),
+                    CanonicalUnitId = table.Column<int>(type: "int", nullable: true),
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RecipeIngredient", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RecipeIngredient_Ingredient_CanonicalIngredientId",
+                        column: x => x.CanonicalIngredientId,
+                        principalTable: "Ingredient",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_RecipeIngredient_ToRecipe",
+                        column: x => x.RecipeId,
+                        principalTable: "Recipe",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RecipeIngredient_Unit_CanonicalUnitId",
+                        column: x => x.CanonicalUnitId,
+                        principalTable: "Unit",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
 
-            migrationBuilder.DropIndex(
-                name: "IX_RecipeIngredient_UnitId",
-                table: "RecipeIngredient");
+            migrationBuilder.Sql(
+                """
+                SET IDENTITY_INSERT [RecipeIngredient] ON;
 
-            migrationBuilder.RenameColumn(
-                name: "UnitId",
-                table: "RecipeIngredient",
-                newName: "SortOrder");
+                INSERT INTO [RecipeIngredient] (
+                    [Id],
+                    [RecipeId],
+                    [SortOrder],
+                    [IngredientText],
+                    [MeasureText],
+                    [SectionTitle],
+                    [Amount],
+                    [UnitText],
+                    [PreparationText],
+                    [IsOptional],
+                    [CanonicalIngredientId],
+                    [CanonicalUnitId])
+                SELECT
+                    ROW_NUMBER() OVER (ORDER BY [RecipeId], [SortOrder], [CanonicalIngredientId], [CanonicalUnitId]),
+                    [RecipeId],
+                    [SortOrder],
+                    [IngredientText],
+                    [MeasureText],
+                    [SectionTitle],
+                    [Amount],
+                    [UnitText],
+                    [PreparationText],
+                    [IsOptional],
+                    [CanonicalIngredientId],
+                    [CanonicalUnitId]
+                FROM [RecipeIngredient_Staging];
 
-            migrationBuilder.RenameColumn(
-                name: "IngredientId",
-                table: "RecipeIngredient",
-                newName: "Id");
+                SET IDENTITY_INSERT [RecipeIngredient] OFF;
+                """);
 
-            migrationBuilder.AlterColumn<decimal>(
-                name: "Amount",
-                table: "RecipeIngredient",
-                type: "decimal(10,4)",
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "decimal(10,4)");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "Id",
-                table: "RecipeIngredient",
-                type: "int",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "int")
-                .Annotation("SqlServer:Identity", "1, 1");
-
-            migrationBuilder.AddColumn<int>(
-                name: "CanonicalIngredientId",
-                table: "RecipeIngredient",
-                type: "int",
-                nullable: true);
-
-            migrationBuilder.AddColumn<int>(
-                name: "CanonicalUnitId",
-                table: "RecipeIngredient",
-                type: "int",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "IngredientText",
-                table: "RecipeIngredient",
-                type: "nvarchar(200)",
-                nullable: false,
-                defaultValue: "");
-
-            migrationBuilder.AddColumn<bool>(
-                name: "IsOptional",
-                table: "RecipeIngredient",
-                type: "bit",
-                nullable: false,
-                defaultValue: false);
-
-            migrationBuilder.AddColumn<string>(
-                name: "MeasureText",
-                table: "RecipeIngredient",
-                type: "nvarchar(100)",
-                nullable: false,
-                defaultValue: "");
-
-            migrationBuilder.AddColumn<string>(
-                name: "PreparationText",
-                table: "RecipeIngredient",
-                type: "nvarchar(200)",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "SectionTitle",
-                table: "RecipeIngredient",
-                type: "nvarchar(200)",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "UnitText",
-                table: "RecipeIngredient",
-                type: "nvarchar(50)",
-                nullable: true);
-
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_RecipeIngredient",
-                table: "RecipeIngredient",
-                column: "Id");
+            migrationBuilder.DropTable(
+                name: "RecipeIngredient_Staging");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RecipeIngredient_CanonicalIngredientId",
@@ -127,116 +154,132 @@ namespace MenuDB.Migrations
                 name: "IX_RecipeIngredient_RecipeId",
                 table: "RecipeIngredient",
                 column: "RecipeId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_RecipeIngredient_Ingredient_CanonicalIngredientId",
-                table: "RecipeIngredient",
-                column: "CanonicalIngredientId",
-                principalTable: "Ingredient",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_RecipeIngredient_Unit_CanonicalUnitId",
-                table: "RecipeIngredient",
-                column: "CanonicalUnitId",
-                principalTable: "Unit",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_RecipeIngredient_Ingredient_CanonicalIngredientId",
-                table: "RecipeIngredient");
+            migrationBuilder.Sql(
+                """
+                IF EXISTS (
+                    SELECT 1
+                    FROM [RecipeIngredient]
+                    WHERE [CanonicalIngredientId] IS NULL
+                       OR [CanonicalUnitId] IS NULL
+                )
+                BEGIN
+                    THROW 51001, 'Migration rollback aborted: RecipeIngredient contains rows that cannot be represented in the legacy schema. Resolve or remove non-canonical rows before rolling back migration 20260530070647.', 1;
+                END
+                """);
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_RecipeIngredient_Unit_CanonicalUnitId",
-                table: "RecipeIngredient");
+            migrationBuilder.Sql(
+                """
+                IF EXISTS (
+                    SELECT 1
+                    FROM [RecipeIngredient]
+                    WHERE [CanonicalIngredientId] IS NOT NULL
+                      AND [CanonicalUnitId] IS NOT NULL
+                      AND [Amount] IS NULL
+                )
+                BEGIN
+                    THROW 51003, 'Migration rollback aborted: canonical RecipeIngredient rows contain NULL Amount values that cannot be represented in the legacy schema. Populate Amount before rolling back migration 20260530070647.', 1;
+                END
+                """);
 
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_RecipeIngredient",
-                table: "RecipeIngredient");
+            migrationBuilder.Sql(
+                """
+                IF EXISTS (
+                    SELECT 1
+                    FROM [RecipeIngredient]
+                    WHERE [CanonicalIngredientId] IS NOT NULL
+                      AND [CanonicalUnitId] IS NOT NULL
+                    GROUP BY [RecipeId], [CanonicalIngredientId], [CanonicalUnitId]
+                    HAVING COUNT(*) > 1
+                )
+                BEGIN
+                    THROW 51004, 'Migration rollback aborted: multiple RecipeIngredient rows map to the same legacy canonical ingredient and unit pair. Deduplicate canonical rows before rolling back migration 20260530070647.', 1;
+                END
+                """);
 
-            migrationBuilder.DropIndex(
-                name: "IX_RecipeIngredient_CanonicalIngredientId",
-                table: "RecipeIngredient");
+            migrationBuilder.Sql(
+                """
+                CREATE TABLE [RecipeIngredient_Staging] (
+                    [RecipeId] int NOT NULL,
+                    [IngredientId] int NOT NULL,
+                    [UnitId] int NOT NULL,
+                    [Amount] decimal(10,4) NOT NULL
+                );
+                """);
 
-            migrationBuilder.DropIndex(
-                name: "IX_RecipeIngredient_CanonicalUnitId",
-                table: "RecipeIngredient");
+            migrationBuilder.Sql(
+                """
+                INSERT INTO [RecipeIngredient_Staging] (
+                    [RecipeId],
+                    [IngredientId],
+                    [UnitId],
+                    [Amount])
+                SELECT
+                    [RecipeId],
+                    [CanonicalIngredientId],
+                    [CanonicalUnitId],
+                    [Amount]
+                FROM [RecipeIngredient]
+                WHERE [CanonicalIngredientId] IS NOT NULL
+                  AND [CanonicalUnitId] IS NOT NULL;
+                """);
 
-            migrationBuilder.DropIndex(
-                name: "IX_RecipeIngredient_RecipeId",
-                table: "RecipeIngredient");
+            migrationBuilder.DropTable(
+                name: "RecipeIngredient");
 
-            migrationBuilder.DropColumn(
-                name: "CanonicalIngredientId",
-                table: "RecipeIngredient");
+            migrationBuilder.CreateTable(
+                name: "RecipeIngredient",
+                columns: table => new
+                {
+                    RecipeId = table.Column<int>(type: "int", nullable: false),
+                    IngredientId = table.Column<int>(type: "int", nullable: false),
+                    UnitId = table.Column<int>(type: "int", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(10,4)", nullable: false),
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RecipeIngredient", x => new { x.RecipeId, x.IngredientId, x.UnitId });
+                    table.ForeignKey(
+                        name: "FK_RecipeIngredient_Ingredient_IngredientId",
+                        column: x => x.IngredientId,
+                        principalTable: "Ingredient",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RecipeIngredient_ToRecipe",
+                        column: x => x.RecipeId,
+                        principalTable: "Recipe",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RecipeIngredient_Unit_UnitId",
+                        column: x => x.UnitId,
+                        principalTable: "Unit",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
-            migrationBuilder.DropColumn(
-                name: "CanonicalUnitId",
-                table: "RecipeIngredient");
+            migrationBuilder.Sql(
+                """
+                INSERT INTO [RecipeIngredient] (
+                    [RecipeId],
+                    [IngredientId],
+                    [UnitId],
+                    [Amount])
+                SELECT
+                    [RecipeId],
+                    [IngredientId],
+                    [UnitId],
+                    [Amount]
+                FROM [RecipeIngredient_Staging];
+                """);
 
-            migrationBuilder.DropColumn(
-                name: "IngredientText",
-                table: "RecipeIngredient");
-
-            migrationBuilder.DropColumn(
-                name: "IsOptional",
-                table: "RecipeIngredient");
-
-            migrationBuilder.DropColumn(
-                name: "MeasureText",
-                table: "RecipeIngredient");
-
-            migrationBuilder.DropColumn(
-                name: "PreparationText",
-                table: "RecipeIngredient");
-
-            migrationBuilder.DropColumn(
-                name: "SectionTitle",
-                table: "RecipeIngredient");
-
-            migrationBuilder.DropColumn(
-                name: "UnitText",
-                table: "RecipeIngredient");
-
-            migrationBuilder.RenameColumn(
-                name: "SortOrder",
-                table: "RecipeIngredient",
-                newName: "UnitId");
-
-            migrationBuilder.RenameColumn(
-                name: "Id",
-                table: "RecipeIngredient",
-                newName: "IngredientId");
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "Amount",
-                table: "RecipeIngredient",
-                type: "decimal(10,4)",
-                nullable: false,
-                defaultValue: 0m,
-                oldClrType: typeof(decimal),
-                oldType: "decimal(10,4)",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "IngredientId",
-                table: "RecipeIngredient",
-                type: "int",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "int")
-                .OldAnnotation("SqlServer:Identity", "1, 1");
-
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_RecipeIngredient",
-                table: "RecipeIngredient",
-                columns: new[] { "RecipeId", "IngredientId", "UnitId" });
+            migrationBuilder.DropTable(
+                name: "RecipeIngredient_Staging");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RecipeIngredient_IngredientId",
@@ -247,22 +290,6 @@ namespace MenuDB.Migrations
                 name: "IX_RecipeIngredient_UnitId",
                 table: "RecipeIngredient",
                 column: "UnitId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_RecipeIngredient_Ingredient_IngredientId",
-                table: "RecipeIngredient",
-                column: "IngredientId",
-                principalTable: "Ingredient",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_RecipeIngredient_Unit_UnitId",
-                table: "RecipeIngredient",
-                column: "UnitId",
-                principalTable: "Unit",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
         }
     }
 }

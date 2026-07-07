@@ -119,7 +119,7 @@ public class ValidationIntegrationTests
     public async Task UpdateRecipe_EmptyTitle_Returns400()
     {
         using var client = await fixture.GetHttpClient();
-        var recipeId = await CreateRecipeAsync(client, "Original Recipe");
+        var recipeId = await CreateRecipeAsync(client, $"Original Recipe {Guid.NewGuid()}");
 
         var updateBody = new NewRecipe { Title = "", Ingredients = [new RecipeIngredient { SortOrder = 0, IngredientText = "Flour", MeasureText = "1", IsOptional = false }] };
         using var updateContent = new StringContent(JsonSerializer.Serialize(updateBody, jsonOptions), Encoding.UTF8, ApplicationJson);
@@ -132,7 +132,7 @@ public class ValidationIntegrationTests
     public async Task UpdateRecipe_EmptyIngredientText_Returns400()
     {
         using var client = await fixture.GetHttpClient();
-        var recipeId = await CreateRecipeAsync(client, "Original Recipe");
+        var recipeId = await CreateRecipeAsync(client, $"Original Recipe {Guid.NewGuid()}");
 
         var updateBody = new NewRecipe
         {
@@ -181,4 +181,3 @@ public class ValidationIntegrationTests
         public List<int> UnitIds { get; set; } = [];
     }
 }
-

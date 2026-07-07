@@ -147,8 +147,7 @@ namespace MenuDB.Migrations
 
                     b.HasIndex("OwnerUserId", "Title")
                         .IsUnique()
-                        .HasDatabaseName("UX_Recipe_OwnerUserId_Title")
-                        .HasFilter("[OwnerUserId] IS NOT NULL");
+                        .HasDatabaseName("UX_Recipe_OwnerUserId_Title");
 
                     b.ToTable("Recipe", (string)null);
                 });

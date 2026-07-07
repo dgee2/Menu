@@ -51,7 +51,15 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
 
     public async Task<RecipeId> CreateRecipeAsync(RecipeTitle title)
     {
-        var entity = new RecipeEntity { Title = title.Value, AccessScope = "Private" };
+        var now = DateTime.UtcNow;
+        var entity = new RecipeEntity
+        {
+            Title = title.Value,
+            AccessScope = "Private",
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now,
+        };
+
         db.Recipes.Add(entity);
         try
         {
@@ -97,11 +105,15 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
 
     public async Task UpdateRecipeAsync(RecipeId recipeId, RecipeTitle title)
     {
+        var now = DateTime.UtcNow;
+
         try
         {
             await db.Recipes
                 .Where(r => r.Id == recipeId.Value)
-                .ExecuteUpdateAsync(s => s.SetProperty(r => r.Title, title.Value))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(r => r.Title, title.Value)
+                    .SetProperty(r => r.UpdatedAtUtc, now))
                 .ConfigureAwait(false);
         }
         catch (SqlException ex) when (ex.IsUniqueConstraintViolation())
