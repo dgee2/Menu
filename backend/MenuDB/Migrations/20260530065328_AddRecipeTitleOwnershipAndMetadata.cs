@@ -57,7 +57,8 @@ namespace MenuDB.Migrations
                 name: "CreatedAtUtc",
                 table: "Recipe",
                 type: "datetime2",
-                nullable: true);
+                nullable: false,
+                defaultValueSql: "GETUTCDATE()");
 
             migrationBuilder.AddColumn<int>(
                 name: "OwnerUserId",
@@ -93,7 +94,8 @@ namespace MenuDB.Migrations
                 name: "UpdatedAtUtc",
                 table: "Recipe",
                 type: "datetime2",
-                nullable: true);
+                nullable: false,
+                defaultValueSql: "GETUTCDATE()");
 
             migrationBuilder.AddColumn<string>(
                 name: "YieldText",

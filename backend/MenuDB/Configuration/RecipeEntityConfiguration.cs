@@ -20,8 +20,8 @@ public class RecipeEntityConfiguration : IEntityTypeConfiguration<RecipeEntity>
         builder.Property(x => x.PrepTimeMinutes).IsRequired(false);
         builder.Property(x => x.CookTimeMinutes).IsRequired(false);
         builder.Property(x => x.TotalTimeMinutes).IsRequired(false);
-        builder.Property(x => x.CreatedAtUtc).HasColumnType("datetime2").IsRequired(false);
-        builder.Property(x => x.UpdatedAtUtc).HasColumnType("datetime2").IsRequired(false);
+        builder.Property(x => x.CreatedAtUtc).HasColumnType("datetime2").IsRequired().HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(x => x.UpdatedAtUtc).HasColumnType("datetime2").IsRequired().HasDefaultValueSql("GETUTCDATE()");
         builder.HasIndex(x => new { x.OwnerUserId, x.Title })
             .IsUnique()
             .HasDatabaseName("UX_Recipe_OwnerUserId_Title")

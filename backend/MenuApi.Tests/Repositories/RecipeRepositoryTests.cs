@@ -26,8 +26,8 @@ public class RecipeRepositoryTests
             .AsNoTracking()
             .SingleAsync(r => r.Id == recipeId.Value, cancellationToken);
 
-        entity.CreatedAtUtc.Should().NotBeNull();
-        entity.UpdatedAtUtc.Should().NotBeNull();
+        entity.CreatedAtUtc.Should().NotBe(default);
+        entity.UpdatedAtUtc.Should().NotBe(default);
         entity.UpdatedAtUtc.Should().Be(entity.CreatedAtUtc);
     }
 

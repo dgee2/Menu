@@ -13,8 +13,8 @@ public class RecipeEntity
     public int? PrepTimeMinutes { get; set; }
     public int? CookTimeMinutes { get; set; }
     public int? TotalTimeMinutes { get; set; }
-    public DateTime? CreatedAtUtc { get; set; }
-    public DateTime? UpdatedAtUtc { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+    public DateTime UpdatedAtUtc { get; set; }
     public ICollection<RecipeIngredientEntity> RecipeIngredients { get; set; } = [];
 
     public ICollection<RecipeStepEntity> RecipeSteps { get; set; } = [];

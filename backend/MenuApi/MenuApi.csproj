@@ -39,9 +39,6 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.1.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
-		<!-- Explicit override: pin transitive Microsoft.OpenApi to a version without the known
-		     high-severity advisory GHSA-v5pm-xwqc-g5wc (fixed in 2.7.5). -->
-		<PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
 		<PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.8">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

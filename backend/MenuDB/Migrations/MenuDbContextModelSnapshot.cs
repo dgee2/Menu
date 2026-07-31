@@ -112,8 +112,10 @@ namespace MenuDB.Migrations
                     b.Property<int?>("CookTimeMinutes")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<int?>("OwnerUserId")
                         .HasColumnType("int");
@@ -134,8 +136,10 @@ namespace MenuDB.Migrations
                     b.Property<int?>("TotalTimeMinutes")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("YieldText")
                         .HasColumnType("nvarchar(100)");
