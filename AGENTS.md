@@ -183,3 +183,13 @@ pnpm storybook            # Storybook dev server (port 6006)
 5. Add service method (interface + impl in `backend/MenuApi/Services/`).
 6. Add the endpoint in the relevant `backend/MenuApi/Recipes/*Api.cs` file using the `MapGroup` pattern.
 7. Register new DI services in `backend/MenuApi/Program.cs`.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues (`gh` CLI); repo is inferred from `git remote -v`. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context layout — root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
