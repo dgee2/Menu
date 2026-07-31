@@ -13,6 +13,8 @@
     <PackageReference Include="Aspire.Hosting.Redis" Version="13.3.5" />
     <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.3.5" />
     <PackageReference Include="CommunityToolkit.Aspire.Hosting.JavaScript.Extensions" Version="13.3.0" />
+    <!-- Pin transitive MessagePack (via Aspire.Hosting -> StreamJsonRpc) past known vulnerabilities in 2.5.192 -->
+    <PackageReference Include="MessagePack" Version="2.5.302" />
   </ItemGroup>
 
   <ItemGroup>
