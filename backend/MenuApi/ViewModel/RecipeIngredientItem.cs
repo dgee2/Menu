@@ -1,6 +1,6 @@
 namespace MenuApi.ViewModel;
 
-public class RecipeIngredient
+public class RecipeIngredientItem
 {
 #pragma warning disable CS8618 // Non-nullable field is uninitialized.
     public string IngredientText { get; init; }
