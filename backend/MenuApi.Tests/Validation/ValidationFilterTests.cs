@@ -30,7 +30,7 @@ public class ValidationFilterTests
     {
         var invalidRecipe = new NewRecipe
         {
-            Name = RecipeName.From(new string('a', 501)),
+            Title = RecipeTitle.From(new string('a', 501)),
             Ingredients = []
         };
 
@@ -53,14 +53,15 @@ public class ValidationFilterTests
     {
         var validRecipe = new NewRecipe
         {
-            Name = RecipeName.From("Valid Recipe"),
+            Title = RecipeTitle.From("Valid Recipe"),
             Ingredients =
             [
                 new RecipeIngredient
                 {
-                    Name = IngredientName.From("Flour"),
-                    Unit = IngredientUnitName.From("Grams"),
-                    Amount = IngredientAmount.From(100m)
+                    SortOrder = 0,
+                    IngredientText = "Flour",
+                    MeasureText = "200g",
+                    IsOptional = false,
                 }
             ]
         };
@@ -116,7 +117,7 @@ public class ValidationFilterTests
 
         var recipe = new NewRecipe
         {
-            Name = RecipeName.From("test"),
+            Title = RecipeTitle.From("test"),
             Ingredients = []
         };
         var context = A.Fake<EndpointFilterInvocationContext>();
@@ -146,7 +147,7 @@ public class ValidationFilterTests
 
         var recipe = new NewRecipe
         {
-            Name = RecipeName.From("test"),
+            Title = RecipeTitle.From("test"),
             Ingredients = []
         };
         var context = A.Fake<EndpointFilterInvocationContext>();
@@ -192,7 +193,7 @@ public class ValidationFilterTests
 
         var recipe = new NewRecipe
         {
-            Name = RecipeName.From("test"),
+            Title = RecipeTitle.From("test"),
             Ingredients = []
         };
         var context = A.Fake<EndpointFilterInvocationContext>();
@@ -207,3 +208,5 @@ public class ValidationFilterTests
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
 }
+
+

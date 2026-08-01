@@ -8,9 +8,9 @@ public class NewRecipeValidator : AbstractValidator<NewRecipe>
 {
     public NewRecipeValidator()
     {
-        Include(VogenValidationRules.StringRules<NewRecipe, RecipeName>(
-            x => x.Name, x => x.Name.Value,
-            x => x.Name.IsInitialized(), "Name", 500));
+        Include(VogenValidationRules.StringRules<NewRecipe, RecipeTitle>(
+            x => x.Title, x => x.Title.Value,
+            x => x.Title.IsInitialized(), "Title", 200));
 
         RuleFor(x => x.Ingredients)
             .NotNull()

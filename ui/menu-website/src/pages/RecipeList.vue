@@ -4,7 +4,7 @@
     <q-list v-if="recipes && recipes.length" bordered separator>
       <q-item v-for="recipe in recipes" :key="recipe.id">
         <q-item-section>
-          <div class="text-h6">{{ recipe.name }}</div>
+          <div class="text-h6">{{ recipe.title }}</div>
           <!--          <div class="text-subtitle2">{{ recipe.description }}</div>-->
         </q-item-section>
       </q-item>

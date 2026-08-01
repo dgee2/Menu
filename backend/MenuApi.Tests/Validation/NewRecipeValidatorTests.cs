@@ -12,9 +12,10 @@ public class NewRecipeValidatorTests
 
     private static RecipeIngredient CreateValidIngredient() => new()
     {
-        Name = IngredientName.From("Flour"),
-        Unit = IngredientUnitName.From("Grams"),
-        Amount = IngredientAmount.From(100m)
+        SortOrder = 0,
+        IngredientText = "Flour",
+        MeasureText = "200g",
+        IsOptional = false,
     };
 
     [Fact]
@@ -22,7 +23,7 @@ public class NewRecipeValidatorTests
     {
         var recipe = new NewRecipe
         {
-            Name = RecipeName.From("Test Recipe"),
+            Title = RecipeTitle.From("Test Recipe"),
             Ingredients = [CreateValidIngredient()]
         };
 
@@ -32,17 +33,17 @@ public class NewRecipeValidatorTests
     }
 
     [Fact]
-    public void NameTooLong_Fails()
+    public void TitleTooLong_Fails()
     {
         var recipe = new NewRecipe
         {
-            Name = RecipeName.From(new string('a', 501)),
+            Title = RecipeTitle.From(new string('a', 201)),
             Ingredients = [CreateValidIngredient()]
         };
 
         var result = validator.TestValidate(recipe);
 
-        result.ShouldHaveValidationErrorFor("Name");
+        result.ShouldHaveValidationErrorFor("Title");
     }
 
     [Fact]
@@ -50,7 +51,7 @@ public class NewRecipeValidatorTests
     {
         var recipe = new NewRecipe
         {
-            Name = RecipeName.From("Valid Recipe"),
+            Title = RecipeTitle.From("Valid Recipe"),
             Ingredients = []
         };
 
@@ -60,34 +61,34 @@ public class NewRecipeValidatorTests
     }
 
     [Fact]
-    public void UninitializedName_Fails()
+    public void UninitializedTitle_Fails()
     {
 #pragma warning disable VOG009
         var recipe = new NewRecipe
         {
-            Name = default,
+            Title = default,
             Ingredients = [CreateValidIngredient()]
         };
 #pragma warning restore VOG009
 
         var result = validator.TestValidate(recipe);
 
-        result.ShouldHaveValidationErrorFor("Name");
+        result.ShouldHaveValidationErrorFor("Title");
     }
 
     [Theory]
     [InlineData(" ")]
     [InlineData("  \t  ")]
-    public void WhitespaceName_Fails(string name)
+    public void WhitespaceTitle_Fails(string title)
     {
         var recipe = new NewRecipe
         {
-            Name = RecipeName.From(name),
+            Title = RecipeTitle.From(title),
             Ingredients = [CreateValidIngredient()]
         };
 
         var result = validator.TestValidate(recipe);
 
-        result.ShouldHaveValidationErrorFor("Name");
+        result.ShouldHaveValidationErrorFor("Title");
     }
 }

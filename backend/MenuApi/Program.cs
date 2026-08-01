@@ -23,6 +23,7 @@ builder.Services.AddTransient<IIngredientService, IngredientService>();
 
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
+builder.Services.AddTransient<IRecipeStepRepository, RecipeStepRepository>();
 
 builder.Services.AddTransient<IMenuUserRepository, MenuUserRepository>();
 builder.Services.AddTransient<IMenuUserService, MenuUserService>();

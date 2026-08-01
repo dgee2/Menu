@@ -4,6 +4,7 @@ using MenuDB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MenuDB.Migrations
 {
     [DbContext(typeof(MenuDbContext))]
-    partial class MenuDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260530065328_AddRecipeTitleOwnershipAndMetadata")]
+    partial class AddRecipeTitleOwnershipAndMetadata
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -155,87 +158,25 @@ namespace MenuDB.Migrations
 
             modelBuilder.Entity("MenuDB.Data.RecipeIngredientEntity", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("RecipeId")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<int>("IngredientId")
+                        .HasColumnType("int");
 
-                    b.Property<decimal?>("Amount")
+                    b.Property<int>("UnitId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Amount")
                         .HasColumnType("decimal(10,4)");
 
-                    b.Property<int?>("CanonicalIngredientId")
-                        .HasColumnType("int");
+                    b.HasKey("RecipeId", "IngredientId", "UnitId");
 
-                    b.Property<int?>("CanonicalUnitId")
-                        .HasColumnType("int");
+                    b.HasIndex("IngredientId");
 
-                    b.Property<string>("IngredientText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("IsOptional")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("MeasureText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("PreparationText")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SectionTitle")
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UnitText")
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CanonicalIngredientId");
-
-                    b.HasIndex("CanonicalUnitId");
-
-                    b.HasIndex("RecipeId");
+                    b.HasIndex("UnitId");
 
                     b.ToTable("RecipeIngredient", (string)null);
-                });
-
-            modelBuilder.Entity("MenuDB.Data.RecipeStepEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("DurationMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<string>("InstructionText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .HasColumnType("nvarchar(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RecipeId");
-
-                    b.ToTable("RecipeStep", (string)null);
                 });
 
             modelBuilder.Entity("MenuDB.Data.UnitEntity", b =>
@@ -374,15 +315,11 @@ namespace MenuDB.Migrations
 
             modelBuilder.Entity("MenuDB.Data.RecipeIngredientEntity", b =>
                 {
-                    b.HasOne("MenuDB.Data.IngredientEntity", "CanonicalIngredient")
+                    b.HasOne("MenuDB.Data.IngredientEntity", "Ingredient")
                         .WithMany()
-                        .HasForeignKey("CanonicalIngredientId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("MenuDB.Data.UnitEntity", "CanonicalUnit")
-                        .WithMany()
-                        .HasForeignKey("CanonicalUnitId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("MenuDB.Data.RecipeEntity", "Recipe")
                         .WithMany("RecipeIngredients")
@@ -391,23 +328,17 @@ namespace MenuDB.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_RecipeIngredient_ToRecipe");
 
-                    b.Navigation("CanonicalIngredient");
-
-                    b.Navigation("CanonicalUnit");
-
-                    b.Navigation("Recipe");
-                });
-
-            modelBuilder.Entity("MenuDB.Data.RecipeStepEntity", b =>
-                {
-                    b.HasOne("MenuDB.Data.RecipeEntity", "Recipe")
-                        .WithMany("RecipeSteps")
-                        .HasForeignKey("RecipeId")
+                    b.HasOne("MenuDB.Data.UnitEntity", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_RecipeStep_ToRecipe");
+                        .IsRequired();
+
+                    b.Navigation("Ingredient");
 
                     b.Navigation("Recipe");
+
+                    b.Navigation("Unit");
                 });
 
             modelBuilder.Entity("MenuDB.Data.UnitEntity", b =>
@@ -430,8 +361,6 @@ namespace MenuDB.Migrations
             modelBuilder.Entity("MenuDB.Data.RecipeEntity", b =>
                 {
                     b.Navigation("RecipeIngredients");
-
-                    b.Navigation("RecipeSteps");
                 });
 
             modelBuilder.Entity("MenuDB.Data.UnitEntity", b =>

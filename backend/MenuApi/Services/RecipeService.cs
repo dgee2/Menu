@@ -1,5 +1,4 @@
 using MenuDB;
-using MenuApi.Exceptions;
 using MenuApi.MappingProfiles;
 using MenuApi.Repositories;
 using MenuApi.ValueObjects;
@@ -40,14 +39,12 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 
-        var ingredients = NormalizeRecipeIngredients(newRecipe.Ingredients);
-
         var strategy = db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
             await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
-            var recipeId = await recipeRepository.CreateRecipeAsync(newRecipe.Name).ConfigureAwait(false);
-            await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
+            var recipeId = await recipeRepository.CreateRecipeAsync(newRecipe.Title).ConfigureAwait(false);
+            await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(newRecipe.Ingredients)).ConfigureAwait(false);
             await tran.CommitAsync().ConfigureAwait(false);
             return recipeId;
         }).ConfigureAwait(false);
@@ -57,38 +54,13 @@ public class RecipeService(IRecipeRepository recipeRepository, MenuDbContext db)
     {
         ArgumentNullException.ThrowIfNull(newRecipe);
 
-        var ingredients = NormalizeRecipeIngredients(newRecipe.Ingredients);
-
         var strategy = db.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
         {
             await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
-            await recipeRepository.UpdateRecipeAsync(recipeId, newRecipe.Name).ConfigureAwait(false);
-            await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ingredients).ConfigureAwait(false);
+            await recipeRepository.UpdateRecipeAsync(recipeId, newRecipe.Title).ConfigureAwait(false);
+            await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(newRecipe.Ingredients)).ConfigureAwait(false);
             await tran.CommitAsync().ConfigureAwait(false);
         }).ConfigureAwait(false);
-    }
-
-    private static IReadOnlyList<DBModel.RecipeIngredient> NormalizeRecipeIngredients(IEnumerable<ViewModel.RecipeIngredient> recipeIngredients)
-    {
-        ArgumentNullException.ThrowIfNull(recipeIngredients);
-
-        var deduped = ViewModelMapper.Map(recipeIngredients).Distinct().ToList();
-
-        // After exact-duplicate removal, any (IngredientName, UnitName) group with more than one
-        // entry represents the same ingredient+unit with conflicting amounts — a business conflict.
-        var conflicts = deduped
-            .GroupBy(i => (i.IngredientName, i.UnitName))
-            .Where(g => g.Count() > 1)
-            .Select(g => $"'{g.Key.IngredientName.Value}' with unit '{g.Key.UnitName.Value}'")
-            .ToList();
-
-        if (conflicts.Count > 0)
-        {
-            throw new BusinessValidationException(
-                $"The following ingredients appear more than once with conflicting amounts: {string.Join(", ", conflicts)}.");
-        }
-
-        return deduped;
     }
 }

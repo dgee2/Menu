@@ -10,7 +10,7 @@ public class Recipe
     public RecipeId Id { get; init; }
     [Required]
 
-    public RecipeName Name { get; init; }
+    public RecipeTitle Title { get; init; }
 
 #pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
 }
