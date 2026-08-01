@@ -33,7 +33,7 @@ public class RecipeIntegrationTests
 
         var data = await response.Content.ReadAsStringAsync();
 
-        var deserializedData = JsonSerializer.Deserialize<HashSet<Recipe>>(data, jsonOptions);
+        var deserializedData = JsonSerializer.Deserialize<HashSet<RecipeListItem>>(data, jsonOptions);
         deserializedData.Should().NotBeNull();
     }
 
@@ -42,12 +42,12 @@ public class RecipeIntegrationTests
     public async Task Create_Recipe_With_Free_Text_Ingredients(string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
-        var recipe = new NewRecipe
+        var recipe = new UpsertRecipe
         {
             Title = recipeTitle,
             Ingredients =
             [
-                new RecipeIngredient { SortOrder = 0, IngredientText = "Flour", MeasureText = "2 cups", IsOptional = false }
+                new RecipeIngredientItem { SortOrder = 0, IngredientText = "Flour", MeasureText = "2 cups", IsOptional = false }
             ]
         };
         var (_, title) = await PostRecipeAsync(client, recipe);
@@ -60,23 +60,23 @@ public class RecipeIntegrationTests
     public async Task Create_and_Update_Recipe(string recipeTitle1, string recipeTitle2)
     {
         using var client = await fixture.GetHttpClient();
-        var recipe = new NewRecipe
+        var recipe = new UpsertRecipe
         {
             Title = recipeTitle1,
             Ingredients =
             [
-                new RecipeIngredient { SortOrder = 0, IngredientText = "Sugar", MeasureText = "1 cup", IsOptional = false }
+                new RecipeIngredientItem { SortOrder = 0, IngredientText = "Sugar", MeasureText = "1 cup", IsOptional = false }
             ]
         };
 
         var (id, _) = await PostRecipeAsync(client, recipe);
 
-        var updatedRecipe = new NewRecipe
+        var updatedRecipe = new UpsertRecipe
         {
             Title = recipeTitle2,
             Ingredients =
             [
-                new RecipeIngredient { SortOrder = 0, IngredientText = "Butter", MeasureText = "1/2 cup", IsOptional = false }
+                new RecipeIngredientItem { SortOrder = 0, IngredientText = "Butter", MeasureText = "1/2 cup", IsOptional = false }
             ]
         };
 
@@ -90,12 +90,12 @@ public class RecipeIntegrationTests
     public async Task Create_And_Get_Recipe(string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
-        var recipe = new NewRecipe
+        var recipe = new UpsertRecipe
         {
             Title = recipeTitle,
             Ingredients =
             [
-                new RecipeIngredient { SortOrder = 0, IngredientText = "Eggs", MeasureText = "3", IsOptional = false }
+                new RecipeIngredientItem { SortOrder = 0, IngredientText = "Eggs", MeasureText = "3", IsOptional = false }
             ]
         };
 
@@ -111,12 +111,12 @@ public class RecipeIntegrationTests
     public async Task Create_Recipe_And_Get_Ingredients(string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
-        var recipe = new NewRecipe
+        var recipe = new UpsertRecipe
         {
             Title = recipeTitle,
             Ingredients =
             [
-                new RecipeIngredient { SortOrder = 0, IngredientText = "Salt", MeasureText = "1 tbsp", IsOptional = false }
+                new RecipeIngredientItem { SortOrder = 0, IngredientText = "Salt", MeasureText = "1 tbsp", IsOptional = false }
             ]
         };
 
@@ -126,7 +126,7 @@ public class RecipeIntegrationTests
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
 
         var data = await response.Content.ReadAsStringAsync();
-        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(data, jsonOptions);
+        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredientItem>>(data, jsonOptions);
         ingredients.Should().NotBeNull();
         ingredients.Should().HaveCount(1);
         ingredients![0].IngredientText.Should().Be("Salt");
@@ -137,12 +137,12 @@ public class RecipeIntegrationTests
     public async Task Create_Recipe_With_Duplicate_Title_Returns_UnprocessableEntity(string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
-        var recipe = new NewRecipe
+        var recipe = new UpsertRecipe
         {
             Title = recipeTitle,
             Ingredients =
             [
-                new RecipeIngredient { SortOrder = 0, IngredientText = "Ingredient", MeasureText = "1", IsOptional = false }
+                new RecipeIngredientItem { SortOrder = 0, IngredientText = "Ingredient", MeasureText = "1", IsOptional = false }
             ]
         };
 
@@ -159,21 +159,21 @@ public class RecipeIntegrationTests
     public async Task Update_Recipe_To_Duplicate_Title_Returns_UnprocessableEntity(string recipeTitle1, string recipeTitle2)
     {
         using var client = await fixture.GetHttpClient();
-        var recipe1 = new NewRecipe
+        var recipe1 = new UpsertRecipe
         {
             Title = recipeTitle1,
             Ingredients =
             [
-                new RecipeIngredient { SortOrder = 0, IngredientText = "Ingredient1", MeasureText = "1", IsOptional = false }
+                new RecipeIngredientItem { SortOrder = 0, IngredientText = "Ingredient1", MeasureText = "1", IsOptional = false }
             ]
         };
 
-        var recipe2 = new NewRecipe
+        var recipe2 = new UpsertRecipe
         {
             Title = recipeTitle2,
             Ingredients =
             [
-                new RecipeIngredient { SortOrder = 0, IngredientText = "Ingredient2", MeasureText = "2", IsOptional = false }
+                new RecipeIngredientItem { SortOrder = 0, IngredientText = "Ingredient2", MeasureText = "2", IsOptional = false }
             ]
         };
 
@@ -188,7 +188,7 @@ public class RecipeIntegrationTests
         await response.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
     }
 
-    private static async Task<(int Id, string Title)> PostRecipeAsync(HttpClient client, NewRecipe recipe)
+    private static async Task<(int Id, string Title)> PostRecipeAsync(HttpClient client, UpsertRecipe recipe)
     {
         using var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
         using var response = await client.PostAsync("/api/recipe", requestContent);
@@ -201,7 +201,7 @@ public class RecipeIntegrationTests
         return GetRecipeFromJson(jsonDoc);
     }
 
-    private static async Task<(int Id, string Title)> PutRecipeAsync(HttpClient client, int id, NewRecipe recipe)
+    private static async Task<(int Id, string Title)> PutRecipeAsync(HttpClient client, int id, UpsertRecipe recipe)
     {
         using var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
         using var response = await client.PutAsync($"/api/recipe/{id}", requestContent);
@@ -235,7 +235,7 @@ public class RecipeIntegrationTests
         );
     }
 
-    private class Recipe
+    private class RecipeListItem
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
         public int Id { get; set; }
@@ -244,14 +244,18 @@ public class RecipeIntegrationTests
 #pragma warning restore S1144 // Unused private types or members should be removed
     }
 
-    public class NewRecipe
+    public class UpsertRecipe
     {
-        public List<RecipeIngredient> Ingredients { get; set; } = [];
+        public List<RecipeIngredientItem> Ingredients { get; set; } = [];
+
+        public List<RecipeStepItem> Steps { get; set; } = [];
 
         public string Title { get; set; } = null!;
+
+        public string AccessScope { get; set; } = "Private";
     }
 
-    public class RecipeIngredient
+    public class RecipeIngredientItem
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
         public int SortOrder { get; set; }
@@ -260,5 +264,12 @@ public class RecipeIntegrationTests
         public bool IsOptional { get; set; }
 #pragma warning restore S1144 // Unused private types or members should be removed
     }
-}
 
+    public class RecipeStepItem
+    {
+#pragma warning disable S1144 // Unused private types or members should be removed
+        public int SortOrder { get; set; }
+        public string InstructionText { get; set; } = null!;
+#pragma warning restore S1144 // Unused private types or members should be removed
+    }
+}

@@ -14,11 +14,13 @@ public class RecipeServiceTests
 {
     private readonly RecipeService sut;
     private readonly IRecipeRepository recipeRepository;
+    private readonly IRecipeStepRepository recipeStepRepository;
     private readonly MenuDbContext db;
 
     public RecipeServiceTests()
     {
         recipeRepository = A.Fake<IRecipeRepository>();
+        recipeStepRepository = A.Fake<IRecipeStepRepository>();
 
         var options = new DbContextOptionsBuilder<MenuDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -26,16 +28,20 @@ public class RecipeServiceTests
             .Options;
         db = new MenuDbContext(options);
 
-        sut = new RecipeService(recipeRepository, db);
+        sut = new RecipeService(recipeRepository, recipeStepRepository, db);
     }
 
     [Theory, CustomAutoData]
-    public async Task GetRecipeSuccess(DBModel.Recipe recipe, IEnumerable<DBModel.RecipeIngredient> ingredients)
+    public async Task GetRecipeSuccess(
+        DBModel.Recipe recipe,
+        IEnumerable<DBModel.RecipeIngredient> ingredients,
+        IEnumerable<DBModel.RecipeStep> steps)
     {
         A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(recipe);
         A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id)).Returns(ingredients);
+        A.CallTo(() => recipeStepRepository.GetStepsByRecipeIdAsync(recipe.Id)).Returns(steps);
 
-        var expected = ingredients.Select(x => new RecipeIngredient
+        var expectedIngredients = ingredients.Select(x => new RecipeIngredientItem
         {
             SortOrder = x.SortOrder,
             IngredientText = x.IngredientText,
@@ -49,20 +55,39 @@ public class RecipeServiceTests
             CanonicalUnitId = x.CanonicalUnitId,
         });
 
+        var expectedSteps = steps.Select(x => new RecipeStepItem
+        {
+            SortOrder = x.SortOrder,
+            InstructionText = x.InstructionText,
+            Title = x.Title,
+            DurationMinutes = x.DurationMinutes,
+        });
+
         var result = await sut.GetRecipeAsync(recipe.Id);
 
         result!.Title.Should().Be(recipe.Title);
         result.Id.Should().Be(recipe.Id);
-        result.Ingredients.Should().BeEquivalentTo(expected);
+        result.AccessScope.Should().Be(recipe.AccessScope);
+        result.Summary.Should().Be(recipe.Summary);
+        result.Servings.Should().Be(recipe.Servings);
+        result.Ingredients.Should().BeEquivalentTo(expectedIngredients);
+        result.Steps.Should().BeEquivalentTo(expectedSteps);
     }
 
     [Theory, CustomAutoData]
     public async Task GetRecipesSuccess(IEnumerable<DBModel.Recipe> recipes)
     {
-        var expected = recipes.Select(x => new Recipe
+        var expected = recipes.Select(x => new RecipeListItem
         {
             Id = x.Id,
-            Title = x.Title
+            Title = x.Title,
+            AccessScope = x.AccessScope,
+            Summary = x.Summary,
+            Servings = x.Servings,
+            YieldText = x.YieldText,
+            PrepTimeMinutes = x.PrepTimeMinutes,
+            CookTimeMinutes = x.CookTimeMinutes,
+            TotalTimeMinutes = x.TotalTimeMinutes,
         });
         A.CallTo(() => recipeRepository.GetRecipesAsync()).Returns(recipes.AsEnumerable());
 
@@ -73,7 +98,7 @@ public class RecipeServiceTests
     [Theory, CustomAutoData]
     public async Task GetRecipeIngredientsSuccess(RecipeId recipeId, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
-        var expected = ingredients.Select(x => new RecipeIngredient
+        var expected = ingredients.Select(x => new RecipeIngredientItem
         {
             SortOrder = x.SortOrder,
             IngredientText = x.IngredientText,
@@ -94,43 +119,35 @@ public class RecipeServiceTests
     }
 
     [Theory, CustomAutoData]
-    public async Task CreateRecipeSuccess(DBModel.Recipe recipe, IEnumerable<RecipeIngredient> ingredients)
+    public async Task CreateRecipeSuccess(RecipeId recipeId, UpsertRecipe upsertRecipe)
     {
-        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Title)).Returns(recipe.Id);
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(A<DBModel.Recipe>._)).Returns(recipeId);
 
-        var newRecipe = new NewRecipe
-        {
-            Title = recipe.Title,
-            Ingredients = ingredients.ToList(),
-        };
+        await sut.CreateRecipeAsync(upsertRecipe);
 
-        await sut.CreateRecipeAsync(newRecipe);
-
-        A.CallTo(() => recipeRepository.CreateRecipeAsync(recipe.Title)).MustHaveHappenedOnceExactly();
-        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipe.Id, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
-    }
-
-    [Theory, CustomAutoData]
-    public async Task UpdateRecipeSuccess(RecipeId recipeId, RecipeTitle recipeTitle, IEnumerable<RecipeIngredient> ingredients)
-    {
-        var newRecipe = new NewRecipe
-        {
-            Title = recipeTitle,
-            Ingredients = ingredients.ToList(),
-        };
-
-        await sut.UpdateRecipeAsync(recipeId, newRecipe);
-
-        A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, recipeTitle)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(A<DBModel.Recipe>.That.Matches(
+            r => r.Title == upsertRecipe.Title && r.AccessScope == upsertRecipe.AccessScope)))
+            .MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
     }
 
     [Theory, CustomAutoData]
-    public async Task UpdateRecipe_Should_Throw_Exception_For_null_newRecipeAsync(RecipeId recipeId)
+    public async Task UpdateRecipeSuccess(RecipeId recipeId, UpsertRecipe upsertRecipe)
+    {
+        await sut.UpdateRecipeAsync(recipeId, upsertRecipe);
+
+        A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, A<DBModel.Recipe>.That.Matches(
+            r => r.Title == upsertRecipe.Title && r.AccessScope == upsertRecipe.AccessScope)))
+            .MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task UpdateRecipe_Should_Throw_Exception_For_null_upsertRecipeAsync(RecipeId recipeId)
     {
         Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, null!);
 
         var result = await fun.Should().ThrowAsync<ArgumentNullException>();
-        result.And.ParamName.Should().Be("newRecipe");
+        result.And.ParamName.Should().Be("upsertRecipe");
     }
 }
