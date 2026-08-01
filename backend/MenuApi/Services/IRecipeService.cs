@@ -1,17 +1,17 @@
-﻿using MenuApi.ValueObjects;
+using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
 
 namespace MenuApi.Services;
 
 public interface IRecipeService
 {
-    Task<RecipeId> CreateRecipeAsync(NewRecipe newRecipe);
+    Task<RecipeId> CreateRecipeAsync(UpsertRecipe upsertRecipe);
 
-    Task<FullRecipe?> GetRecipeAsync(RecipeId recipeId);
+    Task<RecipeDetail?> GetRecipeAsync(RecipeId recipeId);
 
-    Task<IEnumerable<RecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId);
+    Task<IEnumerable<RecipeIngredientItem>> GetRecipeIngredientsAsync(RecipeId recipeId);
 
-    Task<IEnumerable<Recipe>> GetRecipesAsync();
+    Task<IEnumerable<RecipeListItem>> GetRecipesAsync();
 
-    Task UpdateRecipeAsync(RecipeId recipeId, NewRecipe newRecipe);
+    Task UpdateRecipeAsync(RecipeId recipeId, UpsertRecipe upsertRecipe);
 }
