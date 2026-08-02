@@ -41,6 +41,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Menu.AppHost\Menu.AppHost.csproj" />
+	  <ProjectReference Include="..\MenuDB\MenuDB.csproj" />
 	</ItemGroup>
 
 </Project>
