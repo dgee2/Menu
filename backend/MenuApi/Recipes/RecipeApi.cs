@@ -33,14 +33,17 @@ public static class RecipeApi
             .AddEndpointFilter<ValidationFilter<UpsertRecipe>>()
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapPut("{recipeId}", UpdateRecipeAsync)
             .AddEndpointFilter<ValidationFilter<UpsertRecipe>>()
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         return group;
     }
@@ -116,10 +119,22 @@ public static class RecipeApi
         return Results.Ok(recipe ?? throw new InvalidOperationException("Recipe creation failed"));
     }
 
-    public static async Task<RecipeDetail> UpdateRecipeAsync(IRecipeService recipeService, RecipeId recipeId, UpsertRecipe upsertRecipe)
+    public static async Task<IResult> UpdateRecipeAsync(IRecipeService recipeService, HttpContext httpContext, RecipeId recipeId, UpsertRecipe upsertRecipe)
     {
-        await recipeService.UpdateRecipeAsync(recipeId, upsertRecipe);
+        if (httpContext.Items[MenuUserHttpContextKeys.MenuUserId] is not MenuUserId callerId)
+        {
+            return Results.Unauthorized();
+        }
+
+        var updated = await recipeService.UpdateRecipeAsync(recipeId, upsertRecipe, callerId);
+        if (!updated)
+        {
+            return Results.Problem(
+                detail: $"Recipe with ID {recipeId} was not found.",
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
         var recipe = await recipeService.GetRecipeAsync(recipeId);
-        return recipe ?? throw new InvalidOperationException($"Failed to retrieve the updated recipe with ID {recipeId} after the update operation.");
+        return Results.Ok(recipe ?? throw new InvalidOperationException($"Failed to retrieve the updated recipe with ID {recipeId} after the update operation."));
     }
 }

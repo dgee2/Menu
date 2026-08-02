@@ -13,5 +13,5 @@ public interface IRecipeService
 
     Task<IEnumerable<RecipeListItem>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take);
 
-    Task UpdateRecipeAsync(RecipeId recipeId, UpsertRecipe upsertRecipe);
+    Task<bool> UpdateRecipeAsync(RecipeId recipeId, UpsertRecipe upsertRecipe, MenuUserId callerId);
 }
