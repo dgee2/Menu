@@ -2,10 +2,14 @@
   <q-page class="q-pa-md">
     <h1>All Recipes</h1>
     <q-list v-if="recipes && recipes.length" bordered separator>
-      <q-item v-for="recipe in recipes" :key="recipe.id">
+      <q-item
+        v-for="recipe in recipes"
+        :key="recipe.id"
+        clickable
+        :to="`/recipe/${recipe.id}`"
+      >
         <q-item-section>
           <div class="text-h6">{{ recipe.title }}</div>
-          <!--          <div class="text-subtitle2">{{ recipe.description }}</div>-->
         </q-item-section>
       </q-item>
     </q-list>

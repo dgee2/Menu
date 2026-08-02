@@ -13,4 +13,9 @@ export const authenticatedRoutes: RouteRecordRaw[] = [
     path: 'recipes',
     component: () => import('@/pages/RecipeList.vue'),
   },
+  {
+    path: 'recipe/:recipeId',
+    component: () => import('@/pages/RecipeDetail.vue'),
+    props: true,
+  },
 ];
