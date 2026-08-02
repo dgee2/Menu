@@ -10,6 +10,7 @@ export const router = createRouter({
   routes: [
     { path: '/', component: StoryRouteView },
     { path: '/recipes', component: StoryRouteView },
+    { path: '/recipe/:recipeId', component: StoryRouteView },
     { path: '/new-recipe', component: StoryRouteView },
     { path: '/profile', component: StoryRouteView },
   ],
