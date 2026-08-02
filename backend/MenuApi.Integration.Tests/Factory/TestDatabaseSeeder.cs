@@ -56,6 +56,16 @@ internal static class TestDatabaseSeeder
         return entity.Id;
     }
 
+    public static async Task<int> CountStepsForRecipeAsync(
+        ApiTestFixture fixture,
+        int recipeId,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await CreateDbContextAsync(fixture, cancellationToken);
+
+        return await db.RecipeSteps.CountAsync(s => s.RecipeId == recipeId, cancellationToken);
+    }
+
     private static async Task<MenuDbContext> CreateDbContextAsync(ApiTestFixture fixture, CancellationToken cancellationToken)
     {
         var connectionString = await fixture.app.GetConnectionStringAsync("menu", cancellationToken);

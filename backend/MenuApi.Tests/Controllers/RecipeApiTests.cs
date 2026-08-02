@@ -201,4 +201,34 @@ public class RecipeApiTests
 
         result.Should().BeOfType<UnauthorizedHttpResult>();
     }
+
+    [Theory, CustomAutoData]
+    public async Task DeleteRecipeAsync_Success(MenuUserId callerId, RecipeId recipeId)
+    {
+        A.CallTo(() => recipeService.DeleteRecipeAsync(recipeId, callerId)).Returns(true);
+
+        var result = await RecipeApi.DeleteRecipeAsync(recipeService, CreateHttpContext(callerId), recipeId);
+
+        A.CallTo(() => recipeService.DeleteRecipeAsync(recipeId, callerId)).MustHaveHappenedOnceExactly();
+        result.Should().BeOfType<NoContent>();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task DeleteRecipeAsync_NotFound_Returns404(MenuUserId callerId, RecipeId recipeId)
+    {
+        A.CallTo(() => recipeService.DeleteRecipeAsync(recipeId, callerId)).Returns(false);
+
+        var result = await RecipeApi.DeleteRecipeAsync(recipeService, CreateHttpContext(callerId), recipeId);
+
+        var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
+        problemResult.StatusCode.Should().Be(404);
+    }
+
+    [Theory, CustomAutoData]
+    public async Task DeleteRecipeAsync_NoMenuUserId_Returns401(RecipeId recipeId)
+    {
+        var result = await RecipeApi.DeleteRecipeAsync(recipeService, CreateHttpContext(null), recipeId);
+
+        result.Should().BeOfType<UnauthorizedHttpResult>();
+    }
 }

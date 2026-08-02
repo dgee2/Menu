@@ -181,4 +181,40 @@ public class RecipeServiceTests
         var result = await fun.Should().ThrowAsync<ArgumentNullException>();
         result.And.ParamName.Should().Be("upsertRecipe");
     }
+
+    [Theory, CustomAutoData]
+    public async Task DeleteRecipeSuccess(RecipeId recipeId, MenuUserId callerId, DBModel.Recipe existingRecipe)
+    {
+        existingRecipe = existingRecipe with { OwnerUserId = callerId };
+        A.CallTo(() => recipeRepository.GetRecipeAsync(recipeId)).Returns(existingRecipe);
+
+        var result = await sut.DeleteRecipeAsync(recipeId, callerId);
+
+        result.Should().BeTrue();
+        A.CallTo(() => recipeRepository.DeleteRecipeAsync(recipeId)).MustHaveHappenedOnceExactly();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task DeleteRecipe_RecipeNotFound_ReturnsFalse(RecipeId recipeId, MenuUserId callerId)
+    {
+        A.CallTo(() => recipeRepository.GetRecipeAsync(recipeId)).Returns((DBModel.Recipe?)null);
+
+        var result = await sut.DeleteRecipeAsync(recipeId, callerId);
+
+        result.Should().BeFalse();
+        A.CallTo(() => recipeRepository.DeleteRecipeAsync(recipeId)).MustNotHaveHappened();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task DeleteRecipe_CallerIsNotOwner_ThrowsForbiddenAccessException(
+        RecipeId recipeId, MenuUserId callerId, MenuUserId ownerId, DBModel.Recipe existingRecipe)
+    {
+        existingRecipe = existingRecipe with { OwnerUserId = ownerId };
+        A.CallTo(() => recipeRepository.GetRecipeAsync(recipeId)).Returns(existingRecipe);
+
+        Func<Task> fun = () => sut.DeleteRecipeAsync(recipeId, callerId);
+
+        await fun.Should().ThrowAsync<ForbiddenAccessException>();
+        A.CallTo(() => recipeRepository.DeleteRecipeAsync(recipeId)).MustNotHaveHappened();
+    }
 }
