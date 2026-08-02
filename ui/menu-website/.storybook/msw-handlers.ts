@@ -77,6 +77,16 @@ export const recipesLoadingHandler = http.get(recipePath, async () => {
   ]);
 });
 
+export const recipeCreateSuccessHandler = http.post(recipePath, async () => {
+  await delay(150);
+  return HttpResponse.json(sampleRecipeDetail, { status: 200 });
+});
+
+export const recipeCreateErrorHandler = http.post(recipePath, async () => {
+  await delay(150);
+  return HttpResponse.json({ title: 'Internal Server Error', status: 500 }, { status: 500 });
+});
+
 export const ingredientUnitsHandler = http.get(ingredientUnitsPath, () => {
   return HttpResponse.json([
     { id: 1, name: 'g' },
