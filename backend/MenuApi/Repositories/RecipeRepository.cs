@@ -165,4 +165,12 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             throw new ConflictException($"A recipe titled '{recipe.Title.Value}' already exists.");
         }
     }
+
+    public async Task DeleteRecipeAsync(RecipeId recipeId)
+    {
+        await db.Recipes
+            .Where(r => r.Id == recipeId.Value)
+            .ExecuteDeleteAsync()
+            .ConfigureAwait(false);
+    }
 }

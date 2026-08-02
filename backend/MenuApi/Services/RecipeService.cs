@@ -84,4 +84,22 @@ public class RecipeService(IRecipeRepository recipeRepository, IRecipeStepReposi
 
         return true;
     }
+
+    public async Task<bool> DeleteRecipeAsync(RecipeId recipeId, MenuUserId callerId)
+    {
+        var existing = await recipeRepository.GetRecipeAsync(recipeId).ConfigureAwait(false);
+        if (existing is null)
+        {
+            return false;
+        }
+
+        if (existing.OwnerUserId != callerId)
+        {
+            throw new ForbiddenAccessException($"You do not own recipe {recipeId}.");
+        }
+
+        await recipeRepository.DeleteRecipeAsync(recipeId).ConfigureAwait(false);
+
+        return true;
+    }
 }
