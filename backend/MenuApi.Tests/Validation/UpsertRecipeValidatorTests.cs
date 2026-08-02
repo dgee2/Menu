@@ -49,9 +49,25 @@ public class UpsertRecipeValidatorTests
     }
 
     [Fact]
-    public void EmptyIngredients_Fails()
+    public void EmptyIngredients_Passes()
     {
         var recipe = CreateValidRecipe(ingredients: []);
+
+        var result = validator.TestValidate(recipe);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.Ingredients);
+    }
+
+    [Fact]
+    public void NullIngredients_Fails()
+    {
+        var recipe = new UpsertRecipe
+        {
+            Title = RecipeTitle.From("Test Recipe"),
+            AccessScope = RecipeAccessScope.Private,
+            Ingredients = null!,
+            Steps = [],
+        };
 
         var result = validator.TestValidate(recipe);
 

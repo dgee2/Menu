@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using FakeItEasy;
 using MenuDB;
+using MenuApi.Exceptions;
 using MenuApi.Repositories;
 using MenuApi.Services;
 using MenuApi.ValueObjects;
@@ -129,23 +130,53 @@ public class RecipeServiceTests
             r => r.Title == upsertRecipe.Title && r.AccessScope == upsertRecipe.AccessScope && r.OwnerUserId == callerId)))
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeStepRepository.UpsertStepCollectionAsync(recipeId, A<IEnumerable<DBModel.RecipeStep>>._)).MustHaveHappenedOnceExactly();
     }
 
     [Theory, CustomAutoData]
-    public async Task UpdateRecipeSuccess(RecipeId recipeId, UpsertRecipe upsertRecipe)
+    public async Task UpdateRecipeSuccess(RecipeId recipeId, MenuUserId callerId, UpsertRecipe upsertRecipe, DBModel.Recipe existingRecipe)
     {
-        await sut.UpdateRecipeAsync(recipeId, upsertRecipe);
+        existingRecipe = existingRecipe with { OwnerUserId = callerId };
+        A.CallTo(() => recipeRepository.GetRecipeAsync(recipeId)).Returns(existingRecipe);
 
+        var result = await sut.UpdateRecipeAsync(recipeId, upsertRecipe, callerId);
+
+        result.Should().BeTrue();
         A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, A<DBModel.Recipe>.That.Matches(
             r => r.Title == upsertRecipe.Title && r.AccessScope == upsertRecipe.AccessScope)))
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeStepRepository.UpsertStepCollectionAsync(recipeId, A<IEnumerable<DBModel.RecipeStep>>._)).MustHaveHappenedOnceExactly();
     }
 
     [Theory, CustomAutoData]
-    public async Task UpdateRecipe_Should_Throw_Exception_For_null_upsertRecipeAsync(RecipeId recipeId)
+    public async Task UpdateRecipe_RecipeNotFound_ReturnsFalse(RecipeId recipeId, MenuUserId callerId, UpsertRecipe upsertRecipe)
     {
-        Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, null!);
+        A.CallTo(() => recipeRepository.GetRecipeAsync(recipeId)).Returns((DBModel.Recipe?)null);
+
+        var result = await sut.UpdateRecipeAsync(recipeId, upsertRecipe, callerId);
+
+        result.Should().BeFalse();
+        A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, A<DBModel.Recipe>._)).MustNotHaveHappened();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task UpdateRecipe_CallerIsNotOwner_ThrowsForbiddenAccessException(
+        RecipeId recipeId, MenuUserId callerId, MenuUserId ownerId, UpsertRecipe upsertRecipe, DBModel.Recipe existingRecipe)
+    {
+        existingRecipe = existingRecipe with { OwnerUserId = ownerId };
+        A.CallTo(() => recipeRepository.GetRecipeAsync(recipeId)).Returns(existingRecipe);
+
+        Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, upsertRecipe, callerId);
+
+        await fun.Should().ThrowAsync<ForbiddenAccessException>();
+        A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, A<DBModel.Recipe>._)).MustNotHaveHappened();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task UpdateRecipe_Should_Throw_Exception_For_null_upsertRecipeAsync(RecipeId recipeId, MenuUserId callerId)
+    {
+        Func<Task> fun = () => sut.UpdateRecipeAsync(recipeId, null!, callerId);
 
         var result = await fun.Should().ThrowAsync<ArgumentNullException>();
         result.And.ParamName.Should().Be("upsertRecipe");
