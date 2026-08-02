@@ -24,7 +24,22 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         return await query
             .OrderByDescending(r => r.UpdatedAtUtc)
             .Take(take)
-            .Select(r => MapToDbModel(r))
+            .Select(r => new DBModel.Recipe
+            {
+                Id = RecipeId.From(r.Id),
+                Title = RecipeTitle.From(r.Title),
+                AccessScope = r.AccessScope,
+                OwnerUserId = r.OwnerUserId == null ? null : MenuUserId.From(r.OwnerUserId.Value),
+                Summary = r.Summary,
+                Servings = r.Servings,
+                YieldText = r.YieldText,
+                PrepTimeMinutes = r.PrepTimeMinutes,
+                CookTimeMinutes = r.CookTimeMinutes,
+                TotalTimeMinutes = r.TotalTimeMinutes,
+                CreatedAtUtc = r.CreatedAtUtc,
+                UpdatedAtUtc = r.UpdatedAtUtc,
+            })
+            .AsNoTracking()
             .ToListAsync()
             .ConfigureAwait(false);
     }
@@ -33,7 +48,22 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         return await db.Recipes
             .Where(r => r.Id == recipeId.Value)
-            .Select(r => MapToDbModel(r))
+            .Select(r => new DBModel.Recipe
+            {
+                Id = RecipeId.From(r.Id),
+                Title = RecipeTitle.From(r.Title),
+                AccessScope = r.AccessScope,
+                OwnerUserId = r.OwnerUserId == null ? null : MenuUserId.From(r.OwnerUserId.Value),
+                Summary = r.Summary,
+                Servings = r.Servings,
+                YieldText = r.YieldText,
+                PrepTimeMinutes = r.PrepTimeMinutes,
+                CookTimeMinutes = r.CookTimeMinutes,
+                TotalTimeMinutes = r.TotalTimeMinutes,
+                CreatedAtUtc = r.CreatedAtUtc,
+                UpdatedAtUtc = r.UpdatedAtUtc,
+            })
+            .AsNoTracking()
             .FirstOrDefaultAsync()
             .ConfigureAwait(false);
     }
@@ -83,7 +113,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         }
         catch (DbUpdateException ex) when (ex.IsUniqueConstraintViolation())
         {
-            throw new BusinessValidationException($"A recipe titled '{recipe.Title.Value}' already exists.");
+            throw new ConflictException($"A recipe titled '{recipe.Title.Value}' already exists.");
         }
 
         return RecipeId.From(entity.Id);
@@ -141,23 +171,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         }
         catch (SqlException ex) when (ex.IsUniqueConstraintViolation())
         {
-            throw new BusinessValidationException($"A recipe titled '{recipe.Title.Value}' already exists.");
+            throw new ConflictException($"A recipe titled '{recipe.Title.Value}' already exists.");
         }
     }
-
-    private static DBModel.Recipe MapToDbModel(RecipeEntity r) => new()
-    {
-        Id = RecipeId.From(r.Id),
-        Title = RecipeTitle.From(r.Title),
-        AccessScope = r.AccessScope,
-        OwnerUserId = r.OwnerUserId.HasValue ? MenuUserId.From(r.OwnerUserId.Value) : null,
-        Summary = r.Summary,
-        Servings = r.Servings,
-        YieldText = r.YieldText,
-        PrepTimeMinutes = r.PrepTimeMinutes,
-        CookTimeMinutes = r.CookTimeMinutes,
-        TotalTimeMinutes = r.TotalTimeMinutes,
-        CreatedAtUtc = r.CreatedAtUtc,
-        UpdatedAtUtc = r.UpdatedAtUtc,
-    };
 }
