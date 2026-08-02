@@ -182,6 +182,85 @@ export const EmptyIngredientRowBlocksSubmit = meta.story({
   },
 });
 
+export const AddEditRemoveStepRows = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const addButton = canvas.getByRole('button', { name: 'Add step' });
+
+    await userEvent.click(addButton);
+    await userEvent.click(addButton);
+
+    const instructionInputs = canvas.getAllByLabelText('Instructions');
+    await expect(instructionInputs).toHaveLength(2);
+
+    await userEvent.type(instructionInputs[0], 'Preheat the oven');
+    await userEvent.type(instructionInputs[1], 'Mix the batter');
+
+    await expect(instructionInputs[0]).toHaveValue('Preheat the oven');
+    await expect(instructionInputs[1]).toHaveValue('Mix the batter');
+
+    const removeButtons = canvas.getAllByRole('button', { name: 'Remove step' });
+    await userEvent.click(removeButtons[0]);
+
+    const remainingInstructionInputs = canvas.getAllByLabelText('Instructions');
+    await expect(remainingInstructionInputs).toHaveLength(1);
+    await expect(remainingInstructionInputs[0]).toHaveValue('Mix the batter');
+  },
+});
+
+export const ReorderStepRows = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const addButton = canvas.getByRole('button', { name: 'Add step' });
+
+    await userEvent.click(addButton);
+    await userEvent.click(addButton);
+
+    const instructionInputs = () => canvas.getAllByLabelText('Instructions');
+    await userEvent.type(instructionInputs()[0], 'Preheat the oven');
+    await userEvent.type(instructionInputs()[1], 'Mix the batter');
+
+    const moveDownButtons = canvas.getAllByRole('button', { name: 'Move step down' });
+    await userEvent.click(moveDownButtons[0]);
+
+    const reordered = instructionInputs();
+    await expect(reordered[0]).toHaveValue('Mix the batter');
+    await expect(reordered[1]).toHaveValue('Preheat the oven');
+  },
+});
+
+export const EmptyStepRowBlocksSubmit = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nameInput = canvas.getByLabelText('Name');
+    const addButton = canvas.getByRole('button', { name: 'Add step' });
+    const submitButton = canvas.getByRole('button', { name: 'Save recipe' });
+
+    await userEvent.type(nameInput, 'Lasagne');
+    await userEvent.click(addButton);
+    await userEvent.click(submitButton);
+
+    await expect(await canvas.findByText('Instructions are required')).toBeInTheDocument();
+  },
+});
+
+export const ZeroStepDurationBlocksSubmit = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nameInput = canvas.getByLabelText('Name');
+    const addButton = canvas.getByRole('button', { name: 'Add step' });
+    const submitButton = canvas.getByRole('button', { name: 'Save recipe' });
+
+    await userEvent.type(nameInput, 'Lasagne');
+    await userEvent.click(addButton);
+    await userEvent.type(canvas.getByLabelText('Instructions'), 'Preheat the oven');
+    await userEvent.type(canvas.getByLabelText('Duration (minutes)'), '0');
+    await userEvent.click(submitButton);
+
+    await expect(await canvas.findByText('Must be greater than 0')).toBeInTheDocument();
+  },
+});
+
 // NOTE: this story exercises the failed-submit UI, but not specifically a 500.
 // Under `vitest --project=storybook`, MSW does not serve the `*/api/recipe`
 // handler registered below — the POST fails at the network layer instead, which

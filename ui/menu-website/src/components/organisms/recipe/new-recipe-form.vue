@@ -5,8 +5,9 @@ import RecipeNameField from '@/components/molecules/recipe/fields/recipe-name-fi
 import TextField from '@/components/atoms/form/text-field.vue';
 import NumberField from '@/components/atoms/form/number-field.vue';
 import IngredientRowEditor from '@/components/molecules/recipe/ingredient-row-editor.vue';
+import StepRowEditor from '@/components/molecules/recipe/step-row-editor.vue';
 import { useRecipeService } from '@/services/recipe-service';
-import type { RecipeIngredientItem, UpsertRecipe } from '@/services/recipe-api';
+import type { RecipeIngredientItem, RecipeStepItem, UpsertRecipe } from '@/services/recipe-api';
 
 const router = useRouter();
 const { useCreateRecipe } = useRecipeService();
@@ -29,6 +30,14 @@ interface IngredientRow extends RecipeIngredientItem {
   rowId: string;
 }
 
+const moveItem = <T,>(array: T[], index: number, offset: -1 | 1) => {
+  const targetIndex = index + offset;
+  if (targetIndex < 0 || targetIndex >= array.length) return;
+  const [moved] = array.splice(index, 1);
+  if (!moved) return;
+  array.splice(targetIndex, 0, moved);
+};
+
 const ingredients = ref<IngredientRow[]>([]);
 
 const addIngredient = () => {
@@ -46,13 +55,23 @@ const removeIngredient = (index: number) => {
   ingredients.value.splice(index, 1);
 };
 
-const moveIngredient = (index: number, offset: -1 | 1) => {
-  const targetIndex = index + offset;
-  if (targetIndex < 0 || targetIndex >= ingredients.value.length) return;
-  const [moved] = ingredients.value.splice(index, 1);
-  if (!moved) return;
-  ingredients.value.splice(targetIndex, 0, moved);
+const moveIngredient = (index: number, offset: -1 | 1) => moveItem(ingredients.value, index, offset);
+
+const steps = ref<RecipeStepItem[]>([]);
+
+const addStep = () => {
+  steps.value.push({
+    instructionText: '',
+    title: null,
+    durationMinutes: null,
+  });
 };
+
+const removeStep = (index: number) => {
+  steps.value.splice(index, 1);
+};
+
+const moveStep = (index: number, offset: -1 | 1) => moveItem(steps.value, index, offset);
 
 const onSubmit = async () => {
   const recipe: UpsertRecipe = {
@@ -72,7 +91,7 @@ const onSubmit = async () => {
       isOptional: ingredient.isOptional,
       sortOrder: index,
     })),
-    steps: [],
+    steps: steps.value.map((step, index) => ({ ...step, sortOrder: index })),
   };
 
   try {
@@ -130,6 +149,21 @@ const onSubmit = async () => {
       @move-down="moveIngredient(index, 1)"
     />
     <q-btn label="Add ingredient" icon="add" flat @click="addIngredient" />
+
+    <div class="text-h6">Steps</div>
+    <step-row-editor
+      v-for="(step, index) in steps"
+      :key="index"
+      v-model:instruction-text="step.instructionText"
+      v-model:title="step.title"
+      v-model:duration-minutes="step.durationMinutes"
+      :can-move-up="index > 0"
+      :can-move-down="index < steps.length - 1"
+      @remove="removeStep(index)"
+      @move-up="moveStep(index, -1)"
+      @move-down="moveStep(index, 1)"
+    />
+    <q-btn label="Add step" icon="add" flat @click="addStep" />
 
     <q-btn label="Save recipe" type="submit" color="primary" :loading="isPending" />
   </q-form>
