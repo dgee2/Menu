@@ -95,6 +95,17 @@ public class RecipeApiTests
 
         var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
         problemResult.StatusCode.Should().Be(400);
+        problemResult.ProblemDetails.Detail.Should().Be("Unknown scope 'everyone'. Expected 'mine' or 'authenticated'.");
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipesAsync_MissingScope_Returns400(MenuUserId callerId)
+    {
+        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), null, null);
+
+        var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
+        problemResult.StatusCode.Should().Be(400);
+        problemResult.ProblemDetails.Detail.Should().Be("Missing scope. Expected 'mine' or 'authenticated'.");
     }
 
     [Fact]

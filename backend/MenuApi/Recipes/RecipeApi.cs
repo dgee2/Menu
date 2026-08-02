@@ -58,8 +58,12 @@ public static class RecipeApi
 
         if (!TryParseScope(scope, out var recipeListScope))
         {
+            var detail = string.IsNullOrEmpty(scope)
+                ? "Missing scope. Expected 'mine' or 'authenticated'."
+                : $"Unknown scope '{scope}'. Expected 'mine' or 'authenticated'.";
+
             return Results.Problem(
-                detail: $"Unknown scope '{scope}'. Expected 'mine' or 'authenticated'.",
+                detail: detail,
                 statusCode: StatusCodes.Status400BadRequest);
         }
 

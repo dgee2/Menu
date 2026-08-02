@@ -25,7 +25,7 @@ export const useRecipeApi = () => {
 
   client.use(authMiddleware);
 
-  const postRecipe = async (recipe: UpsertRecipe) => {
+  const postRecipe = async (recipe: UpsertRecipe): Promise<RecipeDetail> => {
     const { data, error } = await client.POST('/api/recipe', {
       body: recipe,
     });
@@ -35,10 +35,10 @@ export const useRecipeApi = () => {
       throw new Error('Failed to post recipe');
     }
 
-    return data;
+    return data as RecipeDetail;
   };
 
-  const putRecipe = async (recipeId: string, recipe: UpsertRecipe) => {
+  const putRecipe = async (recipeId: string, recipe: UpsertRecipe): Promise<RecipeDetail> => {
     const { data, error } = await client.PUT('/api/recipe/{recipeId}', {
       params: {
         path: {
@@ -53,7 +53,7 @@ export const useRecipeApi = () => {
       throw new Error('Failed to put recipe');
     }
 
-    return data;
+    return data as RecipeDetail;
   };
 
   const getRecipes = async (): Promise<RecipeListItem[]> => {
@@ -63,7 +63,7 @@ export const useRecipeApi = () => {
       throw new Error('Failed to get recipes');
     }
 
-    return data;
+    return data as RecipeListItem[];
   };
 
   const getRecipe = async (recipeId: string): Promise<RecipeDetail> => {

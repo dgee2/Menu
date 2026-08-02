@@ -19,10 +19,13 @@ internal static class TestDatabaseSeeder
     {
         await using var db = await CreateDbContextAsync(fixture, cancellationToken);
 
+        var now = DateTime.UtcNow;
         var entity = new MenuUserEntity
         {
             AuthSubject = authSubject,
             DisplayName = authSubject,
+            CreatedAtUtc = now,
+            LastSeenAtUtc = now,
         };
 
         db.MenuUsers.Add(entity);
