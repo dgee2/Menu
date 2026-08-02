@@ -6,14 +6,14 @@ using Xunit;
 
 namespace MenuApi.Tests.Validation;
 
-public class RecipeIngredientValidatorTests
+public class RecipeIngredientItemValidatorTests
 {
-    private readonly RecipeIngredientValidator validator = new();
+    private readonly RecipeIngredientItemValidator validator = new();
 
     [Fact]
     public void ValidIngredient_Passes()
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",
@@ -31,7 +31,7 @@ public class RecipeIngredientValidatorTests
     [InlineData("")]
     public void NullOrEmptyIngredientText_Fails(string? text)
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = text!,
@@ -48,7 +48,7 @@ public class RecipeIngredientValidatorTests
     [InlineData("  \t  ")]
     public void WhitespaceIngredientText_Fails(string text)
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = text,
@@ -63,7 +63,7 @@ public class RecipeIngredientValidatorTests
     [Fact]
     public void IngredientTextTooLong_Fails()
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = new string('a', 201),
@@ -80,7 +80,7 @@ public class RecipeIngredientValidatorTests
     [InlineData("")]
     public void NullOrEmptyMeasureText_Fails(string? text)
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",
@@ -97,7 +97,7 @@ public class RecipeIngredientValidatorTests
     [InlineData("  \t  ")]
     public void WhitespaceMeasureText_Fails(string text)
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",
@@ -112,7 +112,7 @@ public class RecipeIngredientValidatorTests
     [Fact]
     public void MeasureTextTooLong_Fails()
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",
@@ -127,7 +127,7 @@ public class RecipeIngredientValidatorTests
     [Fact]
     public void SectionTitleTooLong_Fails()
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",
@@ -143,7 +143,7 @@ public class RecipeIngredientValidatorTests
     [Fact]
     public void UnitTextTooLong_Fails()
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",
@@ -159,7 +159,7 @@ public class RecipeIngredientValidatorTests
     [Fact]
     public void PreparationTextTooLong_Fails()
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",
@@ -175,7 +175,7 @@ public class RecipeIngredientValidatorTests
     [Fact]
     public void NegativeSortOrder_Fails()
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = -1,
             IngredientText = "Flour",
@@ -192,7 +192,7 @@ public class RecipeIngredientValidatorTests
     [InlineData(-1)]
     public void ZeroOrNegativeAmount_Fails(int amount)
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",
@@ -208,7 +208,7 @@ public class RecipeIngredientValidatorTests
     [Fact]
     public void TooManyDecimalPlaces_Fails()
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",
@@ -224,7 +224,7 @@ public class RecipeIngredientValidatorTests
     [Fact]
     public void TooManyTotalDigits_Fails()
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",
@@ -240,7 +240,7 @@ public class RecipeIngredientValidatorTests
     [Fact]
     public void NullAmount_Passes()
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",
@@ -256,7 +256,7 @@ public class RecipeIngredientValidatorTests
     [Fact]
     public void ValidAmountWithDecimals_Passes()
     {
-        var ingredient = new RecipeIngredient
+        var ingredient = new RecipeIngredientItem
         {
             SortOrder = 0,
             IngredientText = "Flour",

@@ -1,6 +1,6 @@
 namespace MenuApi.ViewModel;
 
-public class RecipeStep
+public class RecipeStepItem
 {
     public int SortOrder { get; init; }
 

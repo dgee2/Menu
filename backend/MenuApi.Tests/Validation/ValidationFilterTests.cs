@@ -20,7 +20,7 @@ public class ValidationFilterTests
     {
         var httpContext = new DefaultHttpContext();
         var services = new ServiceCollection();
-        services.AddScoped<IValidator<NewRecipe>, NewRecipeValidator>();
+        services.AddScoped<IValidator<UpsertRecipe>, UpsertRecipeValidator>();
         httpContext.RequestServices = services.BuildServiceProvider();
         return httpContext;
     }
@@ -28,7 +28,7 @@ public class ValidationFilterTests
     [Fact]
     public async Task InvalidRequest_Returns400()
     {
-        var invalidRecipe = new NewRecipe
+        var invalidRecipe = new UpsertRecipe
         {
             Title = RecipeTitle.From(new string('a', 501)),
             Ingredients = []
@@ -40,7 +40,7 @@ public class ValidationFilterTests
         A.CallTo(() => context.Arguments).Returns(new List<object?> { invalidRecipe });
 
         EndpointFilterDelegate next = _ => ValueTask.FromResult<object?>(null);
-        var filter = new ValidationFilter<NewRecipe>();
+        var filter = new ValidationFilter<UpsertRecipe>();
 
         var result = await filter.InvokeAsync(context, next);
 
@@ -51,19 +51,21 @@ public class ValidationFilterTests
     [Fact]
     public async Task ValidRequest_CallsNext()
     {
-        var validRecipe = new NewRecipe
+        var validRecipe = new UpsertRecipe
         {
             Title = RecipeTitle.From("Valid Recipe"),
+            AccessScope = RecipeAccessScope.Private,
             Ingredients =
             [
-                new RecipeIngredient
+                new RecipeIngredientItem
                 {
                     SortOrder = 0,
                     IngredientText = "Flour",
                     MeasureText = "200g",
                     IsOptional = false,
                 }
-            ]
+            ],
+            Steps = [],
         };
 
         var httpContext = CreateHttpContextWithValidator();
@@ -79,7 +81,7 @@ public class ValidationFilterTests
             return ValueTask.FromResult<object?>(expectedResult);
         };
 
-        var filter = new ValidationFilter<NewRecipe>();
+        var filter = new ValidationFilter<UpsertRecipe>();
         var result = await filter.InvokeAsync(context, next);
 
         nextCalled.Should().BeTrue();
@@ -95,7 +97,7 @@ public class ValidationFilterTests
         A.CallTo(() => context.Arguments).Returns(new List<object?> { });
 
         EndpointFilterDelegate next = _ => ValueTask.FromResult<object?>(null);
-        var filter = new ValidationFilter<NewRecipe>();
+        var filter = new ValidationFilter<UpsertRecipe>();
 
         var result = await filter.InvokeAsync(context, next);
 
@@ -109,13 +111,13 @@ public class ValidationFilterTests
         // Simulates when FluentValidation throws accessing uninitialized Vogen structs
         var httpContext = new DefaultHttpContext();
         var services = new ServiceCollection();
-        var throwingValidator = A.Fake<IValidator<NewRecipe>>();
-        A.CallTo(() => throwingValidator.ValidateAsync(A<NewRecipe>._, A<CancellationToken>._))
+        var throwingValidator = A.Fake<IValidator<UpsertRecipe>>();
+        A.CallTo(() => throwingValidator.ValidateAsync(A<UpsertRecipe>._, A<CancellationToken>._))
             .ThrowsAsync(new ValueObjectValidationException("Use of uninitialized Value Object."));
-        services.AddScoped<IValidator<NewRecipe>>(_ => throwingValidator);
+        services.AddScoped<IValidator<UpsertRecipe>>(_ => throwingValidator);
         httpContext.RequestServices = services.BuildServiceProvider();
 
-        var recipe = new NewRecipe
+        var recipe = new UpsertRecipe
         {
             Title = RecipeTitle.From("test"),
             Ingredients = []
@@ -125,7 +127,7 @@ public class ValidationFilterTests
         A.CallTo(() => context.Arguments).Returns(new List<object?> { recipe });
 
         EndpointFilterDelegate next = _ => ValueTask.FromResult<object?>(null);
-        var filter = new ValidationFilter<NewRecipe>();
+        var filter = new ValidationFilter<UpsertRecipe>();
 
         var result = await filter.InvokeAsync(context, next);
 
@@ -139,13 +141,13 @@ public class ValidationFilterTests
         // Verifies fallback path: non-Vogen exception with the Vogen message still returns 400
         var httpContext = new DefaultHttpContext();
         var services = new ServiceCollection();
-        var throwingValidator = A.Fake<IValidator<NewRecipe>>();
-        A.CallTo(() => throwingValidator.ValidateAsync(A<NewRecipe>._, A<CancellationToken>._))
+        var throwingValidator = A.Fake<IValidator<UpsertRecipe>>();
+        A.CallTo(() => throwingValidator.ValidateAsync(A<UpsertRecipe>._, A<CancellationToken>._))
             .ThrowsAsync(new Exception("Use of uninitialized Value Object."));
-        services.AddScoped<IValidator<NewRecipe>>(_ => throwingValidator);
+        services.AddScoped<IValidator<UpsertRecipe>>(_ => throwingValidator);
         httpContext.RequestServices = services.BuildServiceProvider();
 
-        var recipe = new NewRecipe
+        var recipe = new UpsertRecipe
         {
             Title = RecipeTitle.From("test"),
             Ingredients = []
@@ -155,7 +157,7 @@ public class ValidationFilterTests
         A.CallTo(() => context.Arguments).Returns(new List<object?> { recipe });
 
         EndpointFilterDelegate next = _ => ValueTask.FromResult<object?>(null);
-        var filter = new ValidationFilter<NewRecipe>();
+        var filter = new ValidationFilter<UpsertRecipe>();
 
         var result = await filter.InvokeAsync(context, next);
 
@@ -173,7 +175,7 @@ public class ValidationFilterTests
         A.CallTo(() => context.HttpContext).Returns(httpContext);
 
         EndpointFilterDelegate next = _ => ValueTask.FromResult<object?>(null);
-        var filter = new ValidationFilter<NewRecipe>();
+        var filter = new ValidationFilter<UpsertRecipe>();
 
         Func<Task> act = async () => await filter.InvokeAsync(context, next);
 
@@ -185,13 +187,13 @@ public class ValidationFilterTests
     {
         var httpContext = new DefaultHttpContext();
         var services = new ServiceCollection();
-        var throwingValidator = A.Fake<IValidator<NewRecipe>>();
-        A.CallTo(() => throwingValidator.ValidateAsync(A<NewRecipe>._, A<CancellationToken>._))
+        var throwingValidator = A.Fake<IValidator<UpsertRecipe>>();
+        A.CallTo(() => throwingValidator.ValidateAsync(A<UpsertRecipe>._, A<CancellationToken>._))
             .ThrowsAsync(new InvalidOperationException("Some unrelated error"));
-        services.AddScoped<IValidator<NewRecipe>>(_ => throwingValidator);
+        services.AddScoped<IValidator<UpsertRecipe>>(_ => throwingValidator);
         httpContext.RequestServices = services.BuildServiceProvider();
 
-        var recipe = new NewRecipe
+        var recipe = new UpsertRecipe
         {
             Title = RecipeTitle.From("test"),
             Ingredients = []
@@ -201,7 +203,7 @@ public class ValidationFilterTests
         A.CallTo(() => context.Arguments).Returns(new List<object?> { recipe });
 
         EndpointFilterDelegate next = _ => ValueTask.FromResult<object?>(null);
-        var filter = new ValidationFilter<NewRecipe>();
+        var filter = new ValidationFilter<UpsertRecipe>();
 
         Func<Task> act = async () => await filter.InvokeAsync(context, next);
 

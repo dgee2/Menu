@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { type NewRecipe, useRecipeApi } from '@/services/recipe-api';
+import { type UpsertRecipe, useRecipeApi } from '@/services/recipe-api';
 import { toValue, type MaybeRef } from 'vue';
 
 const RECIPE_QUERY_KEY = 'recipe' as const;
@@ -37,7 +37,7 @@ export const useRecipeService = () => {
 
   const useUpdateRecipe = () => {
     return useMutation({
-      mutationFn: ({ recipeId, recipe }: { recipeId: string; recipe: NewRecipe }) =>
+      mutationFn: ({ recipeId, recipe }: { recipeId: string; recipe: UpsertRecipe }) =>
         putRecipe(recipeId, recipe),
       onSuccess: async (data) => invalidateRecipeQueries(data.id.toString()),
     });

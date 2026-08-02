@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using AwesomeAssertions;
 using FakeItEasy;
@@ -21,7 +21,7 @@ public class RecipeApiTests
     }
 
     [Theory, CustomAutoData]
-    public async Task GetRecipesAsync_Success(IEnumerable<Recipe> recipes)
+    public async Task GetRecipesAsync_Success(IEnumerable<RecipeListItem> recipes)
     {
         A.CallTo(() => recipeService.GetRecipesAsync()).Returns(recipes);
 
@@ -31,20 +31,20 @@ public class RecipeApiTests
     }
 
     [Theory, CustomAutoData]
-    public async Task GetRecipeAsync_Success(RecipeId recipeId, FullRecipe recipe)
+    public async Task GetRecipeAsync_Success(RecipeId recipeId, RecipeDetail recipe)
     {
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
         var result = await RecipeApi.GetRecipeAsync(recipeService, recipeId);
 
-        var okResult = result.Should().BeOfType<Ok<FullRecipe>>().Subject;
+        var okResult = result.Should().BeOfType<Ok<RecipeDetail>>().Subject;
         okResult.Value.Should().Be(recipe);
     }
 
     [Theory, CustomAutoData]
     public async Task GetRecipeAsync_NotFound_Returns404(RecipeId recipeId)
     {
-        FullRecipe? recipe = null;
+        RecipeDetail? recipe = null;
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
         var result = await RecipeApi.GetRecipeAsync(recipeService, recipeId);
@@ -54,7 +54,7 @@ public class RecipeApiTests
     }
 
     [Theory, CustomAutoData]
-    public async Task GetRecipeIngredientsAsync_Success(RecipeId recipeId, IEnumerable<RecipeIngredient> ingredients)
+    public async Task GetRecipeIngredientsAsync_Success(RecipeId recipeId, IEnumerable<RecipeIngredientItem> ingredients)
     {
         A.CallTo(() => recipeService.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
 
@@ -64,26 +64,25 @@ public class RecipeApiTests
     }
 
     [Theory, CustomAutoData]
-    public async Task CreateRecipeAsync_Success(NewRecipe newRecipe, FullRecipe recipe, RecipeId recipeId)
+    public async Task CreateRecipeAsync_Success(UpsertRecipe upsertRecipe, RecipeDetail recipe, RecipeId recipeId)
     {
-        A.CallTo(() => recipeService.CreateRecipeAsync(newRecipe)).Returns(recipeId);
+        A.CallTo(() => recipeService.CreateRecipeAsync(upsertRecipe)).Returns(recipeId);
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
-        var result = await RecipeApi.CreateRecipeAsync(recipeService, newRecipe);
+        var result = await RecipeApi.CreateRecipeAsync(recipeService, upsertRecipe);
 
-        A.CallTo(() => recipeService.CreateRecipeAsync(newRecipe)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeService.CreateRecipeAsync(upsertRecipe)).MustHaveHappenedOnceExactly();
         result.Should().Be(recipe);
     }
 
     [Theory, CustomAutoData]
-    public async Task UpdateRecipeAsync_Success(RecipeId recipeId, NewRecipe newRecipe, FullRecipe recipe)
+    public async Task UpdateRecipeAsync_Success(RecipeId recipeId, UpsertRecipe upsertRecipe, RecipeDetail recipe)
     {
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
-        var result = await RecipeApi.UpdateRecipeAsync(recipeService, recipeId, newRecipe);
+        var result = await RecipeApi.UpdateRecipeAsync(recipeService, recipeId, upsertRecipe);
 
-        A.CallTo(() => recipeService.UpdateRecipeAsync(recipeId, newRecipe)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeService.UpdateRecipeAsync(recipeId, upsertRecipe)).MustHaveHappenedOnceExactly();
         result.Should().Be(recipe);
     }
 }
-

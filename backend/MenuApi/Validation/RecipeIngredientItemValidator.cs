@@ -3,9 +3,9 @@ using MenuApi.ViewModel;
 
 namespace MenuApi.Validation;
 
-public class RecipeIngredientValidator : AbstractValidator<RecipeIngredient>
+public class RecipeIngredientItemValidator : AbstractValidator<RecipeIngredientItem>
 {
-    public RecipeIngredientValidator()
+    public RecipeIngredientItemValidator()
     {
         RuleFor(x => x.IngredientText)
             .NotNull().WithMessage("'IngredientText' must not be empty.")
