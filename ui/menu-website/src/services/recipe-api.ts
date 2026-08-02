@@ -3,9 +3,9 @@ import createClient from 'openapi-fetch';
 import type { paths, components } from '@/generated/open-api/menu-api';
 import { useAuth } from '@/services/auth';
 
-export type NewRecipe = components['schemas']['NewRecipe'];
-export type Recipe = components['schemas']['Recipe'];
-export type FullRecipe = components['schemas']['FullRecipe'];
+export type UpsertRecipe = components['schemas']['UpsertRecipe'];
+export type RecipeListItem = components['schemas']['RecipeListItem'];
+export type RecipeDetail = components['schemas']['RecipeDetail'];
 export type IngredientUnit = components['schemas']['IngredientUnit'];
 
 export const useRecipeApi = () => {
@@ -25,7 +25,7 @@ export const useRecipeApi = () => {
 
   client.use(authMiddleware);
 
-  const postRecipe = async (recipe: NewRecipe) => {
+  const postRecipe = async (recipe: UpsertRecipe) => {
     const { data, error } = await client.POST('/api/recipe', {
       body: recipe,
     });
@@ -38,7 +38,7 @@ export const useRecipeApi = () => {
     return data;
   };
 
-  const putRecipe = async (recipeId: string, recipe: NewRecipe) => {
+  const putRecipe = async (recipeId: string, recipe: UpsertRecipe) => {
     const { data, error } = await client.PUT('/api/recipe/{recipeId}', {
       params: {
         path: {
@@ -56,7 +56,7 @@ export const useRecipeApi = () => {
     return data;
   };
 
-  const getRecipes = async (): Promise<Recipe[]> => {
+  const getRecipes = async (): Promise<RecipeListItem[]> => {
     const { data, error } = await client.GET('/api/recipe');
     if (error) {
       console.error('Failed to get recipes:', error);
@@ -66,7 +66,7 @@ export const useRecipeApi = () => {
     return data;
   };
 
-  const getRecipe = async (recipeId: string): Promise<FullRecipe> => {
+  const getRecipe = async (recipeId: string): Promise<RecipeDetail> => {
     const { data, error } = await client.GET('/api/recipe/{recipeId}', {
       params: {
         path: {
