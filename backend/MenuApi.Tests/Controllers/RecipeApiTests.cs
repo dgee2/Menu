@@ -2,10 +2,12 @@
 
 using AwesomeAssertions;
 using FakeItEasy;
+using MenuApi.Middleware;
 using MenuApi.Recipes;
 using MenuApi.Services;
 using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Xunit;
 
@@ -20,14 +22,98 @@ public class RecipeApiTests
         recipeService = A.Fake<IRecipeService>();
     }
 
-    [Theory, CustomAutoData]
-    public async Task GetRecipesAsync_Success(IEnumerable<RecipeListItem> recipes)
+    private static HttpContext CreateHttpContext(MenuUserId? menuUserId)
     {
-        A.CallTo(() => recipeService.GetRecipesAsync()).Returns(recipes);
+        var httpContext = new DefaultHttpContext();
+        if (menuUserId is not null)
+        {
+            httpContext.Items[MenuUserHttpContextKeys.MenuUserId] = menuUserId.Value;
+        }
 
-        var result = await RecipeApi.GetRecipesAsync(recipeService);
+        return httpContext;
+    }
 
-        result.Should().BeEquivalentTo(recipes);
+    [Theory, CustomAutoData]
+    public async Task GetRecipesAsync_Mine_Success(MenuUserId callerId, IEnumerable<RecipeListItem> recipes)
+    {
+        A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 50)).Returns(recipes);
+
+        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "mine", null);
+
+        var okResult = result.Should().BeOfType<Ok<IEnumerable<RecipeListItem>>>().Subject;
+        okResult.Value.Should().BeEquivalentTo(recipes);
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipesAsync_Authenticated_Success(MenuUserId callerId, IEnumerable<RecipeListItem> recipes)
+    {
+        A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Authenticated, callerId, 50)).Returns(recipes);
+
+        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "AUTHENTICATED", null);
+
+        var okResult = result.Should().BeOfType<Ok<IEnumerable<RecipeListItem>>>().Subject;
+        okResult.Value.Should().BeEquivalentTo(recipes);
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipesAsync_ClampsTakeToMax(MenuUserId callerId, IEnumerable<RecipeListItem> recipes)
+    {
+        A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 200)).Returns(recipes);
+
+        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "mine", 500);
+
+        result.Should().BeOfType<Ok<IEnumerable<RecipeListItem>>>();
+        A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 200)).MustHaveHappenedOnceExactly();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipesAsync_ClampsZeroTakeToMin(MenuUserId callerId, IEnumerable<RecipeListItem> recipes)
+    {
+        A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 1)).Returns(recipes);
+
+        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "mine", 0);
+
+        result.Should().BeOfType<Ok<IEnumerable<RecipeListItem>>>();
+        A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 1)).MustHaveHappenedOnceExactly();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipesAsync_ClampsNegativeTakeToMin(MenuUserId callerId, IEnumerable<RecipeListItem> recipes)
+    {
+        A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 1)).Returns(recipes);
+
+        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "mine", -1);
+
+        result.Should().BeOfType<Ok<IEnumerable<RecipeListItem>>>();
+        A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 1)).MustHaveHappenedOnceExactly();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipesAsync_UnknownScope_Returns400(MenuUserId callerId)
+    {
+        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "everyone", null);
+
+        var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
+        problemResult.StatusCode.Should().Be(400);
+        problemResult.ProblemDetails.Detail.Should().Be("Unknown scope 'everyone'. Expected 'mine' or 'authenticated'.");
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipesAsync_MissingScope_Returns400(MenuUserId callerId)
+    {
+        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), null, null);
+
+        var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
+        problemResult.StatusCode.Should().Be(400);
+        problemResult.ProblemDetails.Detail.Should().Be("Missing scope. Expected 'mine' or 'authenticated'.");
+    }
+
+    [Fact]
+    public async Task GetRecipesAsync_NoMenuUserId_Returns401()
+    {
+        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(null), "mine", null);
+
+        result.Should().BeOfType<UnauthorizedHttpResult>();
     }
 
     [Theory, CustomAutoData]
@@ -64,15 +150,24 @@ public class RecipeApiTests
     }
 
     [Theory, CustomAutoData]
-    public async Task CreateRecipeAsync_Success(UpsertRecipe upsertRecipe, RecipeDetail recipe, RecipeId recipeId)
+    public async Task CreateRecipeAsync_Success(MenuUserId callerId, UpsertRecipe upsertRecipe, RecipeDetail recipe, RecipeId recipeId)
     {
-        A.CallTo(() => recipeService.CreateRecipeAsync(upsertRecipe)).Returns(recipeId);
+        A.CallTo(() => recipeService.CreateRecipeAsync(upsertRecipe, callerId)).Returns(recipeId);
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
-        var result = await RecipeApi.CreateRecipeAsync(recipeService, upsertRecipe);
+        var result = await RecipeApi.CreateRecipeAsync(recipeService, CreateHttpContext(callerId), upsertRecipe);
 
-        A.CallTo(() => recipeService.CreateRecipeAsync(upsertRecipe)).MustHaveHappenedOnceExactly();
-        result.Should().Be(recipe);
+        A.CallTo(() => recipeService.CreateRecipeAsync(upsertRecipe, callerId)).MustHaveHappenedOnceExactly();
+        var okResult = result.Should().BeOfType<Ok<RecipeDetail>>().Subject;
+        okResult.Value.Should().Be(recipe);
+    }
+
+    [Theory, CustomAutoData]
+    public async Task CreateRecipeAsync_NoMenuUserId_Returns401(UpsertRecipe upsertRecipe)
+    {
+        var result = await RecipeApi.CreateRecipeAsync(recipeService, CreateHttpContext(null), upsertRecipe);
+
+        result.Should().BeOfType<UnauthorizedHttpResult>();
     }
 
     [Theory, CustomAutoData]

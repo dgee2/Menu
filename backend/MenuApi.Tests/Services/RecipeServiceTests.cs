@@ -75,7 +75,7 @@ public class RecipeServiceTests
     }
 
     [Theory, CustomAutoData]
-    public async Task GetRecipesSuccess(IEnumerable<DBModel.Recipe> recipes)
+    public async Task GetRecipesSuccess(RecipeListScope scope, MenuUserId callerId, IEnumerable<DBModel.Recipe> recipes)
     {
         var expected = recipes.Select(x => new RecipeListItem
         {
@@ -89,9 +89,9 @@ public class RecipeServiceTests
             CookTimeMinutes = x.CookTimeMinutes,
             TotalTimeMinutes = x.TotalTimeMinutes,
         });
-        A.CallTo(() => recipeRepository.GetRecipesAsync()).Returns(recipes.AsEnumerable());
+        A.CallTo(() => recipeRepository.GetRecipesAsync(scope, callerId, 50)).Returns(recipes.AsEnumerable());
 
-        var result = await sut.GetRecipesAsync();
+        var result = await sut.GetRecipesAsync(scope, callerId, 50);
         result.Should().BeEquivalentTo(expected);
     }
 
@@ -119,14 +119,14 @@ public class RecipeServiceTests
     }
 
     [Theory, CustomAutoData]
-    public async Task CreateRecipeSuccess(RecipeId recipeId, UpsertRecipe upsertRecipe)
+    public async Task CreateRecipeSuccess(RecipeId recipeId, MenuUserId callerId, UpsertRecipe upsertRecipe)
     {
         A.CallTo(() => recipeRepository.CreateRecipeAsync(A<DBModel.Recipe>._)).Returns(recipeId);
 
-        await sut.CreateRecipeAsync(upsertRecipe);
+        await sut.CreateRecipeAsync(upsertRecipe, callerId);
 
         A.CallTo(() => recipeRepository.CreateRecipeAsync(A<DBModel.Recipe>.That.Matches(
-            r => r.Title == upsertRecipe.Title && r.AccessScope == upsertRecipe.AccessScope)))
+            r => r.Title == upsertRecipe.Title && r.AccessScope == upsertRecipe.AccessScope && r.OwnerUserId == callerId)))
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
     }

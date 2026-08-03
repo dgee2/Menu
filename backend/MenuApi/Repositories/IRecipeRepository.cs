@@ -12,7 +12,7 @@ public interface IRecipeRepository
 
     Task<IEnumerable<DBModel.RecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId);
 
-    Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync();
+    Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take);
 
     Task UpdateRecipeAsync(RecipeId recipeId, DBModel.Recipe recipe);
 }

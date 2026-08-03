@@ -12,9 +12,18 @@ namespace MenuApi.Repositories;
 [ExcludeFromCodeCoverage]
 public class RecipeRepository(MenuDbContext db) : IRecipeRepository
 {
-    public async Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync()
+    public async Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take)
     {
-        return await db.Recipes
+        var query = scope switch
+        {
+            RecipeListScope.Mine => db.Recipes.Where(r => r.OwnerUserId == callerId.Value),
+            RecipeListScope.Authenticated => db.Recipes.Where(r => r.AccessScope == RecipeAccessScope.AuthenticatedUsers),
+            _ => throw new ArgumentOutOfRangeException(nameof(scope), scope, "Unsupported recipe list scope."),
+        };
+
+        return await query
+            .OrderByDescending(r => r.UpdatedAtUtc)
+            .Take(take)
             .Select(r => MapToDbModel(r))
             .ToListAsync()
             .ConfigureAwait(false);

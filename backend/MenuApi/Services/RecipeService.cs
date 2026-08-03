@@ -9,9 +9,9 @@ namespace MenuApi.Services;
 
 public class RecipeService(IRecipeRepository recipeRepository, IRecipeStepRepository recipeStepRepository, MenuDbContext db) : IRecipeService
 {
-    public async Task<IEnumerable<RecipeListItem>> GetRecipesAsync()
+    public async Task<IEnumerable<RecipeListItem>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take)
     {
-        var recipes = await recipeRepository.GetRecipesAsync().ConfigureAwait(false);
+        var recipes = await recipeRepository.GetRecipesAsync(scope, callerId, take).ConfigureAwait(false);
         return ViewModelMapper.Map(recipes);
     }
 
@@ -38,15 +38,17 @@ public class RecipeService(IRecipeRepository recipeRepository, IRecipeStepReposi
         return ViewModelMapper.Map(ingredients);
     }
 
-    public async Task<RecipeId> CreateRecipeAsync(UpsertRecipe upsertRecipe)
+    public async Task<RecipeId> CreateRecipeAsync(UpsertRecipe upsertRecipe, MenuUserId callerId)
     {
         ArgumentNullException.ThrowIfNull(upsertRecipe);
+
+        var recipe = ViewModelMapper.Map(upsertRecipe) with { OwnerUserId = callerId };
 
         var strategy = db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
             await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
-            var recipeId = await recipeRepository.CreateRecipeAsync(ViewModelMapper.Map(upsertRecipe)).ConfigureAwait(false);
+            var recipeId = await recipeRepository.CreateRecipeAsync(recipe).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Ingredients)).ConfigureAwait(false);
             await tran.CommitAsync().ConfigureAwait(false);
             return recipeId;

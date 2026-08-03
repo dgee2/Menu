@@ -1,3 +1,4 @@
+using MenuApi.Middleware;
 using MenuApi.Services;
 using MenuApi.Validation;
 using MenuApi.ValueObjects;
@@ -7,6 +8,9 @@ namespace MenuApi.Recipes;
 
 public static class RecipeApi
 {
+    private const int DefaultTake = 50;
+    private const int MaxTake = 200;
+
     public static RouteGroupBuilder MapRecipes(this IEndpointRouteBuilder routes)
     {
         var group = routes.MapGroup("/recipe");
@@ -14,7 +18,9 @@ public static class RecipeApi
         group.WithTags("Recipes");
 
         group.MapGet("/", GetRecipesAsync)
-            .Produces<IEnumerable<RecipeListItem>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<RecipeListItem>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/{recipeId}", GetRecipeAsync)
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
@@ -27,7 +33,8 @@ public static class RecipeApi
             .AddEndpointFilter<ValidationFilter<UpsertRecipe>>()
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPut("{recipeId}", UpdateRecipeAsync)
             .AddEndpointFilter<ValidationFilter<UpsertRecipe>>()
@@ -38,9 +45,48 @@ public static class RecipeApi
         return group;
     }
 
-    public static async Task<IEnumerable<RecipeListItem>> GetRecipesAsync(IRecipeService recipeService)
+    public static async Task<IResult> GetRecipesAsync(
+        IRecipeService recipeService,
+        HttpContext httpContext,
+        string? scope,
+        int? take)
     {
-        return await recipeService.GetRecipesAsync();
+        if (httpContext.Items[MenuUserHttpContextKeys.MenuUserId] is not MenuUserId callerId)
+        {
+            return Results.Unauthorized();
+        }
+
+        if (!TryParseScope(scope, out var recipeListScope))
+        {
+            var detail = string.IsNullOrEmpty(scope)
+                ? "Missing scope. Expected 'mine' or 'authenticated'."
+                : $"Unknown scope '{scope}'. Expected 'mine' or 'authenticated'.";
+
+            return Results.Problem(
+                detail: detail,
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        var boundedTake = Math.Clamp(take ?? DefaultTake, 1, MaxTake);
+
+        var recipes = await recipeService.GetRecipesAsync(recipeListScope, callerId, boundedTake);
+        return Results.Ok(recipes);
+    }
+
+    private static bool TryParseScope(string? scope, out RecipeListScope recipeListScope)
+    {
+        switch (scope?.ToLowerInvariant())
+        {
+            case "mine":
+                recipeListScope = RecipeListScope.Mine;
+                return true;
+            case "authenticated":
+                recipeListScope = RecipeListScope.Authenticated;
+                return true;
+            default:
+                recipeListScope = default;
+                return false;
+        }
     }
 
     public static async Task<IResult> GetRecipeAsync(IRecipeService recipeService, RecipeId recipeId)
@@ -58,11 +104,16 @@ public static class RecipeApi
         return await recipeService.GetRecipeIngredientsAsync(recipeId);
     }
 
-    public static async Task<RecipeDetail> CreateRecipeAsync(IRecipeService recipeService, UpsertRecipe upsertRecipe)
+    public static async Task<IResult> CreateRecipeAsync(IRecipeService recipeService, HttpContext httpContext, UpsertRecipe upsertRecipe)
     {
-        var recipeId = await recipeService.CreateRecipeAsync(upsertRecipe);
+        if (httpContext.Items[MenuUserHttpContextKeys.MenuUserId] is not MenuUserId callerId)
+        {
+            return Results.Unauthorized();
+        }
+
+        var recipeId = await recipeService.CreateRecipeAsync(upsertRecipe, callerId);
         var recipe = await recipeService.GetRecipeAsync(recipeId);
-        return recipe ?? throw new InvalidOperationException("Recipe creation failed");
+        return Results.Ok(recipe ?? throw new InvalidOperationException("Recipe creation failed"));
     }
 
     public static async Task<RecipeDetail> UpdateRecipeAsync(IRecipeService recipeService, RecipeId recipeId, UpsertRecipe upsertRecipe)

@@ -27,7 +27,7 @@ public class RecipeIntegrationTests
     public async Task Get_ReturnsAListOfRecipes()
     {
         using var client = await fixture.GetHttpClient();
-        using var response = await client.GetAsync("/api/recipe");
+        using var response = await client.GetAsync("/api/recipe?scope=mine");
 
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
 
@@ -35,6 +35,15 @@ public class RecipeIntegrationTests
 
         var deserializedData = JsonSerializer.Deserialize<HashSet<RecipeListItem>>(data, jsonOptions);
         deserializedData.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Get_UnknownScope_ReturnsBadRequest()
+    {
+        using var client = await fixture.GetHttpClient();
+        using var response = await client.GetAsync("/api/recipe?scope=everyone");
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
     }
 
     [Theory]
