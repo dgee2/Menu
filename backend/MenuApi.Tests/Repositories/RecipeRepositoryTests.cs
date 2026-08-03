@@ -20,7 +20,11 @@ public class RecipeRepositoryTests
         await using var db = CreateDbContext();
         var sut = new RecipeRepository(db);
 
-        var recipeId = await sut.CreateRecipeAsync(RecipeTitle.From("Created Recipe"));
+        var recipeId = await sut.CreateRecipeAsync(new DBModel.Recipe
+        {
+            Title = RecipeTitle.From("Created Recipe"),
+            AccessScope = RecipeAccessScope.Private,
+        });
 
         var entity = await db.Recipes
             .AsNoTracking()

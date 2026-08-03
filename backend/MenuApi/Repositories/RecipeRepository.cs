@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using MenuDB;
 using MenuDB.Data;
 using MenuApi.DBModel;
@@ -15,7 +15,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     public async Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync()
     {
         return await db.Recipes
-            .Select(r => new DBModel.Recipe { Id = RecipeId.From(r.Id), Title = RecipeTitle.From(r.Title) })
+            .Select(r => MapToDbModel(r))
             .ToListAsync()
             .ConfigureAwait(false);
     }
@@ -24,7 +24,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         return await db.Recipes
             .Where(r => r.Id == recipeId.Value)
-            .Select(r => new DBModel.Recipe { Id = RecipeId.From(r.Id), Title = RecipeTitle.From(r.Title) })
+            .Select(r => MapToDbModel(r))
             .FirstOrDefaultAsync()
             .ConfigureAwait(false);
     }
@@ -49,13 +49,20 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             .ConfigureAwait(false);
     }
 
-    public async Task<RecipeId> CreateRecipeAsync(RecipeTitle title)
+    public async Task<RecipeId> CreateRecipeAsync(DBModel.Recipe recipe)
     {
         var now = DateTime.UtcNow;
         var entity = new RecipeEntity
         {
-            Title = title.Value,
-            AccessScope = "Private",
+            Title = recipe.Title.Value,
+            AccessScope = recipe.AccessScope,
+            OwnerUserId = recipe.OwnerUserId?.Value,
+            Summary = recipe.Summary,
+            Servings = recipe.Servings,
+            YieldText = recipe.YieldText,
+            PrepTimeMinutes = recipe.PrepTimeMinutes,
+            CookTimeMinutes = recipe.CookTimeMinutes,
+            TotalTimeMinutes = recipe.TotalTimeMinutes,
             CreatedAtUtc = now,
             UpdatedAtUtc = now,
         };
@@ -67,7 +74,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         }
         catch (DbUpdateException ex) when (ex.IsUniqueConstraintViolation())
         {
-            throw new BusinessValidationException($"A recipe titled '{title.Value}' already exists.");
+            throw new BusinessValidationException($"A recipe titled '{recipe.Title.Value}' already exists.");
         }
 
         return RecipeId.From(entity.Id);
@@ -103,7 +110,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         await db.SaveChangesAsync().ConfigureAwait(false);
     }
 
-    public async Task UpdateRecipeAsync(RecipeId recipeId, RecipeTitle title)
+    public async Task UpdateRecipeAsync(RecipeId recipeId, DBModel.Recipe recipe)
     {
         var now = DateTime.UtcNow;
 
@@ -112,13 +119,36 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             await db.Recipes
                 .Where(r => r.Id == recipeId.Value)
                 .ExecuteUpdateAsync(s => s
-                    .SetProperty(r => r.Title, title.Value)
+                    .SetProperty(r => r.Title, recipe.Title.Value)
+                    .SetProperty(r => r.AccessScope, recipe.AccessScope)
+                    .SetProperty(r => r.Summary, recipe.Summary)
+                    .SetProperty(r => r.Servings, recipe.Servings)
+                    .SetProperty(r => r.YieldText, recipe.YieldText)
+                    .SetProperty(r => r.PrepTimeMinutes, recipe.PrepTimeMinutes)
+                    .SetProperty(r => r.CookTimeMinutes, recipe.CookTimeMinutes)
+                    .SetProperty(r => r.TotalTimeMinutes, recipe.TotalTimeMinutes)
                     .SetProperty(r => r.UpdatedAtUtc, now))
                 .ConfigureAwait(false);
         }
         catch (SqlException ex) when (ex.IsUniqueConstraintViolation())
         {
-            throw new BusinessValidationException($"A recipe titled '{title.Value}' already exists.");
+            throw new BusinessValidationException($"A recipe titled '{recipe.Title.Value}' already exists.");
         }
     }
+
+    private static DBModel.Recipe MapToDbModel(RecipeEntity r) => new()
+    {
+        Id = RecipeId.From(r.Id),
+        Title = RecipeTitle.From(r.Title),
+        AccessScope = r.AccessScope,
+        OwnerUserId = r.OwnerUserId.HasValue ? MenuUserId.From(r.OwnerUserId.Value) : null,
+        Summary = r.Summary,
+        Servings = r.Servings,
+        YieldText = r.YieldText,
+        PrepTimeMinutes = r.PrepTimeMinutes,
+        CookTimeMinutes = r.CookTimeMinutes,
+        TotalTimeMinutes = r.TotalTimeMinutes,
+        CreatedAtUtc = r.CreatedAtUtc,
+        UpdatedAtUtc = r.UpdatedAtUtc,
+    };
 }

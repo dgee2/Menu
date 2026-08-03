@@ -66,7 +66,7 @@ public class RecipeWithIngredientsIntegrationTests
         var root = getDoc.RootElement;
 
         root.GetProperty("title").GetString().Should().Be(recipeTitle);
-        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(
+        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredientItem>>(
             root.GetProperty("ingredients").GetRawText(), jsonOptions)!;
         ingredients.Should().HaveCount(1);
         ingredients[0].IngredientText.Should().Be(ingredientText);
@@ -89,7 +89,7 @@ public class RecipeWithIngredientsIntegrationTests
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
 
         var data = await response.Content.ReadAsStringAsync();
-        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredient>>(data, jsonOptions)!;
+        var ingredients = JsonSerializer.Deserialize<List<RecipeIngredientItem>>(data, jsonOptions)!;
         ingredients.Should().HaveCount(1);
         ingredients[0].IngredientText.Should().Be(ingredientText);
         ingredients[0].MeasureText.Should().Be(measureText);
@@ -118,30 +118,30 @@ public class RecipeWithIngredientsIntegrationTests
         returnedIngredients[0].IngredientText.Should().Be(ingredientText2);
     }
 
-    private async Task<(int Id, string Title, List<RecipeIngredient> Ingredients)> PostRecipeAsync(
-        HttpClient client, NewRecipe recipe)
+    private async Task<(int Id, string Title, List<RecipeIngredientItem> Ingredients)> PostRecipeAsync(
+        HttpClient client, UpsertRecipe recipe)
     {
         using var response = await SendRecipeAsync(client, HttpMethod.Post, ApiRecipeRoute, recipe);
         return await DeserializeRecipeResponseAsync(response);
     }
 
-    private async Task<(int Id, string Title, List<RecipeIngredient> Ingredients)> PutRecipeAsync(
-        HttpClient client, int id, NewRecipe recipe)
+    private async Task<(int Id, string Title, List<RecipeIngredientItem> Ingredients)> PutRecipeAsync(
+        HttpClient client, int id, UpsertRecipe recipe)
     {
         using var response = await SendRecipeAsync(client, HttpMethod.Put, $"{ApiRecipeRoute}/{id}", recipe);
         return await DeserializeRecipeResponseAsync(response);
     }
 
-    private static NewRecipe CreateRecipe(string title, string ingredientText, string measureText)
+    private static UpsertRecipe CreateRecipe(string title, string ingredientText, string measureText)
     {
-        return new NewRecipe
+        return new UpsertRecipe
         {
             Title = title,
-            Ingredients = [new RecipeIngredient { SortOrder = 0, IngredientText = ingredientText, MeasureText = measureText, IsOptional = false }]
+            Ingredients = [new RecipeIngredientItem { SortOrder = 0, IngredientText = ingredientText, MeasureText = measureText, IsOptional = false }]
         };
     }
 
-    private async Task<HttpResponseMessage> SendRecipeAsync(HttpClient client, HttpMethod method, string url, NewRecipe recipe)
+    private async Task<HttpResponseMessage> SendRecipeAsync(HttpClient client, HttpMethod method, string url, UpsertRecipe recipe)
     {
         using var request = new HttpRequestMessage(method, url)
         {
@@ -152,7 +152,7 @@ public class RecipeWithIngredientsIntegrationTests
         return response;
     }
 
-    private async Task<(int Id, string Title, List<RecipeIngredient> Ingredients)> DeserializeRecipeResponseAsync(
+    private async Task<(int Id, string Title, List<RecipeIngredientItem> Ingredients)> DeserializeRecipeResponseAsync(
         HttpResponseMessage response)
     {
         using var stream = await response.Content.ReadAsStreamAsync();
@@ -162,18 +162,20 @@ public class RecipeWithIngredientsIntegrationTests
         return (
             root.GetProperty("id").GetInt32(),
             root.GetProperty("title").GetString()!,
-            JsonSerializer.Deserialize<List<RecipeIngredient>>(root.GetProperty("ingredients").GetRawText(), jsonOptions) ?? []);
+            JsonSerializer.Deserialize<List<RecipeIngredientItem>>(root.GetProperty("ingredients").GetRawText(), jsonOptions) ?? []);
     }
 
-    public class NewRecipe
+    public class UpsertRecipe
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
         public string Title { get; set; } = null!;
-        public List<RecipeIngredient> Ingredients { get; set; } = [];
+        public List<RecipeIngredientItem> Ingredients { get; set; } = [];
+        public List<RecipeStepItem> Steps { get; set; } = [];
+        public string AccessScope { get; set; } = "Private";
 #pragma warning restore S1144 // Unused private types or members should be removed
     }
 
-    public class RecipeIngredient
+    public class RecipeIngredientItem
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
         public int SortOrder { get; set; }
@@ -182,9 +184,12 @@ public class RecipeWithIngredientsIntegrationTests
         public bool IsOptional { get; set; }
 #pragma warning restore S1144 // Unused private types or members should be removed
     }
+
+    public class RecipeStepItem
+    {
+#pragma warning disable S1144 // Unused private types or members should be removed
+        public int SortOrder { get; set; }
+        public string InstructionText { get; set; } = null!;
+#pragma warning restore S1144 // Unused private types or members should be removed
+    }
 }
-
-
-
-
-
