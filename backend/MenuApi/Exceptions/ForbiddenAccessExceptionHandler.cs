@@ -1,29 +1,10 @@
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-
 namespace MenuApi.Exceptions;
 
-public class ForbiddenAccessExceptionHandler : IExceptionHandler
+public class ForbiddenAccessExceptionHandler : ProblemDetailsExceptionHandler<ForbiddenAccessException>
 {
-    public async ValueTask<bool> TryHandleAsync(
-        HttpContext httpContext,
-        Exception exception,
-        CancellationToken cancellationToken)
-    {
-        if (exception is not ForbiddenAccessException fae)
-            return false;
+    protected override int StatusCode => StatusCodes.Status403Forbidden;
 
-        httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
-        httpContext.Response.ContentType = "application/problem+json";
+    protected override string Title => "Forbidden";
 
-        await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
-        {
-            Status = StatusCodes.Status403Forbidden,
-            Title = "Forbidden",
-            Detail = fae.Message,
-            Type = "https://tools.ietf.org/html/rfc9110#section-15.5.4"
-        }, cancellationToken);
-
-        return true;
-    }
+    protected override string Type => "https://tools.ietf.org/html/rfc9110#section-15.5.4";
 }

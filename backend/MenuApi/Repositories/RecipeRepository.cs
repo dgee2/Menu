@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 using MenuDB;
 using MenuDB.Data;
 using MenuApi.DBModel;
@@ -12,6 +13,24 @@ namespace MenuApi.Repositories;
 [ExcludeFromCodeCoverage]
 public class RecipeRepository(MenuDbContext db) : IRecipeRepository
 {
+    // Kept as an Expression (not a method) so EF Core can translate it inside .Select - a compiled
+    // method call there isn't translatable and forces client-side evaluation of a tracked entity.
+    private static readonly Expression<Func<RecipeEntity, DBModel.Recipe>> ToDbModel = r => new DBModel.Recipe
+    {
+        Id = RecipeId.From(r.Id),
+        Title = RecipeTitle.From(r.Title),
+        AccessScope = r.AccessScope,
+        OwnerUserId = r.OwnerUserId == null ? null : MenuUserId.From(r.OwnerUserId.Value),
+        Summary = r.Summary,
+        Servings = r.Servings,
+        YieldText = r.YieldText,
+        PrepTimeMinutes = r.PrepTimeMinutes,
+        CookTimeMinutes = r.CookTimeMinutes,
+        TotalTimeMinutes = r.TotalTimeMinutes,
+        CreatedAtUtc = r.CreatedAtUtc,
+        UpdatedAtUtc = r.UpdatedAtUtc,
+    };
+
     public async Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take)
     {
         var query = scope switch
@@ -24,21 +43,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         return await query
             .OrderByDescending(r => r.UpdatedAtUtc)
             .Take(take)
-            .Select(r => new DBModel.Recipe
-            {
-                Id = RecipeId.From(r.Id),
-                Title = RecipeTitle.From(r.Title),
-                AccessScope = r.AccessScope,
-                OwnerUserId = r.OwnerUserId == null ? null : MenuUserId.From(r.OwnerUserId.Value),
-                Summary = r.Summary,
-                Servings = r.Servings,
-                YieldText = r.YieldText,
-                PrepTimeMinutes = r.PrepTimeMinutes,
-                CookTimeMinutes = r.CookTimeMinutes,
-                TotalTimeMinutes = r.TotalTimeMinutes,
-                CreatedAtUtc = r.CreatedAtUtc,
-                UpdatedAtUtc = r.UpdatedAtUtc,
-            })
+            .Select(ToDbModel)
             .AsNoTracking()
             .ToListAsync()
             .ConfigureAwait(false);
@@ -48,21 +53,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         return await db.Recipes
             .Where(r => r.Id == recipeId.Value)
-            .Select(r => new DBModel.Recipe
-            {
-                Id = RecipeId.From(r.Id),
-                Title = RecipeTitle.From(r.Title),
-                AccessScope = r.AccessScope,
-                OwnerUserId = r.OwnerUserId == null ? null : MenuUserId.From(r.OwnerUserId.Value),
-                Summary = r.Summary,
-                Servings = r.Servings,
-                YieldText = r.YieldText,
-                PrepTimeMinutes = r.PrepTimeMinutes,
-                CookTimeMinutes = r.CookTimeMinutes,
-                TotalTimeMinutes = r.TotalTimeMinutes,
-                CreatedAtUtc = r.CreatedAtUtc,
-                UpdatedAtUtc = r.UpdatedAtUtc,
-            })
+            .Select(ToDbModel)
             .AsNoTracking()
             .FirstOrDefaultAsync()
             .ConfigureAwait(false);
