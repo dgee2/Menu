@@ -158,6 +158,7 @@ pnpm dev                  # Dev server (standalone, port 5173)
 pnpm aspire               # Dev server started by Aspire (port 5173)
 pnpm build                # Type-check + production build
 pnpm test                 # Vitest unit tests
+pnpm test:storybook       # Storybook interaction tests (run after any UI change)
 pnpm test:e2e             # Playwright end-to-end tests
 pnpm lint                 # ESLint
 pnpm lint-fix             # ESLint with auto-fix
@@ -165,6 +166,8 @@ pnpm format               # Prettier
 pnpm generate-openapi     # Regenerate API types from OpenAPI spec
 pnpm storybook            # Storybook dev server (port 6006)
 ```
+
+Always run `pnpm test:storybook` after making any change under `ui/menu-website/src/` — it catches regressions in components exercised by existing stories, not just changes to story files themselves.
 
 ### Style & Linting
 
@@ -183,6 +186,30 @@ pnpm storybook            # Storybook dev server (port 6006)
 5. Add service method (interface + impl in `backend/MenuApi/Services/`).
 6. Add the endpoint in the relevant `backend/MenuApi/Recipes/*Api.cs` file using the `MapGroup` pattern.
 7. Register new DI services in `backend/MenuApi/Program.cs`.
+
+## Agent identity in git and GitHub
+
+If you are an AI agent (GitHub Copilot, Claude, or Codex), you **must** make it clear which agent you are whenever you write to git or GitHub. Identify yourself as whichever agent you actually are — never attribute your work to a different one.
+
+**PR review thread comments** — start the comment with this line, then a blank line, then the body:
+
+```
+> 🤖 **This comment was written by Claude.**
+```
+
+Substitute `GitHub Copilot` or `Codex` as appropriate. Do not add this to PR titles/descriptions, issue bodies, or issue comments.
+
+**Commit messages** — end the message with a `Co-authored-by:` trailer naming the agent:
+
+```
+Co-authored-by: Claude <noreply@anthropic.com>
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+Co-authored-by: Codex <codex@openai.com>
+```
+
+Keep the subject line a normal descriptive summary — identity belongs in the trailer, not the subject, and the `🤖` comment block never goes in a commit message.
+
+Full details in `.claude/skills/agent-identity/SKILL.md`.
 
 ## Agent skills
 

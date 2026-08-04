@@ -112,4 +112,7 @@ Run from `ui/menu-website/`:
 pnpm run lint
 pnpm run build
 pnpm run test
+pnpm run test:storybook
 ```
+
+`test:storybook` runs the co-located `.stories.ts` files through Vitest's Storybook project — always run it after any UI change, not just when a story file was directly edited, since it also catches regressions in components consumed by existing stories.
