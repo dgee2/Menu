@@ -27,7 +27,7 @@ export const Success = meta.story({
   parameters: successParameters,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText('All Recipes')).toBeInTheDocument();
+    await expect(canvas.getByText('My Recipes')).toBeInTheDocument();
     await expect(successParameters.msw.handlers.recipes).toBe(recipesSuccessHandler);
   },
 });

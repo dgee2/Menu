@@ -19,11 +19,17 @@ export const useRecipeService = () => {
     ]);
   };
 
-  const useRecipes = () => useQuery({ queryKey: recipeListQueryKey, queryFn: getRecipes });
+  // getRecipes/getRecipe are stable for the lifetime of this useRecipeService() call, not
+  // reactive query input — including them in the key (a fresh function reference every call)
+  // breaks query caching, so the exhaustive-deps rule is intentionally suppressed below.
+  const useRecipes = () =>
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
+    useQuery({ queryKey: recipeListQueryKey, queryFn: () => getRecipes('mine') });
 
   const useRecipe = (recipeId: MaybeRef<string>) =>
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
     useQuery({
-      queryKey: [RECIPE_QUERY_KEY, recipeId, getRecipe] as const,
+      queryKey: [RECIPE_QUERY_KEY, recipeId] as const,
       queryFn: () => getRecipe(toValue(recipeId)),
       enabled: () => !!toValue(recipeId),
     });

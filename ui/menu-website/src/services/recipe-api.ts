@@ -4,9 +4,12 @@ import type { paths, components } from '@/generated/open-api/menu-api';
 import { useAuth } from '@/services/auth';
 
 export type UpsertRecipe = components['schemas']['UpsertRecipe'];
-export type RecipeListItem = components['schemas']['RecipeListItem'];
 export type RecipeDetail = components['schemas']['RecipeDetail'];
+export type RecipeListItem = components['schemas']['RecipeListItem'];
+export type RecipeIngredientItem = components['schemas']['RecipeIngredientItem'];
+export type RecipeStepItem = components['schemas']['RecipeStepItem'];
 export type IngredientUnit = components['schemas']['IngredientUnit'];
+export type RecipeListScope = 'mine' | 'authenticated';
 
 export const useRecipeApi = () => {
   const auth = useAuth();
@@ -56,8 +59,12 @@ export const useRecipeApi = () => {
     return data as RecipeDetail;
   };
 
-  const getRecipes = async (): Promise<RecipeListItem[]> => {
-    const { data, error } = await client.GET('/api/recipe');
+  const getRecipes = async (scope: RecipeListScope = 'mine'): Promise<RecipeListItem[]> => {
+    const { data, error } = await client.GET('/api/recipe', {
+      params: {
+        query: { scope },
+      },
+    });
     if (error) {
       console.error('Failed to get recipes:', error);
       throw new Error('Failed to get recipes');
