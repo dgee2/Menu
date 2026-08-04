@@ -187,6 +187,30 @@ Always run `pnpm test:storybook` after making any change under `ui/menu-website/
 6. Add the endpoint in the relevant `backend/MenuApi/Recipes/*Api.cs` file using the `MapGroup` pattern.
 7. Register new DI services in `backend/MenuApi/Program.cs`.
 
+## Agent identity in git and GitHub
+
+If you are an AI agent (GitHub Copilot, Claude, or Codex), you **must** make it clear which agent you are whenever you write to git or GitHub. Identify yourself as whichever agent you actually are — never attribute your work to a different one.
+
+**PR review thread comments** — start the comment with this line, then a blank line, then the body:
+
+```
+> 🤖 **This comment was written by Claude.**
+```
+
+Substitute `GitHub Copilot` or `Codex` as appropriate. Do not add this to PR titles/descriptions, issue bodies, or issue comments.
+
+**Commit messages** — end the message with a `Co-authored-by:` trailer naming the agent:
+
+```
+Co-authored-by: Claude <noreply@anthropic.com>
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+Co-authored-by: Codex <codex@openai.com>
+```
+
+Keep the subject line a normal descriptive summary — identity belongs in the trailer, not the subject, and the `🤖` comment block never goes in a commit message.
+
+Full details in `.github/skills/agent-identity/SKILL.md`.
+
 ## Agent skills
 
 ### Issue tracker
