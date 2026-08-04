@@ -45,6 +45,12 @@ public static class RecipeApi
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
+        group.MapDelete("{recipeId}", DeleteRecipeAsync)
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         return group;
     }
 
@@ -136,5 +142,23 @@ public static class RecipeApi
 
         var recipe = await recipeService.GetRecipeAsync(recipeId);
         return Results.Ok(recipe ?? throw new InvalidOperationException($"Failed to retrieve the updated recipe with ID {recipeId} after the update operation."));
+    }
+
+    public static async Task<IResult> DeleteRecipeAsync(IRecipeService recipeService, HttpContext httpContext, RecipeId recipeId)
+    {
+        if (httpContext.Items[MenuUserHttpContextKeys.MenuUserId] is not MenuUserId callerId)
+        {
+            return Results.Unauthorized();
+        }
+
+        var deleted = await recipeService.DeleteRecipeAsync(recipeId, callerId);
+        if (!deleted)
+        {
+            return Results.Problem(
+                detail: $"Recipe with ID {recipeId} was not found.",
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
+        return Results.NoContent();
     }
 }

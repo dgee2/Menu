@@ -15,4 +15,6 @@ public interface IRecipeRepository
     Task<IEnumerable<DBModel.Recipe>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take);
 
     Task UpdateRecipeAsync(RecipeId recipeId, DBModel.Recipe recipe);
+
+    Task DeleteRecipeAsync(RecipeId recipeId);
 }
