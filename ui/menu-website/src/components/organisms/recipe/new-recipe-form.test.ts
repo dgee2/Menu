@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
-import { Quasar } from 'quasar';
+import { QSelect, Quasar } from 'quasar';
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query';
 import { createMemoryHistory, createRouter, type Router } from 'vue-router';
-import { defineComponent } from 'vue';
+import { defineComponent, nextTick } from 'vue';
 import NewRecipeForm from './new-recipe-form.vue';
 import type { RecipeDetail } from '@/services/recipe-api';
 
@@ -69,6 +69,23 @@ const fillField = async (wrapper: VueWrapper, label: string, value: string) => {
     .setValue(value);
 };
 
+/**
+ * Picks a dropdown option by label. The QSelect menu is portalled outside the wrapper, so the
+ * selection is emitted from the QSelect itself; the click-through path is covered by the story.
+ */
+const selectOption = async (wrapper: VueWrapper, fieldLabel: string, optionLabel: string) => {
+  const select = field(wrapper, fieldLabel).findComponent(QSelect);
+  const options = select.props('options') as { label: string; value: string }[];
+  const option = options.find((candidate) => candidate.label === optionLabel);
+
+  if (!option) {
+    throw new Error(`No option labelled "${optionLabel}" in field "${fieldLabel}"`);
+  }
+
+  select.vm.$emit('update:modelValue', option);
+  await nextTick();
+};
+
 /** Fills the Nth (0-indexed) field sharing `label`, for repeated rows like step editors. */
 const fillFieldAt = async (wrapper: VueWrapper, label: string, occurrence: number, value: string) => {
   const matches = wrapper
@@ -119,6 +136,7 @@ describe('new-recipe-form', () => {
     const labels = wrapper.findAll('.q-field__label').map((label) => label.text());
     expect(labels).toEqual([
       'Name',
+      'Visibility',
       'Summary',
       'Yield',
       'Servings',
@@ -236,6 +254,27 @@ describe('new-recipe-form', () => {
       ingredients: [],
       steps: [],
     });
+  });
+
+  it('defaults the submitted visibility to Private', async () => {
+    const wrapper = await mountForm();
+
+    expect(field(wrapper, 'Visibility').find('.q-field__native').text()).toBe('Private');
+
+    await fillField(wrapper, 'Name', 'Lasagne');
+    await submit(wrapper);
+
+    expect(submittedRecipe()).toMatchObject({ accessScope: 'Private' });
+  });
+
+  it('submits the selected visibility scope', async () => {
+    const wrapper = await mountForm();
+
+    await fillField(wrapper, 'Name', 'Lasagne');
+    await selectOption(wrapper, 'Visibility', 'Visible to all Menu users');
+    await submit(wrapper);
+
+    expect(submittedRecipe()).toMatchObject({ accessScope: 'AuthenticatedUsers' });
   });
 
   it('submits added steps with their edited fields and a recomputed sortOrder', async () => {

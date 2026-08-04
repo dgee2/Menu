@@ -6,14 +6,21 @@ import TextField from '@/components/atoms/form/text-field.vue';
 import NumberField from '@/components/atoms/form/number-field.vue';
 import IngredientRowEditor from '@/components/molecules/recipe/ingredient-row-editor.vue';
 import StepRowEditor from '@/components/molecules/recipe/step-row-editor.vue';
+import RecipeVisibilityField from '@/components/molecules/recipe/fields/recipe-visibility-field.vue';
 import { useRecipeService } from '@/services/recipe-service';
-import type { RecipeIngredientItem, RecipeStepItem, UpsertRecipe } from '@/services/recipe-api';
+import type {
+  RecipeAccessScope,
+  RecipeIngredientItem,
+  RecipeStepItem,
+  UpsertRecipe,
+} from '@/services/recipe-api';
 
 const router = useRouter();
 const { useCreateRecipe } = useRecipeService();
 const { mutateAsync: createRecipe, isPending, isError } = useCreateRecipe();
 
 const title = ref<string | null>(null);
+const accessScope = ref<RecipeAccessScope>('Private');
 const summary = ref<string | null>(null);
 const yieldText = ref<string | null>(null);
 const servings = ref<number | null>(null);
@@ -87,7 +94,7 @@ const onSubmit = async () => {
     prepTimeMinutes: prepTimeMinutes.value,
     cookTimeMinutes: cookTimeMinutes.value,
     totalTimeMinutes: totalTimeMinutes.value,
-    accessScope: 'Private',
+    accessScope: accessScope.value,
     ingredients: ingredients.value.map((ingredient, index) => ({
       ingredientText: ingredient.ingredientText,
       measureText: ingredient.measureText,
@@ -119,6 +126,7 @@ const onSubmit = async () => {
       Failed to save recipe. Please try again.
     </q-banner>
     <recipe-name-field v-model="title" />
+    <recipe-visibility-field v-model="accessScope" />
     <text-field v-model="summary" type="textarea" label="Summary" hint="A short description of the recipe" />
     <text-field v-model="yieldText" label="Yield" hint="e.g. One 9-inch cake" />
     <number-field v-model="servings" label="Servings" :min="0" :step="1" :rules="nonNegativeIntegerRules" />

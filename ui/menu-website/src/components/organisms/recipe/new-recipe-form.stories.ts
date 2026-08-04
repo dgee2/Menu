@@ -24,6 +24,20 @@ export const Default = meta.story({
     await expect(canvas.getByLabelText('Prep time (minutes)')).toBeInTheDocument();
     await expect(canvas.getByLabelText('Cook time (minutes)')).toBeInTheDocument();
     await expect(canvas.getByLabelText('Total time (minutes)')).toBeInTheDocument();
+    await expect(canvas.getByRole('combobox', { name: 'Visibility' })).toHaveValue('Private');
+  },
+});
+
+export const SelectingVisibilityUpdatesForm = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const combobox = canvas.getByRole('combobox', { name: 'Visibility' });
+
+    await userEvent.click(combobox);
+    const body = within(document.body);
+    await userEvent.click(await body.findByRole('option', { name: 'Visible to all Menu users' }));
+
+    await expect(combobox).toHaveValue('Visible to all Menu users');
   },
 });
 

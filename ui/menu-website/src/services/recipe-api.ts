@@ -11,6 +11,13 @@ export type RecipeStepItem = components['schemas']['RecipeStepItem'];
 export type IngredientUnit = components['schemas']['IngredientUnit'];
 export type RecipeListScope = 'mine' | 'authenticated';
 
+/**
+ * The values the API accepts for `accessScope`. The generated type is a bare `string`
+ * (the backend validates against `RecipeAccessScope.AllValues`), so narrow it here to
+ * catch typos at compile time.
+ */
+export type RecipeAccessScope = 'Private' | 'AuthenticatedUsers';
+
 export const useRecipeApi = () => {
   const auth = useAuth();
 
