@@ -30,3 +30,46 @@ export const PreFilledValue = meta.story({
     await expect(canvas.getByDisplayValue('Chocolate Cake')).toBeInTheDocument();
   },
 });
+
+export const EmptyNameIsRejected = meta.story({
+  args: {
+    modelValue: '',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Quasar validates on blur (and on model change), so focus then leave the field.
+    await userEvent.click(canvas.getByRole('textbox', { name: 'Name' }));
+    await userEvent.tab();
+
+    await expect(await canvas.findByText('Name is required')).toBeInTheDocument();
+  },
+});
+
+export const WhitespaceOnlyNameIsRejected = meta.story({
+  args: {
+    modelValue: '   ',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByRole('textbox', { name: 'Name' }));
+    await userEvent.tab();
+
+    await expect(await canvas.findByText('Name is required')).toBeInTheDocument();
+  },
+});
+
+export const NonBlankNameIsAccepted = meta.story({
+  args: {
+    modelValue: 'Lasagne',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByRole('textbox', { name: 'Name' }));
+    await userEvent.tab();
+
+    await expect(canvas.queryByText('Name is required')).not.toBeInTheDocument();
+  },
+});

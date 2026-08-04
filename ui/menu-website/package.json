@@ -15,6 +15,7 @@
     "lint": "eslint . \"./src/**/*.{ts,js,cjs,mjs,vue}\"",
     "lint-fix": "eslint . \"./src/**/*.{ts,js,cjs,mjs,vue}\" --fix",
     "test": "vitest --passWithNoTests",
+    "test:unit": "vitest --project=unit --run",
     "test:e2e": "playwright test",
     "test:storybook": "vitest --project=storybook --run",
     "type-check": "vue-tsc --build --noEmit",
