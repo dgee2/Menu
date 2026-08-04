@@ -158,6 +158,7 @@ pnpm dev                  # Dev server (standalone, port 5173)
 pnpm aspire               # Dev server started by Aspire (port 5173)
 pnpm build                # Type-check + production build
 pnpm test                 # Vitest unit tests
+pnpm test:storybook       # Storybook interaction tests (run after any UI change)
 pnpm test:e2e             # Playwright end-to-end tests
 pnpm lint                 # ESLint
 pnpm lint-fix             # ESLint with auto-fix
@@ -165,6 +166,8 @@ pnpm format               # Prettier
 pnpm generate-openapi     # Regenerate API types from OpenAPI spec
 pnpm storybook            # Storybook dev server (port 6006)
 ```
+
+Always run `pnpm test:storybook` after making any change under `ui/menu-website/src/` — it catches regressions in components exercised by existing stories, not just changes to story files themselves.
 
 ### Style & Linting
 
