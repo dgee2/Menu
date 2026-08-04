@@ -7,6 +7,7 @@ const meta = preview.meta({
   component: RecipeVisibilityField,
   tags: ['autodocs'],
   args: {
+    modelValue: 'Private',
     'onUpdate:modelValue': fn(),
   },
 });
@@ -16,6 +17,7 @@ export const Default = meta.story({
     const canvas = within(canvasElement);
     const combobox = canvas.getByRole('combobox', { name: 'Visibility' });
     await expect(combobox).toHaveValue('Private');
+    await expect(canvas.getByText('Who can see this recipe')).toBeInTheDocument();
   },
 });
 
@@ -41,5 +43,17 @@ export const PreFilledValue = meta.story({
     const canvas = within(canvasElement);
     const combobox = canvas.getByRole('combobox', { name: 'Visibility' });
     await expect(combobox).toHaveValue('Visible to all Menu users');
+  },
+});
+
+/** The field shows nothing rather than a misleading "Private" when the model has no value. */
+export const NoValueSelected = meta.story({
+  args: {
+    modelValue: undefined,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const combobox = canvas.getByRole('combobox', { name: 'Visibility' });
+    await expect(combobox).toHaveValue('');
   },
 });

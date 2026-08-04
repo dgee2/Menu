@@ -8,14 +8,19 @@ import IngredientRowEditor from '@/components/molecules/recipe/ingredient-row-ed
 import StepRowEditor from '@/components/molecules/recipe/step-row-editor.vue';
 import RecipeVisibilityField from '@/components/molecules/recipe/fields/recipe-visibility-field.vue';
 import { useRecipeService } from '@/services/recipe-service';
-import type { RecipeIngredientItem, RecipeStepItem, UpsertRecipe } from '@/services/recipe-api';
+import type {
+  RecipeAccessScope,
+  RecipeIngredientItem,
+  RecipeStepItem,
+  UpsertRecipe,
+} from '@/services/recipe-api';
 
 const router = useRouter();
 const { useCreateRecipe } = useRecipeService();
 const { mutateAsync: createRecipe, isPending, isError } = useCreateRecipe();
 
 const title = ref<string | null>(null);
-const accessScope = ref('Private');
+const accessScope = ref<RecipeAccessScope>('Private');
 const summary = ref<string | null>(null);
 const yieldText = ref<string | null>(null);
 const servings = ref<number | null>(null);

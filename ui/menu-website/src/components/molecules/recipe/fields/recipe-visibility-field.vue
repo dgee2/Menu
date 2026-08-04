@@ -1,24 +1,35 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import SelectField from '@/components/atoms/form/select-field.vue';
+import type { RecipeAccessScope } from '@/services/recipe-api';
 
-const accessScope = defineModel<string>({ default: 'Private' });
+// The default lives with the owning form, not here, so the field can never display a
+// value the parent has not actually been given.
+const accessScope = defineModel<RecipeAccessScope>();
 
-const options = [
+type VisibilityOption = { label: string; value: RecipeAccessScope };
+
+const options: VisibilityOption[] = [
   { label: 'Private', value: 'Private' },
   { label: 'Visible to all Menu users', value: 'AuthenticatedUsers' },
-] as const;
+];
 
-const selectedOption = computed({
-  get: () => options.find((option) => option.value === accessScope.value) ?? options[0],
+const selectedOption = computed<VisibilityOption | undefined>({
+  // An unrecognised scope renders as empty rather than silently reading as Private.
+  get: () => options.find((option) => option.value === accessScope.value),
   set: (option) => {
-    accessScope.value = option?.value ?? options[0].value;
+    accessScope.value = option?.value;
   },
 });
 </script>
 
 <template>
-  <select-field v-model="selectedOption" :options="[...options]" label="Visibility" />
+  <select-field
+    v-model="selectedOption"
+    :options="options"
+    label="Visibility"
+    hint="Who can see this recipe"
+  />
 </template>
 
 <style scoped></style>
