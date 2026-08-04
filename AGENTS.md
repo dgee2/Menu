@@ -157,7 +157,8 @@ pnpm install              # Install dependencies
 pnpm dev                  # Dev server (standalone, port 5173)
 pnpm aspire               # Dev server started by Aspire (port 5173)
 pnpm build                # Type-check + production build
-pnpm test                 # Vitest unit tests
+pnpm test                 # Vitest: unit + Storybook projects
+pnpm test:unit            # Vitest unit tests only (jsdom)
 pnpm test:storybook       # Storybook interaction tests (run after any UI change)
 pnpm test:e2e             # Playwright end-to-end tests
 pnpm lint                 # ESLint
@@ -168,6 +169,18 @@ pnpm storybook            # Storybook dev server (port 6006)
 ```
 
 Always run `pnpm test:storybook` after making any change under `ui/menu-website/src/` — it catches regressions in components exercised by existing stories, not just changes to story files themselves.
+
+### Component Test Coverage
+
+Every Vue component that is added or changed must come with both:
+
+- **A co-located Storybook story** (`<component>.stories.ts`) covering the new/changed rendering and any client-side validation, with `play` interaction assertions.
+- **A co-located unit test** (`<component>.test.ts`) run by the `unit` Vitest project (jsdom + `@vue/test-utils`). Mount with `global: { plugins: [Quasar] }`; add `VueQueryPlugin` and a memory `vue-router` for components that use them.
+
+Split the two by what each can verify reliably:
+
+- Stories cover rendering, props and validation messages. Note that MSW request mocking is **not** currently reliable under `vitest --project=storybook` — handlers registered for `*/api/recipe` are not served, so the request fails at the network layer. Do not write a story that asserts on a mocked response body.
+- Unit tests cover request payloads, success/error branches and routing, by mocking `@/services/recipe-api` (the API layer) so the real service/TanStack Query wiring is still exercised. See `src/components/organisms/recipe/new-recipe-form.test.ts`.
 
 ### Style & Linting
 
