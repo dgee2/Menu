@@ -25,7 +25,11 @@ const nonNegativeIntegerRules = [
   (val: number | null) => val == null || val >= 0 || 'Must be 0 or greater',
 ];
 
-const ingredients = ref<RecipeIngredientItem[]>([]);
+interface IngredientRow extends RecipeIngredientItem {
+  rowId: string;
+}
+
+const ingredients = ref<IngredientRow[]>([]);
 
 const addIngredient = () => {
   ingredients.value.push({
@@ -34,6 +38,7 @@ const addIngredient = () => {
     sectionTitle: null,
     preparationText: null,
     isOptional: false,
+    rowId: crypto.randomUUID(),
   });
 };
 
@@ -59,7 +64,14 @@ const onSubmit = async () => {
     cookTimeMinutes: cookTimeMinutes.value,
     totalTimeMinutes: totalTimeMinutes.value,
     accessScope: 'Private',
-    ingredients: ingredients.value.map((ingredient, index) => ({ ...ingredient, sortOrder: index })),
+    ingredients: ingredients.value.map((ingredient, index) => ({
+      ingredientText: ingredient.ingredientText,
+      measureText: ingredient.measureText,
+      sectionTitle: ingredient.sectionTitle,
+      preparationText: ingredient.preparationText,
+      isOptional: ingredient.isOptional,
+      sortOrder: index,
+    })),
     steps: [],
   };
 
@@ -105,7 +117,7 @@ const onSubmit = async () => {
     <div class="text-h6">Ingredients</div>
     <ingredient-row-editor
       v-for="(ingredient, index) in ingredients"
-      :key="index"
+      :key="ingredient.rowId"
       v-model:ingredient-text="ingredient.ingredientText"
       v-model:measure-text="ingredient.measureText"
       v-model:section-title="ingredient.sectionTitle"
