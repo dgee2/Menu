@@ -119,6 +119,7 @@ describe('new-recipe-form', () => {
     const labels = wrapper.findAll('.q-field__label').map((label) => label.text());
     expect(labels).toEqual([
       'Name',
+      'Visibility',
       'Summary',
       'Yield',
       'Servings',
