@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md">
-    <h1>All Recipes</h1>
+    <h1>My Recipes</h1>
     <q-list v-if="recipes && recipes.length" bordered separator>
       <q-item
         v-for="recipe in recipes"

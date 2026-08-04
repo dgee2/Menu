@@ -23,7 +23,10 @@
       <div v-for="section in ingredientSections" :key="section.title ?? ''">
         <h3 v-if="section.title">{{ section.title }}</h3>
         <q-list bordered separator>
-          <q-item v-for="(ingredient, index) in section.ingredients" :key="index">
+          <q-item
+            v-for="ingredient in section.ingredients"
+            :key="ingredient.sortOrder"
+          >
             <q-item-section>
               {{ ingredient.measureText }} {{ ingredient.ingredientText }}
               <span v-if="ingredient.isOptional" class="text-grey-6">(optional)</span>
@@ -35,7 +38,7 @@
       <h2>Steps</h2>
       <div v-if="recipe.steps.length === 0">No steps.</div>
       <q-list v-else bordered separator>
-        <q-item v-for="(step, index) in recipe.steps" :key="index">
+        <q-item v-for="(step, index) in recipe.steps" :key="step.sortOrder">
           <q-item-section avatar>{{ index + 1 }}</q-item-section>
           <q-item-section>
             <div v-if="step.title" class="text-weight-bold">{{ step.title }}</div>
