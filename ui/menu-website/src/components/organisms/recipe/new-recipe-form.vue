@@ -4,8 +4,9 @@ import { useRouter } from 'vue-router';
 import RecipeNameField from '@/components/molecules/recipe/fields/recipe-name-field.vue';
 import TextField from '@/components/atoms/form/text-field.vue';
 import NumberField from '@/components/atoms/form/number-field.vue';
+import IngredientRowEditor from '@/components/molecules/recipe/ingredient-row-editor.vue';
 import { useRecipeService } from '@/services/recipe-service';
-import type { UpsertRecipe } from '@/services/recipe-api';
+import type { RecipeIngredientItem, UpsertRecipe } from '@/services/recipe-api';
 
 const router = useRouter();
 const { useCreateRecipe } = useRecipeService();
@@ -24,6 +25,35 @@ const nonNegativeIntegerRules = [
   (val: number | null) => val == null || val >= 0 || 'Must be 0 or greater',
 ];
 
+interface IngredientRow extends RecipeIngredientItem {
+  rowId: string;
+}
+
+const ingredients = ref<IngredientRow[]>([]);
+
+const addIngredient = () => {
+  ingredients.value.push({
+    ingredientText: '',
+    measureText: '',
+    sectionTitle: null,
+    preparationText: null,
+    isOptional: false,
+    rowId: crypto.randomUUID(),
+  });
+};
+
+const removeIngredient = (index: number) => {
+  ingredients.value.splice(index, 1);
+};
+
+const moveIngredient = (index: number, offset: -1 | 1) => {
+  const targetIndex = index + offset;
+  if (targetIndex < 0 || targetIndex >= ingredients.value.length) return;
+  const [moved] = ingredients.value.splice(index, 1);
+  if (!moved) return;
+  ingredients.value.splice(targetIndex, 0, moved);
+};
+
 const onSubmit = async () => {
   const recipe: UpsertRecipe = {
     title: title.value ?? '',
@@ -34,7 +64,14 @@ const onSubmit = async () => {
     cookTimeMinutes: cookTimeMinutes.value,
     totalTimeMinutes: totalTimeMinutes.value,
     accessScope: 'Private',
-    ingredients: [],
+    ingredients: ingredients.value.map((ingredient, index) => ({
+      ingredientText: ingredient.ingredientText,
+      measureText: ingredient.measureText,
+      sectionTitle: ingredient.sectionTitle,
+      preparationText: ingredient.preparationText,
+      isOptional: ingredient.isOptional,
+      sortOrder: index,
+    })),
     steps: [],
   };
 
@@ -48,7 +85,7 @@ const onSubmit = async () => {
 </script>
 
 <template>
-  <q-form class="q-gutter-md" @submit="onSubmit">
+  <q-form greedy class="q-gutter-md" @submit="onSubmit">
     <q-banner v-if="isError" class="bg-negative text-white">
       Failed to save recipe. Please try again.
     </q-banner>
@@ -77,6 +114,23 @@ const onSubmit = async () => {
       :step="1"
       :rules="nonNegativeIntegerRules"
     />
+    <div class="text-h6">Ingredients</div>
+    <ingredient-row-editor
+      v-for="(ingredient, index) in ingredients"
+      :key="ingredient.rowId"
+      v-model:ingredient-text="ingredient.ingredientText"
+      v-model:measure-text="ingredient.measureText"
+      v-model:section-title="ingredient.sectionTitle"
+      v-model:preparation-text="ingredient.preparationText"
+      v-model:is-optional="ingredient.isOptional"
+      :can-move-up="index > 0"
+      :can-move-down="index < ingredients.length - 1"
+      @remove="removeIngredient(index)"
+      @move-up="moveIngredient(index, -1)"
+      @move-down="moveIngredient(index, 1)"
+    />
+    <q-btn label="Add ingredient" icon="add" flat @click="addIngredient" />
+
     <q-btn label="Save recipe" type="submit" color="primary" :loading="isPending" />
   </q-form>
 </template>
