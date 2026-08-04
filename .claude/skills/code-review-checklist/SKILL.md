@@ -1,8 +1,6 @@
 ---
 name: code-review-checklist
 description: Structured checklist for reviewing pull requests in the Menu repository — layer separation, Vogen coverage, Mapperly attributes, async conventions, and StyleCop compliance.
-user-invokable: true
-context: inline
 ---
 
 # Code Review Checklist

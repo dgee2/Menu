@@ -1,8 +1,6 @@
 ---
 name: github-issues-status
 description: Fetch all issues for a GitHub repo, parse Epic task lists, and compute a blocked/unblocked/in-progress/done status for every issue and epic transitively.
-user-invokable: true
-context: inline
 ---
 
 # GitHub Issues Status

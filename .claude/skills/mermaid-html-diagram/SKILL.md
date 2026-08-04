@@ -1,8 +1,6 @@
 ---
 name: mermaid-html-diagram
 description: Generate a self-contained HTML file containing one or more interactive Mermaid diagrams with dark GitHub-style theming, status-based colour coding, and mouse/button pan-and-zoom via svg-pan-zoom.
-user-invokable: true
-context: inline
 ---
 
 # Mermaid HTML Diagram

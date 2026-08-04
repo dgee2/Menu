@@ -1,8 +1,6 @@
 ---
 name: ef-migration
 description: Canonical commands and safety rules for EF Core migration management in the Menu repository — adding, removing, and applying migrations correctly.
-user-invokable: true
-context: inline
 ---
 
 # EF Core Migration Management

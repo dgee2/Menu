@@ -1,8 +1,6 @@
 ---
 name: write-tests
 description: Patterns for writing unit and integration tests in the Menu repository — xUnit, AutoFixture, FakeItEasy, AwesomeAssertions, CustomAutoData, and Aspire integration test conventions.
-user-invokable: true
-context: inline
 ---
 
 # Writing Tests

@@ -186,6 +186,8 @@ pnpm storybook            # Storybook dev server (port 6006)
 
 ## Agent skills
 
+Repo-local skills live in `.claude/skills/<name>/SKILL.md`, and slash commands in `.claude/commands/<name>.md`.
+
 ### Issue tracker
 
 Issues live in GitHub Issues (`gh` CLI); repo is inferred from `git remote -v`. See `docs/agents/issue-tracker.md`.
