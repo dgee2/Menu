@@ -209,9 +209,11 @@ Co-authored-by: Codex <codex@openai.com>
 
 Keep the subject line a normal descriptive summary — identity belongs in the trailer, not the subject, and the `🤖` comment block never goes in a commit message.
 
-Full details in `.github/skills/agent-identity/SKILL.md`.
+Full details in `.claude/skills/agent-identity/SKILL.md`.
 
 ## Agent skills
+
+Repo-local skills live in `.claude/skills/<name>/SKILL.md`, and slash commands in `.claude/commands/<name>.md`.
 
 ### Issue tracker
 

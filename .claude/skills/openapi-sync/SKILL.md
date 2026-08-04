@@ -1,8 +1,6 @@
 ---
 name: openapi-sync
 description: Keep the frontend API types in sync with the backend after any endpoint change — regenerate menu-api.ts from the OpenAPI spec produced by the .NET build.
-user-invokable: true
-context: inline
 ---
 
 # OpenAPI Sync

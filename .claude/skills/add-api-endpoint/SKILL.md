@@ -1,8 +1,6 @@
 ---
 name: add-api-endpoint
 description: Step-by-step guide for adding a new Minimal API endpoint to MenuApi following the layered model pattern (EF Entity → DBModel → ViewModel, Mapperly, repository, service, MapGroup registration).
-user-invokable: true
-context: inline
 ---
 
 # Adding a New API Endpoint

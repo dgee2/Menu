@@ -1,8 +1,6 @@
 ---
 name: frontend-component
 description: Conventions for adding a new Vue 3 + Quasar component in the Menu frontend — correct folder, TypeScript Composition API style, co-located Storybook story, and the two-layer API service pattern.
-user-invokable: true
-context: inline
 ---
 
 # Adding a New Frontend Component

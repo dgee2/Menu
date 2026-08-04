@@ -1,5 +1,4 @@
 ---
-name: issues-diagram
 description: Generate or refresh a self-contained HTML file with three interactive Mermaid dependency diagrams for the dgee2/Menu repo — epics only, child issues only, and a full combined view — with status-based colour coding and pan/zoom.
 argument-hint: optional output path (defaults to docs/issues-diagram.html)
 ---
@@ -18,7 +17,7 @@ Apply both of these skills in order:
 ## Runtime context
 
 - Repository: `dgee2/Menu`
-- Output path: `docs/issues-diagram.html` (override with the caller's argument if provided)
+- Output path: `$ARGUMENTS` if provided, otherwise `docs/issues-diagram.html`
 - Open the file after writing it
 
 ## Three diagrams to produce

@@ -1,8 +1,6 @@
 ---
 name: add-value-object
 description: How to create a new Vogen value object in MenuApi — covering the attribute, assembly-wide defaults, EF Core value converter registration, Swagger mapping, and repository wrapping conventions.
-user-invokable: true
-context: inline
 ---
 
 # Adding a New Vogen Value Object
