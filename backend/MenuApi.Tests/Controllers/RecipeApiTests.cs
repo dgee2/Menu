@@ -171,13 +171,34 @@ public class RecipeApiTests
     }
 
     [Theory, CustomAutoData]
-    public async Task UpdateRecipeAsync_Success(RecipeId recipeId, UpsertRecipe upsertRecipe, RecipeDetail recipe)
+    public async Task UpdateRecipeAsync_Success(MenuUserId callerId, RecipeId recipeId, UpsertRecipe upsertRecipe, RecipeDetail recipe)
     {
+        A.CallTo(() => recipeService.UpdateRecipeAsync(recipeId, upsertRecipe, callerId)).Returns(true);
         A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
 
-        var result = await RecipeApi.UpdateRecipeAsync(recipeService, recipeId, upsertRecipe);
+        var result = await RecipeApi.UpdateRecipeAsync(recipeService, CreateHttpContext(callerId), recipeId, upsertRecipe);
 
-        A.CallTo(() => recipeService.UpdateRecipeAsync(recipeId, upsertRecipe)).MustHaveHappenedOnceExactly();
-        result.Should().Be(recipe);
+        A.CallTo(() => recipeService.UpdateRecipeAsync(recipeId, upsertRecipe, callerId)).MustHaveHappenedOnceExactly();
+        var okResult = result.Should().BeOfType<Ok<RecipeDetail>>().Subject;
+        okResult.Value.Should().Be(recipe);
+    }
+
+    [Theory, CustomAutoData]
+    public async Task UpdateRecipeAsync_NotFound_Returns404(MenuUserId callerId, RecipeId recipeId, UpsertRecipe upsertRecipe)
+    {
+        A.CallTo(() => recipeService.UpdateRecipeAsync(recipeId, upsertRecipe, callerId)).Returns(false);
+
+        var result = await RecipeApi.UpdateRecipeAsync(recipeService, CreateHttpContext(callerId), recipeId, upsertRecipe);
+
+        var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
+        problemResult.StatusCode.Should().Be(404);
+    }
+
+    [Theory, CustomAutoData]
+    public async Task UpdateRecipeAsync_NoMenuUserId_Returns401(RecipeId recipeId, UpsertRecipe upsertRecipe)
+    {
+        var result = await RecipeApi.UpdateRecipeAsync(recipeService, CreateHttpContext(null), recipeId, upsertRecipe);
+
+        result.Should().BeOfType<UnauthorizedHttpResult>();
     }
 }

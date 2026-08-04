@@ -29,6 +29,8 @@ builder.Services.AddTransient<IMenuUserRepository, MenuUserRepository>();
 builder.Services.AddTransient<IMenuUserService, MenuUserService>();
 
 builder.Services.AddExceptionHandler<BusinessValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<ConflictExceptionHandler>();
+builder.Services.AddExceptionHandler<ForbiddenAccessExceptionHandler>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 

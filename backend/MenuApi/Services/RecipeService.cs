@@ -1,4 +1,5 @@
 using MenuDB;
+using MenuApi.Exceptions;
 using MenuApi.MappingProfiles;
 using MenuApi.Repositories;
 using MenuApi.ValueObjects;
@@ -50,14 +51,26 @@ public class RecipeService(IRecipeRepository recipeRepository, IRecipeStepReposi
             await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
             var recipeId = await recipeRepository.CreateRecipeAsync(recipe).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Ingredients)).ConfigureAwait(false);
+            await recipeStepRepository.UpsertStepCollectionAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Steps)).ConfigureAwait(false);
             await tran.CommitAsync().ConfigureAwait(false);
             return recipeId;
         }).ConfigureAwait(false);
     }
 
-    public async Task UpdateRecipeAsync(RecipeId recipeId, UpsertRecipe upsertRecipe)
+    public async Task<bool> UpdateRecipeAsync(RecipeId recipeId, UpsertRecipe upsertRecipe, MenuUserId callerId)
     {
         ArgumentNullException.ThrowIfNull(upsertRecipe);
+
+        var existing = await recipeRepository.GetRecipeAsync(recipeId).ConfigureAwait(false);
+        if (existing is null)
+        {
+            return false;
+        }
+
+        if (existing.OwnerUserId != callerId)
+        {
+            throw new ForbiddenAccessException($"You do not own recipe {recipeId}.");
+        }
 
         var strategy = db.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
@@ -65,7 +78,10 @@ public class RecipeService(IRecipeRepository recipeRepository, IRecipeStepReposi
             await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
             await recipeRepository.UpdateRecipeAsync(recipeId, ViewModelMapper.Map(upsertRecipe)).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Ingredients)).ConfigureAwait(false);
+            await recipeStepRepository.UpsertStepCollectionAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Steps)).ConfigureAwait(false);
             await tran.CommitAsync().ConfigureAwait(false);
         }).ConfigureAwait(false);
+
+        return true;
     }
 }

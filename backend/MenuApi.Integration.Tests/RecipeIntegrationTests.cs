@@ -143,7 +143,7 @@ public class RecipeIntegrationTests
 
     [Theory]
     [InlineData("Unique Title")]
-    public async Task Create_Recipe_With_Duplicate_Title_Returns_UnprocessableEntity(string recipeTitle)
+    public async Task Create_Recipe_With_Duplicate_Title_Returns_Conflict(string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
         var recipe = new UpsertRecipe
@@ -160,12 +160,12 @@ public class RecipeIntegrationTests
         using var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
         using var response = await client.PostAsync("/api/recipe", requestContent);
 
-        await response.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
+        await response.ShouldHaveStatusCode(HttpStatusCode.Conflict);
     }
 
     [Theory]
     [InlineData("Recipe A", "Recipe B")]
-    public async Task Update_Recipe_To_Duplicate_Title_Returns_UnprocessableEntity(string recipeTitle1, string recipeTitle2)
+    public async Task Update_Recipe_To_Duplicate_Title_Returns_Conflict(string recipeTitle1, string recipeTitle2)
     {
         using var client = await fixture.GetHttpClient();
         var recipe1 = new UpsertRecipe
@@ -189,12 +189,12 @@ public class RecipeIntegrationTests
         await PostRecipeAsync(client, recipe1);
         var (id2, _) = await PostRecipeAsync(client, recipe2);
 
-        // Try to rename recipe2 to recipe1's title - should be 422
+        // Try to rename recipe2 to recipe1's title - should be 409
         recipe2.Title = recipeTitle1;
         using var requestContent = new StringContent(JsonSerializer.Serialize(recipe2), Encoding.UTF8, "application/json");
         using var response = await client.PutAsync($"/api/recipe/{id2}", requestContent);
 
-        await response.ShouldHaveStatusCode(HttpStatusCode.UnprocessableEntity);
+        await response.ShouldHaveStatusCode(HttpStatusCode.Conflict);
     }
 
     private static async Task<(int Id, string Title)> PostRecipeAsync(HttpClient client, UpsertRecipe recipe)

@@ -19,12 +19,7 @@ public class UpsertRecipeValidator : AbstractValidator<UpsertRecipe>
 
         RuleFor(x => x.Ingredients)
             .NotNull()
-            .WithMessage("'Ingredients' must not be empty.");
-
-        RuleFor(x => x.Ingredients)
-            .Must(i => i is { Count: > 0 })
-            .When(x => x.Ingredients is not null)
-            .WithMessage("'Ingredients' must not be empty.");
+            .WithMessage("'Ingredients' must not be null.");
 
         RuleForEach(x => x.Ingredients)
             .SetValidator(new RecipeIngredientItemValidator());
