@@ -69,6 +69,33 @@ const fillField = async (wrapper: VueWrapper, label: string, value: string) => {
     .setValue(value);
 };
 
+/** Fills the Nth (0-indexed) field sharing `label`, for repeated rows like step editors. */
+const fillFieldAt = async (wrapper: VueWrapper, label: string, occurrence: number, value: string) => {
+  const matches = wrapper
+    .findAll('.q-field')
+    .filter((candidate) => candidate.find('.q-field__label').text() === label);
+
+  await matches[occurrence].find<HTMLInputElement | HTMLTextAreaElement>('input, textarea').setValue(value);
+};
+
+/**
+ * Matches icon-only buttons by their `aria-label`, and labelled buttons by their visible text
+ * (Quasar prepends the icon's ligature text, e.g. "add", so text is matched with `endsWith`).
+ */
+const clickButton = async (wrapper: VueWrapper, name: string) => {
+  const byAriaLabel = wrapper.find(`[aria-label="${name}"]`);
+  if (byAriaLabel.exists()) {
+    await byAriaLabel.trigger('click');
+    return;
+  }
+
+  const byText = wrapper.findAll('button').find((candidate) => candidate.text().endsWith(name));
+  if (!byText) {
+    throw new Error(`No button labelled "${name}"`);
+  }
+  await byText.trigger('click');
+};
+
 const submit = async (wrapper: VueWrapper) => {
   await wrapper.find('form').trigger('submit');
   await flushPromises();
@@ -209,6 +236,52 @@ describe('new-recipe-form', () => {
       ingredients: [],
       steps: [],
     });
+  });
+
+  it('submits added steps with their edited fields and a recomputed sortOrder', async () => {
+    const wrapper = await mountForm();
+
+    await fillField(wrapper, 'Name', 'Lasagne');
+    await clickButton(wrapper, 'Add step');
+    await clickButton(wrapper, 'Add step');
+
+    await fillFieldAt(wrapper, 'Instructions', 0, 'Preheat the oven');
+    await fillFieldAt(wrapper, 'Title', 0, 'Preheat');
+    await fillFieldAt(wrapper, 'Duration (minutes)', 0, '10');
+    await fillFieldAt(wrapper, 'Instructions', 1, 'Mix the batter');
+
+    await submit(wrapper);
+
+    expect(submittedRecipe()).toMatchObject({
+      steps: [
+        { instructionText: 'Preheat the oven', title: 'Preheat', durationMinutes: 10, sortOrder: 0 },
+        { instructionText: 'Mix the batter', title: null, durationMinutes: null, sortOrder: 1 },
+      ],
+    });
+  });
+
+  it('recomputes step sortOrder after a reorder and does not leak the internal rowId', async () => {
+    const wrapper = await mountForm();
+
+    await fillField(wrapper, 'Name', 'Lasagne');
+    await clickButton(wrapper, 'Add step');
+    await clickButton(wrapper, 'Add step');
+
+    await fillFieldAt(wrapper, 'Instructions', 0, 'Preheat the oven');
+    await fillFieldAt(wrapper, 'Instructions', 1, 'Mix the batter');
+
+    await clickButton(wrapper, 'Move step down');
+    await submit(wrapper);
+
+    expect(submittedRecipe()).toMatchObject({
+      steps: [
+        { instructionText: 'Mix the batter', sortOrder: 0 },
+        { instructionText: 'Preheat the oven', sortOrder: 1 },
+      ],
+    });
+    for (const step of (submittedRecipe() as { steps: object[] }).steps) {
+      expect(step).not.toHaveProperty('rowId');
+    }
   });
 
   it('submits the populated metadata fields as numbers', async () => {

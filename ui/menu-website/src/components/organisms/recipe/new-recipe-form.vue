@@ -30,6 +30,10 @@ interface IngredientRow extends RecipeIngredientItem {
   rowId: string;
 }
 
+interface StepRow extends RecipeStepItem {
+  rowId: string;
+}
+
 const moveItem = <T,>(array: T[], index: number, offset: -1 | 1) => {
   const targetIndex = index + offset;
   if (targetIndex < 0 || targetIndex >= array.length) return;
@@ -57,13 +61,14 @@ const removeIngredient = (index: number) => {
 
 const moveIngredient = (index: number, offset: -1 | 1) => moveItem(ingredients.value, index, offset);
 
-const steps = ref<RecipeStepItem[]>([]);
+const steps = ref<StepRow[]>([]);
 
 const addStep = () => {
   steps.value.push({
     instructionText: '',
     title: null,
     durationMinutes: null,
+    rowId: crypto.randomUUID(),
   });
 };
 
@@ -91,7 +96,12 @@ const onSubmit = async () => {
       isOptional: ingredient.isOptional,
       sortOrder: index,
     })),
-    steps: steps.value.map((step, index) => ({ ...step, sortOrder: index })),
+    steps: steps.value.map((step, index) => ({
+      instructionText: step.instructionText,
+      title: step.title,
+      durationMinutes: step.durationMinutes,
+      sortOrder: index,
+    })),
   };
 
   try {
@@ -153,7 +163,7 @@ const onSubmit = async () => {
     <div class="text-h6">Steps</div>
     <step-row-editor
       v-for="(step, index) in steps"
-      :key="index"
+      :key="step.rowId"
       v-model:instruction-text="step.instructionText"
       v-model:title="step.title"
       v-model:duration-minutes="step.durationMinutes"
