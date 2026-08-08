@@ -1,3 +1,9 @@
+# Aspire's WithPnpm() spawns pnpm non-interactively with no TTY. Without this,
+# a pnpm major-version bump (see the corepack packageManager pin in package.json)
+# leaves a stale node_modules store from the old version, and pnpm aborts waiting
+# for a purge confirmation prompt it can never receive
+# (ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY).
+confirmModulesPurge: false
 allowBuilds:
   '@parcel/watcher': true
   browser-tabs-lock: true

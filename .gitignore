@@ -343,3 +343,6 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 /.sonarlint
+
+# Machine-local Playwright CLI config (browser channel etc.) from aspire agent init
+.playwright/
