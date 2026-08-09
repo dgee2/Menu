@@ -170,7 +170,7 @@ pnpm storybook            # Storybook dev server (port 6006)
 
 Always run `pnpm test:storybook` after making any change under `ui/menu-website/src/` — it catches regressions in components exercised by existing stories, not just changes to story files themselves.
 
-pnpm's version is pinned via corepack (`packageManager` in `package.json`), which is also what Aspire's `WithPnpm()` shells out to when running the full stack (`dotnet run --project Menu.AppHost`). `pnpm-workspace.yaml` sets `confirmModulesPurge: false` so a pinned-version bump self-heals a stale `node_modules` automatically; if you ever see `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` anyway, just run `pnpm install` once by hand from `ui/menu-website/`.
+pnpm's version is pinned via corepack (`packageManager` in `package.json`), which is also what Aspire's `WithPnpm()` shells out to when the AppHost starts the full stack (via `aspire start`, the agent-preferred path, or `dotnet run --project Menu.AppHost`). `pnpm-workspace.yaml` sets `confirmModulesPurge: false` so a pinned-version bump self-heals a stale `node_modules` automatically; if you ever see `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` anyway, just run `pnpm install` once by hand from `ui/menu-website/`.
 
 ### Component Test Coverage
 
