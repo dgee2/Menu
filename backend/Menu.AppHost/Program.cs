@@ -24,7 +24,7 @@ var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
 var isTestMode = Environment.GetEnvironmentVariable("ASPIRE_TEST_MODE") == "true";
 if (!isTestMode)
 {
-    builder.AddJavaScriptApp("menu-ui", "../ui/menu-website", "aspire")
+    builder.AddJavaScriptApp("menu-ui", "../../ui/menu-website", "aspire")
         .WithPnpm()
         .WithReference(menuApi)
         .WithEnvironment("VITE_MENU_API_URL", menuApi.GetEndpoint("menuApiHttp"))
