@@ -64,7 +64,7 @@
     "eslint-plugin-vue": "~10.10.0",
     "globals": "^17.9.0",
     "jiti": "^2.7.0",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.1",
     "msw": "^2.12.14",
     "msw-storybook-addon": "^2.0.6",
     "npm-run-all2": "^8.0.4",
