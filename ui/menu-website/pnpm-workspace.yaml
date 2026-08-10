@@ -16,5 +16,21 @@ onlyBuiltDependencies:
   - esbuild
   - msw
   - vue-demi
-patchedDependencies:
-  '@storybook/addon-vitest@10.3.3': patches/@storybook__addon-vitest@10.3.3.patch
+overrides:
+  # @auth0/auth0-vue declares vue as a regular dependency (not a peer), so pnpm
+  # resolves it independently and installs a second vue copy whenever the range
+  # it pins doesn't happen to match our own vue version exactly. Two vue
+  # installs means two structurally-incompatible `App`/`Plugin` types, which
+  # breaks `app.use(createAuth0())` under vue-tsc. Force a single instance.
+  vue: ^3.5.41
+  # @vitest/mocker (pulled in by @storybook/addon-vitest's browser mode) only
+  # peer-requires msw ^2.4.9, but pnpm's dedup picks the newest version that
+  # satisfies every range in the graph — which silently pulled in msw 2.15.x
+  # even though our own package.json still asks for ^2.12.14. msw 2.15's
+  # `setupWorker()` no longer exposes `worker.context`, which
+  # msw-storybook-addon@2.0.6 depends on, breaking every Storybook
+  # interaction test with "Cannot set properties of undefined (setting
+  # 'activationPromise')". Pin msw to the version msw-storybook-addon@2.0.6
+  # was actually built against until the addon is upgraded to v3 (which
+  # supports newer msw), so it stops floating up on unrelated bumps.
+  msw: 2.12.14
