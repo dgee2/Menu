@@ -4,7 +4,8 @@ import addonLinks from '@storybook/addon-links';
 import { setup, definePreview } from '@storybook/vue3-vite';
 import { QLayout, QPageContainer, Quasar } from 'quasar';
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
-import { initialize, mswLoader } from 'msw-storybook-addon';
+import { setupWorker } from 'msw/browser';
+import addonMsw from 'msw-storybook-addon';
 import { router } from './router';
 import { ingredientUnitsHandler } from './msw-handlers';
 
@@ -13,14 +14,6 @@ import '@quasar/extras/material-icons/material-icons.css';
 
 import 'quasar/src/css/index.sass'; // as suggested in https://quasar.dev/start/vite-plugin
 import '../src/css/app.scss';
-
-initialize({
-  serviceWorker: {
-    url: '/mockServiceWorker.js',
-  },
-  onUnhandledRequest: 'bypass',
-  quiet: true,
-});
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,8 +49,6 @@ export const withPageLayout = () => ({
 });
 
 export default definePreview({
-  loaders: [mswLoader],
-
   initialGlobals: {
     backgrounds: { value: 'light' },
   },
@@ -71,6 +62,10 @@ export default definePreview({
       template: '<story />',
     }),
   ],
+
+  beforeEach({ msw }) {
+    msw.use(ingredientUnitsHandler);
+  },
 
   parameters: {
     controls: {
@@ -104,10 +99,6 @@ export default definePreview({
       },
     },
 
-    msw: {
-      handlers: [ingredientUnitsHandler],
-    },
-
     a11y: {
       // 'todo' - show a11y violations in the test UI only
       // 'error' - fail CI on a11y violations
@@ -116,6 +107,21 @@ export default definePreview({
     },
   },
 
-  addons: [addonLinks(), addonDocs(), addonA11y()],
+  addons: [
+    addonLinks(),
+    addonDocs(),
+    addonA11y(),
+    addonMsw(async () => {
+      const worker = setupWorker();
+      await worker.start({
+        serviceWorker: {
+          url: '/mockServiceWorker.js',
+        },
+        onUnhandledRequest: 'bypass',
+        quiet: true,
+      });
+      return worker;
+    }),
+  ],
 });
 
