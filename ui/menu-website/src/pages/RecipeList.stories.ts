@@ -15,30 +15,20 @@ const meta = preview.meta({
   decorators: [withPageLayout],
 });
 
-const successParameters = {
-  msw: {
-    handlers: {
-      recipes: recipesSuccessHandler,
-    },
-  },
-};
-
 export const Success = meta.story({
-  parameters: successParameters,
+  beforeEach({ msw }) {
+    msw.use(recipesSuccessHandler);
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('My Recipes')).toBeInTheDocument();
-    await expect(successParameters.msw.handlers.recipes).toBe(recipesSuccessHandler);
+    await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
   },
 });
 
 export const Empty = meta.story({
-  parameters: {
-    msw: {
-      handlers: {
-        recipes: recipesEmptyHandler,
-      },
-    },
+  beforeEach({ msw }) {
+    msw.use(recipesEmptyHandler);
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -48,12 +38,8 @@ export const Empty = meta.story({
 
 export const ErrorStory = meta.story({
   name: 'Error',
-  parameters: {
-    msw: {
-      handlers: {
-        recipes: recipesErrorHandler,
-      },
-    },
+  beforeEach({ msw }) {
+    msw.use(recipesErrorHandler);
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -62,12 +48,8 @@ export const ErrorStory = meta.story({
 });
 
 export const Loading = meta.story({
-  parameters: {
-    msw: {
-      handlers: {
-        recipes: recipesLoadingHandler,
-      },
-    },
+  beforeEach({ msw }) {
+    msw.use(recipesLoadingHandler);
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

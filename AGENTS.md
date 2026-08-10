@@ -181,7 +181,7 @@ Every Vue component that is added or changed must come with both:
 
 Split the two by what each can verify reliably:
 
-- Stories cover rendering, props and validation messages. Note that MSW request mocking is **not** currently reliable under `vitest --project=storybook` — handlers registered for `*/api/recipe` are not served, so the request fails at the network layer. Do not write a story that asserts on a mocked response body.
+- Stories cover rendering, props and validation messages, including MSW-mocked response bodies — register handlers per-story via the `beforeEach({ msw }) { msw.use(handler); }` hook (not the legacy `parameters.msw` object, which `msw-storybook-addon`'s CSF-Next API silently ignores). See `RecipeList.stories.ts` and `RecipeDetail.stories.ts` for examples.
 - Unit tests cover request payloads, success/error branches and routing, by mocking `@/services/recipe-api` (the API layer) so the real service/TanStack Query wiring is still exercised. See `src/components/organisms/recipe/new-recipe-form.test.ts`.
 
 ### Style & Linting
