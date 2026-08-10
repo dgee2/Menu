@@ -1,4 +1,4 @@
-﻿<Project Sdk="Aspire.AppHost.Sdk/13.3.5">
+<Project Sdk="Aspire.AppHost.Sdk/13.4.6">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,12 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.3.5" />
-    <PackageReference Include="Aspire.Hosting.Redis" Version="13.3.5" />
-    <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.3.5" />
-    <PackageReference Include="CommunityToolkit.Aspire.Hosting.JavaScript.Extensions" Version="13.3.0" />
-    <!-- Pin transitive MessagePack (via Aspire.Hosting -> StreamJsonRpc) past known vulnerabilities in 2.5.192 -->
-    <PackageReference Include="MessagePack" Version="2.5.302" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.4.6" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="13.4.6" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.4.6" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.JavaScript.Extensions" Version="13.4.0" />
   </ItemGroup>
 
   <ItemGroup>
