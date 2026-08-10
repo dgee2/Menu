@@ -6,7 +6,8 @@ public class RecipeEntity
     public required string Title { get; set; }
     public int? OwnerUserId { get; set; }
     public MenuUserEntity? Owner { get; set; }
-    public required string AccessScope { get; set; }
+    public byte AccessScopeId { get; set; }
+    public RecipeAccessScopeEntity? AccessScope { get; set; }
     public string? Summary { get; set; }
     public int? Servings { get; set; }
     public string? YieldText { get; set; }

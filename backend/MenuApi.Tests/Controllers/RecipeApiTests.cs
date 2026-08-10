@@ -7,7 +7,6 @@ using MenuApi.Recipes;
 using MenuApi.Services;
 using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Xunit;
 
@@ -22,23 +21,16 @@ public class RecipeApiTests
         recipeService = A.Fake<IRecipeService>();
     }
 
-    private static HttpContext CreateHttpContext(MenuUserId? menuUserId)
-    {
-        var httpContext = new DefaultHttpContext();
-        if (menuUserId is not null)
-        {
-            httpContext.Items[MenuUserHttpContextKeys.MenuUserId] = menuUserId.Value;
-        }
-
-        return httpContext;
-    }
+    // The "no caller" path is RequireCallerFilter's job now, so handlers here are always called
+    // with a bound caller - see RequireCallerFilterTests for the 401.
+    private static CallerId Caller(MenuUserId menuUserId) => new(menuUserId);
 
     [Theory, CustomAutoData]
     public async Task GetRecipesAsync_Mine_Success(MenuUserId callerId, IEnumerable<RecipeListItem> recipes)
     {
         A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 50)).Returns(recipes);
 
-        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "mine", null);
+        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(callerId), "mine", null);
 
         var okResult = result.Should().BeOfType<Ok<IEnumerable<RecipeListItem>>>().Subject;
         okResult.Value.Should().BeEquivalentTo(recipes);
@@ -49,7 +41,7 @@ public class RecipeApiTests
     {
         A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Authenticated, callerId, 50)).Returns(recipes);
 
-        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "AUTHENTICATED", null);
+        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(callerId), "AUTHENTICATED", null);
 
         var okResult = result.Should().BeOfType<Ok<IEnumerable<RecipeListItem>>>().Subject;
         okResult.Value.Should().BeEquivalentTo(recipes);
@@ -60,7 +52,7 @@ public class RecipeApiTests
     {
         A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 200)).Returns(recipes);
 
-        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "mine", 500);
+        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(callerId), "mine", 500);
 
         result.Should().BeOfType<Ok<IEnumerable<RecipeListItem>>>();
         A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 200)).MustHaveHappenedOnceExactly();
@@ -71,7 +63,7 @@ public class RecipeApiTests
     {
         A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 1)).Returns(recipes);
 
-        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "mine", 0);
+        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(callerId), "mine", 0);
 
         result.Should().BeOfType<Ok<IEnumerable<RecipeListItem>>>();
         A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 1)).MustHaveHappenedOnceExactly();
@@ -82,69 +74,83 @@ public class RecipeApiTests
     {
         A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 1)).Returns(recipes);
 
-        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "mine", -1);
+        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(callerId), "mine", -1);
 
         result.Should().BeOfType<Ok<IEnumerable<RecipeListItem>>>();
         A.CallTo(() => recipeService.GetRecipesAsync(RecipeListScope.Mine, callerId, 1)).MustHaveHappenedOnceExactly();
     }
 
     [Theory, CustomAutoData]
-    public async Task GetRecipesAsync_UnknownScope_Returns400(MenuUserId callerId)
+    public async Task GetRecipesAsync_UnknownScope_ReturnsValidationProblemKeyedOnScope(MenuUserId callerId)
     {
-        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), "everyone", null);
+        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(callerId), "everyone", null);
 
-        var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
+        var problemResult = result.Should().BeOfType<ValidationProblem>().Subject;
         problemResult.StatusCode.Should().Be(400);
-        problemResult.ProblemDetails.Detail.Should().Be("Unknown scope 'everyone'. Expected 'mine' or 'authenticated'.");
+        problemResult.ProblemDetails.Errors.Should().ContainKey("scope");
+        problemResult.ProblemDetails.Errors["scope"].Should()
+            .ContainSingle().Which.Should().Be("Unknown scope 'everyone'. Expected one of: mine, authenticated.");
     }
 
     [Theory, CustomAutoData]
-    public async Task GetRecipesAsync_MissingScope_Returns400(MenuUserId callerId)
+    public async Task GetRecipesAsync_MissingScope_ReturnsValidationProblemKeyedOnScope(MenuUserId callerId)
     {
-        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(callerId), null, null);
+        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(callerId), null, null);
 
-        var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
+        var problemResult = result.Should().BeOfType<ValidationProblem>().Subject;
         problemResult.StatusCode.Should().Be(400);
-        problemResult.ProblemDetails.Detail.Should().Be("Missing scope. Expected 'mine' or 'authenticated'.");
-    }
-
-    [Fact]
-    public async Task GetRecipesAsync_NoMenuUserId_Returns401()
-    {
-        var result = await RecipeApi.GetRecipesAsync(recipeService, CreateHttpContext(null), "mine", null);
-
-        result.Should().BeOfType<UnauthorizedHttpResult>();
+        problemResult.ProblemDetails.Errors["scope"].Should()
+            .ContainSingle().Which.Should().Be("Missing scope. Expected one of: mine, authenticated.");
     }
 
     [Theory, CustomAutoData]
-    public async Task GetRecipeAsync_Success(RecipeId recipeId, RecipeDetail recipe)
+    public async Task GetRecipesAsync_NumericScope_ReturnsValidationProblem(MenuUserId callerId)
     {
-        A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
+        // The enum's ordinals must not become a second, undocumented spelling of the contract.
+        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(callerId), "0", null);
 
-        var result = await RecipeApi.GetRecipeAsync(recipeService, recipeId);
+        result.Should().BeOfType<ValidationProblem>();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipeAsync_Success(MenuUserId callerId, RecipeId recipeId, RecipeDetail recipe)
+    {
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId)).Returns(recipe);
+
+        var result = await RecipeApi.GetRecipeAsync(recipeService, Caller(callerId), recipeId);
 
         var okResult = result.Should().BeOfType<Ok<RecipeDetail>>().Subject;
         okResult.Value.Should().Be(recipe);
     }
 
     [Theory, CustomAutoData]
-    public async Task GetRecipeAsync_NotFound_Returns404(RecipeId recipeId)
+    public async Task GetRecipeAsync_NotReadable_Returns404(MenuUserId callerId, RecipeId recipeId)
     {
         RecipeDetail? recipe = null;
-        A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId)).Returns(recipe);
 
-        var result = await RecipeApi.GetRecipeAsync(recipeService, recipeId);
+        var result = await RecipeApi.GetRecipeAsync(recipeService, Caller(callerId), recipeId);
 
         var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
         problemResult.StatusCode.Should().Be(404);
     }
 
     [Theory, CustomAutoData]
-    public async Task GetRecipeIngredientsAsync_Success(RecipeId recipeId, IEnumerable<RecipeIngredientItem> ingredients)
+    public async Task GetRecipeAsync_PassesCallerToService(MenuUserId callerId, RecipeId recipeId, RecipeDetail recipe)
     {
-        A.CallTo(() => recipeService.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId)).Returns(recipe);
 
-        var result = await RecipeApi.GetRecipeIngredientsAsync(recipeService, recipeId);
+        await RecipeApi.GetRecipeAsync(recipeService, Caller(callerId), recipeId);
+
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId)).MustHaveHappenedOnceExactly();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipeIngredientsAsync_Success(MenuUserId callerId, RecipeId recipeId, IEnumerable<RecipeIngredientItem> ingredients)
+    {
+        A.CallTo(() => recipeService.GetRecipeIngredientsAsync(recipeId, callerId)).Returns(ingredients);
+
+        var result = await RecipeApi.GetRecipeIngredientsAsync(recipeService, Caller(callerId), recipeId);
 
         result.Should().BeEquivalentTo(ingredients);
     }
@@ -153,9 +159,9 @@ public class RecipeApiTests
     public async Task CreateRecipeAsync_Success(MenuUserId callerId, UpsertRecipe upsertRecipe, RecipeDetail recipe, RecipeId recipeId)
     {
         A.CallTo(() => recipeService.CreateRecipeAsync(upsertRecipe, callerId)).Returns(recipeId);
-        A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId)).Returns(recipe);
 
-        var result = await RecipeApi.CreateRecipeAsync(recipeService, CreateHttpContext(callerId), upsertRecipe);
+        var result = await RecipeApi.CreateRecipeAsync(recipeService, Caller(callerId), upsertRecipe);
 
         A.CallTo(() => recipeService.CreateRecipeAsync(upsertRecipe, callerId)).MustHaveHappenedOnceExactly();
         var okResult = result.Should().BeOfType<Ok<RecipeDetail>>().Subject;
@@ -163,20 +169,12 @@ public class RecipeApiTests
     }
 
     [Theory, CustomAutoData]
-    public async Task CreateRecipeAsync_NoMenuUserId_Returns401(UpsertRecipe upsertRecipe)
-    {
-        var result = await RecipeApi.CreateRecipeAsync(recipeService, CreateHttpContext(null), upsertRecipe);
-
-        result.Should().BeOfType<UnauthorizedHttpResult>();
-    }
-
-    [Theory, CustomAutoData]
     public async Task UpdateRecipeAsync_Success(MenuUserId callerId, RecipeId recipeId, UpsertRecipe upsertRecipe, RecipeDetail recipe)
     {
         A.CallTo(() => recipeService.UpdateRecipeAsync(recipeId, upsertRecipe, callerId)).Returns(true);
-        A.CallTo(() => recipeService.GetRecipeAsync(recipeId)).Returns(recipe);
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId)).Returns(recipe);
 
-        var result = await RecipeApi.UpdateRecipeAsync(recipeService, CreateHttpContext(callerId), recipeId, upsertRecipe);
+        var result = await RecipeApi.UpdateRecipeAsync(recipeService, Caller(callerId), recipeId, upsertRecipe);
 
         A.CallTo(() => recipeService.UpdateRecipeAsync(recipeId, upsertRecipe, callerId)).MustHaveHappenedOnceExactly();
         var okResult = result.Should().BeOfType<Ok<RecipeDetail>>().Subject;
@@ -188,18 +186,10 @@ public class RecipeApiTests
     {
         A.CallTo(() => recipeService.UpdateRecipeAsync(recipeId, upsertRecipe, callerId)).Returns(false);
 
-        var result = await RecipeApi.UpdateRecipeAsync(recipeService, CreateHttpContext(callerId), recipeId, upsertRecipe);
+        var result = await RecipeApi.UpdateRecipeAsync(recipeService, Caller(callerId), recipeId, upsertRecipe);
 
         var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
         problemResult.StatusCode.Should().Be(404);
-    }
-
-    [Theory, CustomAutoData]
-    public async Task UpdateRecipeAsync_NoMenuUserId_Returns401(RecipeId recipeId, UpsertRecipe upsertRecipe)
-    {
-        var result = await RecipeApi.UpdateRecipeAsync(recipeService, CreateHttpContext(null), recipeId, upsertRecipe);
-
-        result.Should().BeOfType<UnauthorizedHttpResult>();
     }
 
     [Theory, CustomAutoData]
@@ -207,7 +197,7 @@ public class RecipeApiTests
     {
         A.CallTo(() => recipeService.DeleteRecipeAsync(recipeId, callerId)).Returns(true);
 
-        var result = await RecipeApi.DeleteRecipeAsync(recipeService, CreateHttpContext(callerId), recipeId);
+        var result = await RecipeApi.DeleteRecipeAsync(recipeService, Caller(callerId), recipeId);
 
         A.CallTo(() => recipeService.DeleteRecipeAsync(recipeId, callerId)).MustHaveHappenedOnceExactly();
         result.Should().BeOfType<NoContent>();
@@ -218,17 +208,9 @@ public class RecipeApiTests
     {
         A.CallTo(() => recipeService.DeleteRecipeAsync(recipeId, callerId)).Returns(false);
 
-        var result = await RecipeApi.DeleteRecipeAsync(recipeService, CreateHttpContext(callerId), recipeId);
+        var result = await RecipeApi.DeleteRecipeAsync(recipeService, Caller(callerId), recipeId);
 
         var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
         problemResult.StatusCode.Should().Be(404);
-    }
-
-    [Theory, CustomAutoData]
-    public async Task DeleteRecipeAsync_NoMenuUserId_Returns401(RecipeId recipeId)
-    {
-        var result = await RecipeApi.DeleteRecipeAsync(recipeService, CreateHttpContext(null), recipeId);
-
-        result.Should().BeOfType<UnauthorizedHttpResult>();
     }
 }

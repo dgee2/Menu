@@ -9,6 +9,19 @@ description: How to create a new Vogen value object in MenuApi — covering the 
 
 Use this skill when wrapping a primitive type in a Vogen value object. All domain identifiers and constrained values in `MenuApi` must be Vogen types — never raw `int`, `string`, or `Guid`.
 
+## Vogen or a plain C# enum?
+
+**Vogen for open-ended constrained values. A plain C# enum for closed sets.**
+
+A closed set is one where the API contract is the complete list of permitted names — recipe visibility, a permission level, a status. Reach for an enum there, not a `[ValueObject<string>]`:
+
+- Vogen's Swagger mapping (`OpenApiSchemaCustomizations.GenerateSwashbuckleMappingExtensionMethod` in `VogenDefaults.cs`) emits a `[ValueObject<string>]` as a bare `string` schema. The permitted values never reach the OpenAPI document, so the frontend has to keep a hand-written mirror of them that nothing checks — exactly the drift that `RecipeAccessScope` used to have in `recipe-api.ts`.
+- A C# enum with `JsonStringEnumConverter` emits a named string-enum schema, and `openapi-typescript` turns it into `"Private" | "AuthenticatedUsers"`. The mirror can be deleted.
+
+Precedents in `backend/MenuApi/ValueObjects/`: `RecipeAccessScope` and `RecipeListScope` are enums; `RecipeId`, `RecipeTitle` and `IngredientAmount` are Vogen types.
+
+When the enum is also persisted, back it with a lookup table (`ValueGeneratedNever()` + `HasData`, unique index on `Name`) as `RecipeAccessScope` does, and add a drift-guard unit test asserting each enum member's numeric value and name match a seeded row — nothing in the compiler or in EF Core catches divergence. Keep the lookup id off the wire: the enum name is the contract.
+
 ## Repository facts
 
 - Value objects live in: `backend/MenuApi/ValueObjects/`

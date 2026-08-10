@@ -6,7 +6,9 @@ public sealed record Recipe
 {
     public RecipeId Id { get; init; }
     public required RecipeTitle Title { get; init; }
-    public required string AccessScope { get; init; }
+
+    // The enum, never the lookup table's integer id - the id must not leak past this layer.
+    public required RecipeAccessScope AccessScope { get; init; }
     public MenuUserId? OwnerUserId { get; init; }
     public string? Summary { get; init; }
     public int? Servings { get; init; }

@@ -91,13 +91,117 @@ public class RecipeRepositoryTests
         result.Should().HaveCount(2);
     }
 
-    private static void AddRecipe(MenuDbContext db, string title, MenuUserId ownerId, string accessScope)
+    [Fact]
+    public async Task GetReadableRecipeAsync_OwnPrivateRecipe_IsReturned()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await using var db = CreateDbContext();
+        var sut = new RecipeRepository(db);
+
+        var caller = MenuUserId.From(1);
+        AddRecipe(db, "Private Mine", caller, RecipeAccessScope.Private);
+        await db.SaveChangesAsync(cancellationToken);
+        var recipeId = RecipeId.From(db.Recipes.Single().Id);
+
+        var result = await sut.GetReadableRecipeAsync(recipeId, caller);
+
+        result.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetReadableRecipeAsync_SomeoneElsesPrivateRecipe_IsNotReturned()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await using var db = CreateDbContext();
+        var sut = new RecipeRepository(db);
+
+        var caller = MenuUserId.From(1);
+        var otherOwner = MenuUserId.From(2);
+        AddRecipe(db, "Private Theirs", otherOwner, RecipeAccessScope.Private);
+        await db.SaveChangesAsync(cancellationToken);
+        var recipeId = RecipeId.From(db.Recipes.Single().Id);
+
+        var result = await sut.GetReadableRecipeAsync(recipeId, caller);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetReadableRecipeAsync_SomeoneElsesSharedRecipe_IsReturned()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await using var db = CreateDbContext();
+        var sut = new RecipeRepository(db);
+
+        var caller = MenuUserId.From(1);
+        var otherOwner = MenuUserId.From(2);
+        AddRecipe(db, "Shared Theirs", otherOwner, RecipeAccessScope.AuthenticatedUsers);
+        await db.SaveChangesAsync(cancellationToken);
+        var recipeId = RecipeId.From(db.Recipes.Single().Id);
+
+        var result = await sut.GetReadableRecipeAsync(recipeId, caller);
+
+        result.Should().NotBeNull();
+        result!.AccessScope.Should().Be(RecipeAccessScope.AuthenticatedUsers);
+    }
+
+    [Fact]
+    public async Task GetRecipeIngredientsAsync_SomeoneElsesPrivateRecipe_ReturnsNothing()
+    {
+        // Ingredients must not become a side channel onto a recipe the caller cannot read.
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await using var db = CreateDbContext();
+        var sut = new RecipeRepository(db);
+
+        var caller = MenuUserId.From(1);
+        var otherOwner = MenuUserId.From(2);
+        AddRecipe(db, "Private Theirs", otherOwner, RecipeAccessScope.Private);
+        await db.SaveChangesAsync(cancellationToken);
+        var recipeId = RecipeId.From(db.Recipes.Single().Id);
+
+        db.RecipeIngredients.Add(new RecipeIngredientEntity
+        {
+            RecipeId = recipeId.Value,
+            SortOrder = 0,
+            IngredientText = "Secret Ingredient",
+            MeasureText = "1",
+        });
+        await db.SaveChangesAsync(cancellationToken);
+
+        var result = await sut.GetRecipeIngredientsAsync(recipeId, caller);
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetRecipeIngredientsAsync_OwnRecipe_ReturnsIngredientsInSortOrder()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await using var db = CreateDbContext();
+        var sut = new RecipeRepository(db);
+
+        var caller = MenuUserId.From(1);
+        AddRecipe(db, "Mine", caller, RecipeAccessScope.Private);
+        await db.SaveChangesAsync(cancellationToken);
+        var recipeId = RecipeId.From(db.Recipes.Single().Id);
+
+        db.RecipeIngredients.AddRange(
+            new RecipeIngredientEntity { RecipeId = recipeId.Value, SortOrder = 1, IngredientText = "Second", MeasureText = "1" },
+            new RecipeIngredientEntity { RecipeId = recipeId.Value, SortOrder = 0, IngredientText = "First", MeasureText = "1" });
+        await db.SaveChangesAsync(cancellationToken);
+
+        var result = await sut.GetRecipeIngredientsAsync(recipeId, caller);
+
+        result.Select(i => i.IngredientText).Should().Equal("First", "Second");
+    }
+
+    private static void AddRecipe(MenuDbContext db, string title, MenuUserId ownerId, RecipeAccessScope accessScope)
     {
         db.Recipes.Add(new RecipeEntity
         {
             Title = title,
             OwnerUserId = ownerId.Value,
-            AccessScope = accessScope,
+            AccessScopeId = (byte)accessScope,
         });
     }
 

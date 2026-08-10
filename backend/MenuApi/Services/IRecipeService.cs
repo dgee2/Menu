@@ -7,9 +7,13 @@ public interface IRecipeService
 {
     Task<RecipeId> CreateRecipeAsync(UpsertRecipe upsertRecipe, MenuUserId callerId);
 
-    Task<RecipeDetail?> GetRecipeAsync(RecipeId recipeId);
+    /// <summary>
+    /// Returns the recipe if <paramref name="callerId"/> may read it, otherwise <see langword="null"/>
+    /// - callers turn that into a 404 rather than a 403, so a private recipe's existence does not leak.
+    /// </summary>
+    Task<RecipeDetail?> GetRecipeAsync(RecipeId recipeId, MenuUserId callerId);
 
-    Task<IEnumerable<RecipeIngredientItem>> GetRecipeIngredientsAsync(RecipeId recipeId);
+    Task<IEnumerable<RecipeIngredientItem>> GetRecipeIngredientsAsync(RecipeId recipeId, MenuUserId callerId);
 
     Task<IEnumerable<RecipeListItem>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take);
 

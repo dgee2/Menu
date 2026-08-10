@@ -19,7 +19,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         Id = RecipeId.From(r.Id),
         Title = RecipeTitle.From(r.Title),
-        AccessScope = r.AccessScope,
+        AccessScope = (RecipeAccessScope)r.AccessScopeId,
         OwnerUserId = r.OwnerUserId == null ? null : MenuUserId.From(r.OwnerUserId.Value),
         Summary = r.Summary,
         Servings = r.Servings,
@@ -36,7 +36,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         var query = scope switch
         {
             RecipeListScope.Mine => db.Recipes.Where(r => r.OwnerUserId == callerId.Value),
-            RecipeListScope.Authenticated => db.Recipes.Where(r => r.AccessScope == RecipeAccessScope.AuthenticatedUsers),
+            RecipeListScope.Authenticated => db.Recipes.Where(r => r.AccessScopeId == (byte)RecipeAccessScope.AuthenticatedUsers),
             _ => throw new ArgumentOutOfRangeException(nameof(scope), scope, "Unsupported recipe list scope."),
         };
 
@@ -59,10 +59,25 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             .ConfigureAwait(false);
     }
 
-    public async Task<IEnumerable<DBModel.RecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId)
+    public async Task<DBModel.Recipe?> GetReadableRecipeAsync(RecipeId recipeId, MenuUserId callerId)
     {
-        return await db.RecipeIngredients
-            .Where(ri => ri.RecipeId == recipeId.Value)
+        return await db.Recipes
+            .Where(r => r.Id == recipeId.Value)
+            .Where(RecipeAccessRules.ReadableBy(callerId))
+            .Select(ToDbModel)
+            .AsNoTracking()
+            .FirstOrDefaultAsync()
+            .ConfigureAwait(false);
+    }
+
+    public async Task<IEnumerable<DBModel.RecipeIngredient>> GetRecipeIngredientsAsync(RecipeId recipeId, MenuUserId callerId)
+    {
+        // Filtered through the parent recipe rather than fetched directly, so ingredients cannot be
+        // used as a side channel onto a recipe the caller is not allowed to read.
+        return await db.Recipes
+            .Where(r => r.Id == recipeId.Value)
+            .Where(RecipeAccessRules.ReadableBy(callerId))
+            .SelectMany(r => r.RecipeIngredients)
             .OrderBy(ri => ri.SortOrder)
             .Select(ri => new DBModel.RecipeIngredient(
                 ri.SortOrder,
@@ -85,7 +100,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         var entity = new RecipeEntity
         {
             Title = recipe.Title.Value,
-            AccessScope = recipe.AccessScope,
+            AccessScopeId = (byte)recipe.AccessScope,
             OwnerUserId = recipe.OwnerUserId?.Value,
             Summary = recipe.Summary,
             Servings = recipe.Servings,
@@ -143,6 +158,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     public async Task UpdateRecipeAsync(RecipeId recipeId, DBModel.Recipe recipe)
     {
         var now = DateTime.UtcNow;
+        var accessScopeId = (byte)recipe.AccessScope;
 
         try
         {
@@ -150,7 +166,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
                 .Where(r => r.Id == recipeId.Value)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(r => r.Title, recipe.Title.Value)
-                    .SetProperty(r => r.AccessScope, recipe.AccessScope)
+                    .SetProperty(r => r.AccessScopeId, accessScopeId)
                     .SetProperty(r => r.Summary, recipe.Summary)
                     .SetProperty(r => r.Servings, recipe.Servings)
                     .SetProperty(r => r.YieldText, recipe.YieldText)

@@ -20,7 +20,9 @@ The three model layers must never be mixed:
 
 ## 2. Vogen value objects
 
-- [ ] New domain identifiers and constrained values use Vogen types — not raw `int`, `string`, or `Guid`.
+- [ ] New domain identifiers and open-ended constrained values use Vogen types — not raw `int`, `string`, or `Guid`.
+- [ ] **Closed sets use a plain C# enum, not Vogen.** A `[ValueObject<string>]` emits a bare `string` OpenAPI schema, which forces the frontend to hand-maintain a mirror of the permitted values; an enum generates the union directly. See the `add-value-object` skill.
+- [ ] A persisted enum is backed by a lookup table and has a drift-guard test tying each member's number and name to a seeded row — and the lookup id does not appear in any DTO or on the wire.
 - [ ] Repository code uses `.Value` to unwrap and `TypeName.From(x)` to wrap.
 - [ ] New value objects are placed in `backend/MenuApi/ValueObjects/`.
 
