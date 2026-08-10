@@ -21,8 +21,21 @@ export const Success = meta.story({
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText('My Recipes')).toBeInTheDocument();
+    await expect(canvas.getByRole('heading', { name: 'My recipes' })).toBeInTheDocument();
     await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
+  },
+});
+
+export const ScopeToggle = meta.story({
+  beforeEach({ msw }) {
+    msw.use(recipesSuccessHandler);
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // `scope=authenticated` has been supported by the API all along; only `mine` was reachable.
+    await expect(canvas.getByRole('button', { name: 'My recipes' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Shared with everyone' })).toBeInTheDocument();
   },
 });
 
@@ -32,7 +45,9 @@ export const Empty = meta.story({
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText('No recipes found.')).toBeInTheDocument();
+    await expect(
+      await canvas.findByText('You have not created any recipes yet.'),
+    ).toBeInTheDocument();
   },
 });
 
@@ -43,7 +58,14 @@ export const ErrorStory = meta.story({
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText('No recipes found.')).toBeInTheDocument();
+    // An empty list and a failed load are now distinct states, so this asserts the banner rather
+    // than the empty message the page used to show for both.
+    await expect(
+      await canvas.findByText('Something went wrong loading recipes.'),
+    ).toBeInTheDocument();
+    await expect(
+      canvas.queryByText('You have not created any recipes yet.'),
+    ).not.toBeInTheDocument();
   },
 });
 

@@ -46,6 +46,17 @@ export const recipeDetailNotFoundHandler = http.get(recipeDetailPath, async () =
   return HttpResponse.json({ title: 'Not Found', status: 404 }, { status: 404 });
 });
 
+/** The same recipe, with the access flags the API returns to its owner. */
+export const recipeDetailEditableHandler = http.get(recipeDetailPath, async () => {
+  await delay(150);
+  return HttpResponse.json({ ...sampleRecipeDetail, canEdit: true, canDelete: true });
+});
+
+export const recipeDetailErrorHandler = http.get(recipeDetailPath, async () => {
+  await delay(150);
+  return HttpResponse.json({ title: 'Internal Server Error', status: 500 }, { status: 500 });
+});
+
 export const recipeDetailLoadingHandler = http.get(recipeDetailPath, async () => {
   await delay(3000);
   return HttpResponse.json(sampleRecipeDetail);

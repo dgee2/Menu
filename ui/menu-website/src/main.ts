@@ -15,6 +15,7 @@ import App from './App.vue';
 import router from './router';
 import { createAuth0 } from './boot/auth0';
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
+import { ApiError } from './services/api-error';
 
 const app = createApp(App);
 
@@ -22,6 +23,11 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
+      // A 4xx is the server's considered answer, not a blip: retrying a 404 or a 403 three times
+      // only delays the empty state the user is going to see anyway.
+      retry: (failureCount, error) =>
+        !(error instanceof ApiError && error.status >= 400 && error.status < 500) &&
+        failureCount < 3,
     },
   },
 });

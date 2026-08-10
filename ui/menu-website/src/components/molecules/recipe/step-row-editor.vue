@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import TextField from '@/components/atoms/form/text-field.vue';
 import NumberField from '@/components/atoms/form/number-field.vue';
+import { positiveIntegerRules, requiredTextUnlessRowIsBlank } from '@/services/form-rules';
+import { isBlankStepRow } from '@/services/recipe-rows';
 
 const instructionText = defineModel<string | null>('instructionText');
 const title = defineModel<string | null>('title');
@@ -17,10 +20,17 @@ defineEmits<{
   moveDown: [];
 }>();
 
-const instructionTextRules = [(val: string | null) => !!val?.trim() || 'Instructions are required'];
-const positiveIntegerRules = [
-  (val: number | null) => val == null || Number.isInteger(val) || 'Must be a whole number',
-  (val: number | null) => val == null || val > 0 || 'Must be greater than 0',
+// An untouched row is valid and gets dropped from the payload — see ingredient-row-editor.
+const rowIsBlank = computed(() =>
+  isBlankStepRow({
+    instructionText: instructionText.value ?? undefined,
+    title: title.value,
+    durationMinutes: durationMinutes.value,
+  }),
+);
+
+const instructionTextRules = [
+  requiredTextUnlessRowIsBlank('Instructions are required', () => rowIsBlank.value),
 ];
 </script>
 

@@ -4,6 +4,7 @@ import RecipeDetail from './RecipeDetail.vue';
 import {
   recipeDetailSuccessHandler,
   recipeDetailNotFoundHandler,
+  recipeDetailErrorHandler,
   recipeDetailLoadingHandler,
 } from '@storybook-config/msw-handlers';
 
@@ -34,6 +35,21 @@ export const NotFound = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText('Recipe not found.')).toBeInTheDocument();
+  },
+});
+
+// The page used to render "Recipe not found." for any failure at all. A 404 and a 500 are now
+// distinct states, so this asserts the one the previous story could not distinguish.
+export const LoadFailure = meta.story({
+  beforeEach({ msw }) {
+    msw.use(recipeDetailErrorHandler);
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      await canvas.findByText('Something went wrong loading this recipe.'),
+    ).toBeInTheDocument();
+    await expect(canvas.queryByText('Recipe not found.')).not.toBeInTheDocument();
   },
 });
 

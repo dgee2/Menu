@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import NewRecipeForm from '@/components/organisms/recipe/new-recipe-form.vue';
+import RecipeForm from '@/components/organisms/recipe/recipe-form.vue';
 </script>
 
 <template>
   <q-page class="row items-center justify-evenly">
-    <new-recipe-form />
+    <recipe-form />
   </q-page>
 </template>
 
