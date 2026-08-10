@@ -31,7 +31,7 @@
     "autoprefixer": "^10.5.0",
     "openapi-fetch": "^0.17.0",
     "pinia": "^3.0.4",
-    "quasar": "^2.19.3",
+    "quasar": "^2.22.0",
     "vite-tsconfig-paths": "^6.1.1",
     "vue": "^3.5.33",
     "vue-router": "^5.0.6"
