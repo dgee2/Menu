@@ -47,6 +47,11 @@ const existingRecipe = {
       sectionTitle: 'For the layers',
       preparationText: null,
       isOptional: false,
+      // The form does not expose these, but the API accepts them and an edit must not drop them.
+      amount: 250,
+      unitText: 'g',
+      canonicalIngredientId: 17,
+      canonicalUnitId: 4,
     },
   ],
   steps: [{ sortOrder: 0, instructionText: 'Assemble', title: null, durationMinutes: null }],
@@ -688,6 +693,27 @@ describe('recipe-form', () => {
       expect(putRecipe.mock.calls[0]?.[0]).toBe('7');
       expect(updatedRecipe()).toMatchObject({ title: 'Renamed Lasagne' });
       expect(router.currentRoute.value.path).toBe('/recipe/7');
+    });
+
+    it('carries structured ingredient fields through an edit untouched', async () => {
+      // UpsertRecipeIngredientsAsync replaces the whole collection, so anything the payload omits is
+      // deleted. The form does not expose amount/unit/canonical ids, but it must not destroy them.
+      const wrapper = await mountEditForm();
+
+      await fillField(wrapper, 'Name', 'Renamed Lasagne');
+      await submit(wrapper);
+
+      expect(updatedRecipe()).toMatchObject({
+        ingredients: [
+          {
+            ingredientText: 'Pasta',
+            amount: 250,
+            unitText: 'g',
+            canonicalIngredientId: 17,
+            canonicalUnitId: 4,
+          },
+        ],
+      });
     });
 
     it('does not call the create endpoint', async () => {

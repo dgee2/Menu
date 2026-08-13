@@ -147,6 +147,13 @@ const buildPayload = (): UpsertRecipe => ({
       sectionTitle: ingredient.sectionTitle,
       preparationText: ingredient.preparationText,
       isOptional: ingredient.isOptional,
+      // Carried through untouched: the form does not expose these, but the API accepts them and
+      // UpsertRecipeIngredientsAsync replaces the whole collection, so omitting them would delete
+      // any structured amounts an existing recipe already has.
+      amount: ingredient.amount,
+      unitText: ingredient.unitText,
+      canonicalIngredientId: ingredient.canonicalIngredientId,
+      canonicalUnitId: ingredient.canonicalUnitId,
       sortOrder: index,
     })),
   steps: steps.value

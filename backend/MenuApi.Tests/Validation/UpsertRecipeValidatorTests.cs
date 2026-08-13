@@ -173,7 +173,6 @@ public class UpsertRecipeValidatorTests
     }
 
     [Theory]
-    [InlineData(0)]
     [InlineData(-5)]
     [InlineData(1001)]
     public void ServingsOutOfRange_Fails(int servings)
@@ -186,6 +185,8 @@ public class UpsertRecipeValidatorTests
     }
 
     [Theory]
+    // Zero is accepted so the server does not reject a value the editor validates as good.
+    [InlineData(0)]
     [InlineData(1)]
     [InlineData(1000)]
     public void ServingsInRange_Passes(int servings)

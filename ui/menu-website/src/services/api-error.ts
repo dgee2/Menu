@@ -48,9 +48,21 @@ export class ApiError extends Error {
     return this.problem?.errors;
   }
 
-  /** The server's own explanation, when it gave one worth showing. */
+  /**
+   * The server's own explanation, when it gave one worth showing.
+   *
+   * A validation problem carries no `detail` and a fixed, useless `title` ("One or more validation
+   * errors occurred."), so the first field message is preferred over it - that is the part the user
+   * can actually act on until field-level mapping arrives.
+   */
   get detail(): string | undefined {
-    return this.problem?.detail ?? this.problem?.title;
+    return this.problem?.detail ?? this.firstValidationError ?? this.problem?.title;
+  }
+
+  private get firstValidationError(): string | undefined {
+    return Object.values(this.validationErrors ?? {})
+      .flat()
+      .find((message) => !!message);
   }
 
   /**
@@ -69,8 +81,9 @@ export class ApiError extends Error {
 
   static from(operation: string, error: unknown, response: Response): ApiError {
     const problem = isProblemDetails(error) ? error : undefined;
-    const message = problem?.detail ?? problem?.title ?? `${operation} failed (${response.status})`;
+    const fallback = `${operation} failed (${response.status})`;
 
-    return new ApiError(message, response.status, problem);
+    const apiError = new ApiError(fallback, response.status, problem);
+    return new ApiError(apiError.detail ?? fallback, response.status, problem);
   }
 }

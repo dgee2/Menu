@@ -66,6 +66,9 @@ const onDelete = async () => {
     confirmingDelete.value = false;
     await router.push('/recipes');
   } catch (deleteFailure) {
+    // Closed here too: the banner renders on the page behind the dialog, so leaving the dialog open
+    // would hide the only feedback the user gets.
+    confirmingDelete.value = false;
     deleteError.value =
       deleteFailure instanceof ApiError
         ? deleteFailure.userFacingMessage('Failed to delete recipe. Please try again.')

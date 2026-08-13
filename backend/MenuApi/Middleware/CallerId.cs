@@ -19,12 +19,14 @@ public readonly record struct CallerId(MenuUserId? MenuUserId)
         ?? throw new InvalidOperationException(
             $"No caller id on the request. Add {nameof(RequireCallerFilter)} to any endpoint taking a {nameof(CallerId)}.");
 
-    public static ValueTask<CallerId> BindAsync(HttpContext context)
+    // Returns a nullable CallerId because that is the shape minimal APIs document and look for, but
+    // never actually returns null - a null here would be a 400, and a missing caller must be a 401.
+    public static ValueTask<CallerId?> BindAsync(HttpContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         var menuUserId = context.Items[MenuUserHttpContextKeys.MenuUserId] as MenuUserId?;
-        return ValueTask.FromResult(new CallerId(menuUserId));
+        return ValueTask.FromResult<CallerId?>(new CallerId(menuUserId));
     }
 }
 

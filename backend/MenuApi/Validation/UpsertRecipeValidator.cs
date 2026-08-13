@@ -43,10 +43,11 @@ public class UpsertRecipeValidator : AbstractValidator<UpsertRecipe>
 
         When(x => x.Servings.HasValue, () =>
         {
+            // Zero is allowed to match the editor, whose Servings field accepts it.
             RuleFor(x => x.Servings!.Value)
-                .InclusiveBetween(1, MaxServings)
+                .InclusiveBetween(0, MaxServings)
                 .OverridePropertyName(nameof(UpsertRecipe.Servings))
-                .WithMessage($"'Servings' must be between 1 and {MaxServings}.");
+                .WithMessage($"'Servings' must be between 0 and {MaxServings}.");
         });
 
         AddDurationRules(x => x.PrepTimeMinutes, nameof(UpsertRecipe.PrepTimeMinutes));

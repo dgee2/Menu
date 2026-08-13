@@ -13,18 +13,23 @@ public static class RecipeListScopeParser
         Enum.GetNames<RecipeListScope>().Select(n => n.ToLowerInvariant()).ToArray();
 
     /// <summary>
-    /// Parses the <c>scope</c> query value. Names only - a numeric string is rejected, so the enum's
-    /// ordinals never become an undocumented second spelling of the API contract.
+    /// Parses the <c>scope</c> query value. Exactly one member name, matched case-insensitively.
     /// </summary>
+    /// <remarks>
+    /// Deliberately not <see cref="Enum.TryParse{TEnum}(string, bool, out TEnum)"/>: that trims
+    /// whitespace and accepts comma-separated lists, so <c>" 1"</c> and <c>"mine,authenticated"</c>
+    /// would both parse and the enum's ordinals would become an undocumented second spelling of the
+    /// API contract.
+    /// </remarks>
     public static bool TryParse(string? scope, out RecipeListScope recipeListScope)
     {
-        if (!string.IsNullOrEmpty(scope)
-            && !char.IsDigit(scope[0])
-            && scope[0] != '-'
-            && Enum.TryParse(scope, ignoreCase: true, out recipeListScope)
-            && Enum.IsDefined(recipeListScope))
+        foreach (var candidate in Enum.GetValues<RecipeListScope>())
         {
-            return true;
+            if (string.Equals(scope, candidate.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                recipeListScope = candidate;
+                return true;
+            }
         }
 
         recipeListScope = default;

@@ -5,6 +5,7 @@ using MenuApi.Middleware;
 using MenuApi.ValueObjects;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace MenuApi.Tests.Middleware;
@@ -18,17 +19,19 @@ public class CallerIdTests
 
         var caller = await CallerId.BindAsync(httpContext);
 
-        caller.Value.Should().Be(menuUserId);
+        caller.Should().NotBeNull();
+        caller!.Value.Value.Should().Be(menuUserId);
     }
 
     [Fact]
     public async Task BindAsync_WithoutProvisionedUser_BindsEmpty()
     {
-        // Binding runs before endpoint filters, so it must succeed even with no caller - otherwise
-        // the framework would answer 400 and RequireCallerFilter would never get to say 401.
+        // Binding runs before endpoint filters, so it must succeed even with no caller - a null here
+        // would make the framework answer 400 and RequireCallerFilter would never get to say 401.
         var caller = await CallerId.BindAsync(CreateHttpContext(null));
 
-        caller.MenuUserId.Should().BeNull();
+        caller.Should().NotBeNull();
+        caller!.Value.MenuUserId.Should().BeNull();
     }
 
     [Fact]
@@ -67,6 +70,26 @@ public class CallerIdTests
 
         called.Should().BeFalse();
         result.Should().BeOfType<UnauthorizedHttpResult>();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task MinimalApiBindsCallerIdIntoAHandlerParameter(MenuUserId menuUserId)
+    {
+        // Calling BindAsync directly proves nothing about whether minimal APIs will *find* it. If
+        // the signature is not one RequestDelegateFactory recognises, it falls back to treating
+        // CallerId as a service or body parameter and every recipe endpoint breaks at once - so
+        // build a real request delegate and run a request through it.
+        MenuUserId? bound = null;
+        var requestDelegate = RequestDelegateFactory
+            .Create((CallerId caller) => { bound = caller.Value; })
+            .RequestDelegate;
+
+        var httpContext = CreateHttpContext(menuUserId);
+        httpContext.RequestServices = new ServiceCollection().BuildServiceProvider();
+
+        await requestDelegate(httpContext);
+
+        bound.Should().Be(menuUserId);
     }
 
     private static HttpContext CreateHttpContext(MenuUserId? menuUserId)

@@ -16,7 +16,13 @@ export const isBlankIngredientRow = (row: Partial<RecipeIngredientItem>): boolea
   isEmptyText(row.measureText) &&
   isEmptyText(row.preparationText) &&
   isEmptyText(row.sectionTitle) &&
-  !row.isOptional;
+  !row.isOptional &&
+  // The form does not expose these, but a row loaded for editing can carry them - a row holding
+  // structured data is not blank, however empty its text fields look.
+  isEmptyText(row.unitText) &&
+  row.amount == null &&
+  row.canonicalIngredientId == null &&
+  row.canonicalUnitId == null;
 
 export const isBlankStepRow = (row: Partial<RecipeStepItem>): boolean =>
   isEmptyText(row.instructionText) && isEmptyText(row.title) && row.durationMinutes == null;

@@ -41,7 +41,9 @@ const loadErrorMessage = computed(() =>
     </div>
     <div v-else>
       <h1 class="q-mt-none">Edit recipe</h1>
-      <recipe-form :initial-recipe="recipe" />
+      <!-- Keyed on the id so moving between two edit URLs builds a fresh form: recipe-form reads
+           initialRecipe once, in its setup, and the route record is the same for both. -->
+      <recipe-form :key="recipe.id" :initial-recipe="recipe" />
     </div>
   </q-page>
 </template>

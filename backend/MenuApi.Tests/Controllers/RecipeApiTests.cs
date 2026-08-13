@@ -103,11 +103,16 @@ public class RecipeApiTests
             .ContainSingle().Which.Should().Be("Missing scope. Expected one of: mine, authenticated.");
     }
 
-    [Theory, CustomAutoData]
-    public async Task GetRecipesAsync_NumericScope_ReturnsValidationProblem(MenuUserId callerId)
+    [Theory]
+    [InlineData("0")]
+    [InlineData("1")]
+    [InlineData(" 1")] // Enum.TryParse would trim and accept this
+    [InlineData("mine,authenticated")] // Enum.TryParse would OR these together
+    [InlineData("mine ")]
+    public async Task GetRecipesAsync_NonMemberNameScope_ReturnsValidationProblem(string scope)
     {
         // The enum's ordinals must not become a second, undocumented spelling of the contract.
-        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(callerId), "0", null);
+        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(MenuUserId.From(1)), scope, null);
 
         result.Should().BeOfType<ValidationProblem>();
     }
