@@ -99,18 +99,9 @@ export const NonIntegerServingsBlocksSubmit = meta.story({
   },
 });
 
-// A fully populated form wired to a successful create. In the interactive
-// Storybook dev server (where the MSW service worker is active) submitting this
-// story navigates to the new recipe's detail page. The story therefore asserts
-// only that a fully populated form clears validation and reaches submit — see
-// the NOTE below for why the response itself is not asserted here.
 export const FullyPopulated = meta.story({
-  parameters: {
-    msw: {
-      handlers: {
-        recipe: recipeCreateSuccessHandler,
-      },
-    },
+  beforeEach({ msw }) {
+    msw.use(recipeCreateSuccessHandler);
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -275,25 +266,9 @@ export const ZeroStepDurationBlocksSubmit = meta.story({
   },
 });
 
-// NOTE: this story exercises the failed-submit UI, but not specifically a 500.
-// Under `vitest --project=storybook`, MSW does not serve the `*/api/recipe`
-// handler registered below — the POST fails at the network layer instead, which
-// drives the component down the same failure path. (Verified by probing: a POST
-// to a sub-path such as `*/api/recipe/probe-ok` is served correctly with its
-// body, while `*/api/recipe` is not, so this is a handler-registration gap in the
-// Storybook/Vitest MSW setup rather than anything specific to POST. It equally
-// affects the RecipeList and RecipeDetail stories.) The story keeps passing
-// unchanged once that gap is closed, since the handler below also returns 500.
-// The response-specific behaviour — the exact request payload, the 500 → banner
-// mapping, and the success path navigating to the new recipe — is covered
-// deterministically in new-recipe-form.test.ts, which mocks the API layer.
 export const SubmitFailureShowsError = meta.story({
-  parameters: {
-    msw: {
-      handlers: {
-        recipe: recipeCreateErrorHandler,
-      },
-    },
+  beforeEach({ msw }) {
+    msw.use(recipeCreateErrorHandler);
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

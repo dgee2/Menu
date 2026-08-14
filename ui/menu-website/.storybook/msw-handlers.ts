@@ -54,8 +54,8 @@ export const recipeDetailLoadingHandler = http.get(recipeDetailPath, async () =>
 export const recipesSuccessHandler = http.get(recipePath, async () => {
   await delay(150);
   return HttpResponse.json([
-    { id: '1', name: 'Chocolate Cake' },
-    { id: '2', name: 'Tomato Soup' },
+    { id: 1, title: 'Chocolate Cake' },
+    { id: 2, title: 'Tomato Soup' },
   ]);
 });
 
@@ -72,8 +72,8 @@ export const recipesErrorHandler = http.get(recipePath, async () => {
 export const recipesLoadingHandler = http.get(recipePath, async () => {
   await delay(3000);
   return HttpResponse.json([
-    { id: '1', name: 'Chocolate Cake' },
-    { id: '2', name: 'Tomato Soup' },
+    { id: 1, title: 'Chocolate Cake' },
+    { id: 2, title: 'Tomato Soup' },
   ]);
 });
 

@@ -18,35 +18,18 @@ const meta = preview.meta({
 });
 
 export const Success = meta.story({
-  parameters: {
-    msw: {
-      handlers: {
-        recipe: recipeDetailSuccessHandler,
-      },
-    },
+  beforeEach({ msw }) {
+    msw.use(recipeDetailSuccessHandler);
   },
   play: async ({ canvasElement }) => {
-    // NOTE: MSW isn't intercepting this path-parameterized route
-    // (`/api/recipe/:recipeId`) under `vitest --project=storybook` today, even
-    // though the handler pattern matches correctly in isolation (verified
-    // directly against MSW's own `matchRequestUrl`) and the non-parameterized
-    // `/api/recipe` route works fine. This looks like a narrow, pre-existing gap
-    // between `msw-storybook-addon` and this project's Storybook 10 CSF-factory
-    // setup for parameterized paths specifically — flagged separately for a
-    // dedicated fix rather than worked around here. Asserting the reliably
-    // reachable state until then.
     const canvas = within(canvasElement);
-    await expect(canvas.getByText('Loading recipe...')).toBeInTheDocument();
+    await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
   },
 });
 
 export const NotFound = meta.story({
-  parameters: {
-    msw: {
-      handlers: {
-        recipe: recipeDetailNotFoundHandler,
-      },
-    },
+  beforeEach({ msw }) {
+    msw.use(recipeDetailNotFoundHandler);
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -55,12 +38,8 @@ export const NotFound = meta.story({
 });
 
 export const Loading = meta.story({
-  parameters: {
-    msw: {
-      handlers: {
-        recipe: recipeDetailLoadingHandler,
-      },
-    },
+  beforeEach({ msw }) {
+    msw.use(recipeDetailLoadingHandler);
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

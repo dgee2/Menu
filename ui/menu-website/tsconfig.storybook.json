@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.node.json",
-  "include": ["env.d.ts", ".storybook/**/*.ts"],
+  "include": [".storybook/preview.ts", "env.d.ts", ".storybook/**/*.ts"],
   "compilerOptions": {
+    "types": ["node", "msw-storybook-addon/types"],
     "tsBuildInfoFile": "./build/tsconfig.storybook.tsbuildinfo"
   }
 }
