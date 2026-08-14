@@ -45,7 +45,7 @@ export const useRecipeApi = () => {
       throw new Error('Failed to post recipe');
     }
 
-    return data as RecipeDetail;
+    return data;
   };
 
   const putRecipe = async (recipeId: string, recipe: UpsertRecipe): Promise<RecipeDetail> => {
@@ -63,7 +63,7 @@ export const useRecipeApi = () => {
       throw new Error('Failed to put recipe');
     }
 
-    return data as RecipeDetail;
+    return data;
   };
 
   const getRecipes = async (scope: RecipeListScope = 'mine'): Promise<RecipeListItem[]> => {
