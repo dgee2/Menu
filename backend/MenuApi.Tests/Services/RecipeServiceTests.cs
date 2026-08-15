@@ -7,6 +7,7 @@ using MenuApi.Services;
 using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace MenuApi.Tests;
@@ -29,17 +30,18 @@ public class RecipeServiceTests
             .Options;
         db = new MenuDbContext(options);
 
-        sut = new RecipeService(recipeRepository, recipeStepRepository, db);
+        sut = new RecipeService(recipeRepository, recipeStepRepository, db, NullLogger<RecipeService>.Instance);
     }
 
     [Theory, CustomAutoData]
     public async Task GetRecipeSuccess(
+        MenuUserId callerId,
         DBModel.Recipe recipe,
         IEnumerable<DBModel.RecipeIngredient> ingredients,
         IEnumerable<DBModel.RecipeStep> steps)
     {
-        A.CallTo(() => recipeRepository.GetRecipeAsync(recipe.Id)).Returns(recipe);
-        A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id)).Returns(ingredients);
+        A.CallTo(() => recipeRepository.GetReadableRecipeAsync(recipe.Id, callerId)).Returns(recipe);
+        A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id, callerId)).Returns(ingredients);
         A.CallTo(() => recipeStepRepository.GetStepsByRecipeIdAsync(recipe.Id)).Returns(steps);
 
         var expectedIngredients = ingredients.Select(x => new RecipeIngredientItem
@@ -64,7 +66,7 @@ public class RecipeServiceTests
             DurationMinutes = x.DurationMinutes,
         });
 
-        var result = await sut.GetRecipeAsync(recipe.Id);
+        var result = await sut.GetRecipeAsync(recipe.Id, callerId);
 
         result!.Title.Should().Be(recipe.Title);
         result.Id.Should().Be(recipe.Id);
@@ -73,6 +75,58 @@ public class RecipeServiceTests
         result.Servings.Should().Be(recipe.Servings);
         result.Ingredients.Should().BeEquivalentTo(expectedIngredients);
         result.Steps.Should().BeEquivalentTo(expectedSteps);
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipe_NotReadableByCaller_ReturnsNull(RecipeId recipeId, MenuUserId callerId)
+    {
+        // The cast is load-bearing: a bare null is ambiguous between FakeItEasy's two Returns
+        // overloads (CS0121), since the call returns Task<DBModel.Recipe?>.
+        A.CallTo(() => recipeRepository.GetReadableRecipeAsync(recipeId, callerId)).Returns((DBModel.Recipe?)null);
+
+        var result = await sut.GetRecipeAsync(recipeId, callerId);
+
+        result.Should().BeNull();
+        A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId, callerId)).MustNotHaveHappened();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipe_OwnedByCaller_CanEditAndDelete(
+        MenuUserId callerId,
+        DBModel.Recipe recipe,
+        IEnumerable<DBModel.RecipeIngredient> ingredients,
+        IEnumerable<DBModel.RecipeStep> steps)
+    {
+        recipe = recipe with { OwnerUserId = callerId };
+        A.CallTo(() => recipeRepository.GetReadableRecipeAsync(recipe.Id, callerId)).Returns(recipe);
+        A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id, callerId)).Returns(ingredients);
+        A.CallTo(() => recipeStepRepository.GetStepsByRecipeIdAsync(recipe.Id)).Returns(steps);
+
+        var result = await sut.GetRecipeAsync(recipe.Id, callerId);
+
+        result!.CanEdit.Should().BeTrue();
+        result.CanDelete.Should().BeTrue();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipe_ReadableButNotOwned_CannotEditOrDelete(
+        MenuUserId callerId,
+        MenuUserId ownerId,
+        DBModel.Recipe recipe,
+        IEnumerable<DBModel.RecipeIngredient> ingredients,
+        IEnumerable<DBModel.RecipeStep> steps)
+    {
+        // A shared recipe the caller can read but must not change - the flags are what stops the
+        // client from offering an edit button that would only ever 403.
+        recipe = recipe with { OwnerUserId = ownerId };
+        A.CallTo(() => recipeRepository.GetReadableRecipeAsync(recipe.Id, callerId)).Returns(recipe);
+        A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipe.Id, callerId)).Returns(ingredients);
+        A.CallTo(() => recipeStepRepository.GetStepsByRecipeIdAsync(recipe.Id)).Returns(steps);
+
+        var result = await sut.GetRecipeAsync(recipe.Id, callerId);
+
+        result!.CanEdit.Should().BeFalse();
+        result.CanDelete.Should().BeFalse();
     }
 
     [Theory, CustomAutoData]
@@ -97,7 +151,7 @@ public class RecipeServiceTests
     }
 
     [Theory, CustomAutoData]
-    public async Task GetRecipeIngredientsSuccess(RecipeId recipeId, IEnumerable<DBModel.RecipeIngredient> ingredients)
+    public async Task GetRecipeIngredientsSuccess(RecipeId recipeId, MenuUserId callerId, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
         var expected = ingredients.Select(x => new RecipeIngredientItem
         {
@@ -113,9 +167,9 @@ public class RecipeServiceTests
             CanonicalUnitId = x.CanonicalUnitId,
         });
 
-        A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId)).Returns(ingredients);
+        A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId, callerId)).Returns(ingredients);
 
-        var result = await sut.GetRecipeIngredientsAsync(recipeId);
+        var result = await sut.GetRecipeIngredientsAsync(recipeId, callerId);
         result.Should().BeEquivalentTo(expected);
     }
 

@@ -38,16 +38,23 @@ internal static class TestDatabaseSeeder
         ApiTestFixture fixture,
         string title,
         int ownerUserId,
-        string accessScope,
+        string accessScopeName,
         CancellationToken cancellationToken)
     {
         await using var db = await CreateDbContextAsync(fixture, cancellationToken);
+
+        // Resolved through the lookup table rather than hard-coded, so a seeded row that goes
+        // missing shows up here as a failing test instead of a silently wrong scope.
+        var accessScopeId = await db.RecipeAccessScopes
+            .Where(s => s.Name == accessScopeName)
+            .Select(s => s.Id)
+            .SingleAsync(cancellationToken);
 
         var entity = new RecipeEntity
         {
             Title = title,
             OwnerUserId = ownerUserId,
-            AccessScope = accessScope,
+            AccessScopeId = accessScopeId,
         };
 
         db.Recipes.Add(entity);

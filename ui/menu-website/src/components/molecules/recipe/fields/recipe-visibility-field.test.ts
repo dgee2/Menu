@@ -1,17 +1,30 @@
-import { describe, expect, it } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { afterEach, describe, expect, it } from 'vitest';
+import { mount, type VueWrapper } from '@vue/test-utils';
 import { QSelect, Quasar } from 'quasar';
 import { nextTick } from 'vue';
 import RecipeVisibilityField from './recipe-visibility-field.vue';
 
 type VisibilityOption = { label: string; value: string };
 
-const mountVisibilityField = (props: Record<string, unknown> = {}) =>
-  mount(RecipeVisibilityField, {
+const mounted: VueWrapper[] = [];
+
+// This field is a QSelect, whose debounced virtual-scroll timer is only cancelled in
+// onBeforeUnmount. Left mounted it can fire after jsdom has torn `window` down and fail the run
+// as an unhandled error. See combobox-field.test.ts.
+afterEach(() => {
+  while (mounted.length) mounted.pop()?.unmount();
+});
+
+const mountVisibilityField = (props: Record<string, unknown> = {}) => {
+  const wrapper = mount(RecipeVisibilityField, {
     props,
     global: { plugins: [Quasar] },
     attachTo: document.body,
   });
+
+  mounted.push(wrapper);
+  return wrapper;
+};
 
 type Wrapper = ReturnType<typeof mountVisibilityField>;
 

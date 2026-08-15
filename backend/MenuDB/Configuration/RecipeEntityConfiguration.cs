@@ -13,7 +13,7 @@ public class RecipeEntityConfiguration : IEntityTypeConfiguration<RecipeEntity>
         builder.Property(x => x.Id).UseIdentityColumn();
         builder.Property(x => x.Title).HasColumnType("nvarchar(200)").IsRequired();
         builder.Property(x => x.OwnerUserId).IsRequired(false);
-        builder.Property(x => x.AccessScope).HasColumnType("nvarchar(30)").IsRequired().HasDefaultValue("Private");
+        builder.Property(x => x.AccessScopeId).HasColumnType("tinyint").IsRequired().HasDefaultValue((byte)1);
         builder.Property(x => x.Summary).HasColumnType("nvarchar(max)").IsRequired(false);
         builder.Property(x => x.Servings).IsRequired(false);
         builder.Property(x => x.YieldText).HasColumnType("nvarchar(100)").IsRequired(false);
@@ -26,6 +26,11 @@ public class RecipeEntityConfiguration : IEntityTypeConfiguration<RecipeEntity>
             .IsUnique()
             .HasDatabaseName("UX_Recipe_OwnerUserId_Title")
             .HasFilter(null);
+        builder.HasOne(x => x.AccessScope)
+            .WithMany(x => x.Recipes)
+            .HasForeignKey(x => x.AccessScopeId)
+            .HasConstraintName("FK_Recipe_ToRecipeAccessScope")
+            .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Owner)
             .WithMany()
             .HasForeignKey(x => x.OwnerUserId)

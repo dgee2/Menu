@@ -2,6 +2,7 @@ import type { Middleware } from 'openapi-fetch';
 import createClient from 'openapi-fetch';
 import type { paths, components } from '@/generated/open-api/menu-api';
 import { useAuth } from '@/services/auth';
+import { ApiError } from '@/services/api-error';
 
 export type UpsertRecipe = components['schemas']['UpsertRecipe'];
 export type RecipeDetail = components['schemas']['RecipeDetail'];
@@ -12,11 +13,10 @@ export type IngredientUnit = components['schemas']['IngredientUnit'];
 export type RecipeListScope = 'mine' | 'authenticated';
 
 /**
- * The values the API accepts for `accessScope`. The generated type is a bare `string`
- * (the backend validates against `RecipeAccessScope.AllValues`), so narrow it here to
- * catch typos at compile time.
+ * The values the API accepts for `accessScope`. Generated from the backend's `RecipeAccessScope`
+ * enum, so adding a scope on the server is a compile error here rather than a silent mismatch.
  */
-export type RecipeAccessScope = 'Private' | 'AuthenticatedUsers';
+export type RecipeAccessScope = components['schemas']['RecipeAccessScope'];
 
 export const useRecipeApi = () => {
   const auth = useAuth();
@@ -36,20 +36,19 @@ export const useRecipeApi = () => {
   client.use(authMiddleware);
 
   const postRecipe = async (recipe: UpsertRecipe): Promise<RecipeDetail> => {
-    const { data, error } = await client.POST('/api/recipe', {
+    const { data, error, response } = await client.POST('/api/recipe', {
       body: recipe,
     });
 
     if (error) {
-      console.error('Failed to post recipe:', error);
-      throw new Error('Failed to post recipe');
+      throw ApiError.from('Create recipe', error, response);
     }
 
     return data;
   };
 
   const putRecipe = async (recipeId: string, recipe: UpsertRecipe): Promise<RecipeDetail> => {
-    const { data, error } = await client.PUT('/api/recipe/{recipeId}', {
+    const { data, error, response } = await client.PUT('/api/recipe/{recipeId}', {
       params: {
         path: {
           recipeId: recipeId,
@@ -59,29 +58,14 @@ export const useRecipeApi = () => {
     });
 
     if (error) {
-      console.error('Failed to put recipe:', error);
-      throw new Error('Failed to put recipe');
+      throw ApiError.from('Update recipe', error, response);
     }
 
     return data;
   };
 
-  const getRecipes = async (scope: RecipeListScope = 'mine'): Promise<RecipeListItem[]> => {
-    const { data, error } = await client.GET('/api/recipe', {
-      params: {
-        query: { scope },
-      },
-    });
-    if (error) {
-      console.error('Failed to get recipes:', error);
-      throw new Error('Failed to get recipes');
-    }
-
-    return data as RecipeListItem[];
-  };
-
-  const getRecipe = async (recipeId: string): Promise<RecipeDetail> => {
-    const { data, error } = await client.GET('/api/recipe/{recipeId}', {
+  const deleteRecipe = async (recipeId: string): Promise<void> => {
+    const { error, response } = await client.DELETE('/api/recipe/{recipeId}', {
       params: {
         path: {
           recipeId,
@@ -90,26 +74,56 @@ export const useRecipeApi = () => {
     });
 
     if (error) {
-      console.error('Failed to get recipe:', error);
-      throw new Error('Failed to get recipe');
+      throw ApiError.from('Delete recipe', error, response);
+    }
+  };
+
+  const getRecipes = async (scope: RecipeListScope = 'mine'): Promise<RecipeListItem[]> => {
+    const { data, error, response } = await client.GET('/api/recipe', {
+      params: {
+        query: { scope },
+      },
+    });
+
+    if (error) {
+      throw ApiError.from('List recipes', error, response);
     }
 
-    return data;
+    return data as RecipeListItem[];
+  };
+
+  const getRecipe = async (recipeId: string): Promise<RecipeDetail> => {
+    const { data, error, response } = await client.GET('/api/recipe/{recipeId}', {
+      params: {
+        path: {
+          recipeId,
+        },
+      },
+    });
+
+    if (error) {
+      throw ApiError.from('Get recipe', error, response);
+    }
+
+    // The endpoint documents a 401 with no body, so the generated union admits `undefined` on the
+    // success branch; reaching here means the request succeeded and the body is there.
+    return data as RecipeDetail;
   };
 
   const getIngredientUnits = async (): Promise<IngredientUnit[]> => {
-    const { data, error } = await client.GET('/api/ingredient/unit', {});
+    const { data, error, response } = await client.GET('/api/ingredient/unit', {});
 
     if (error) {
-      console.error('Failed to get ingredient units:', error);
-      throw new Error('Failed to get ingredient units');
+      throw ApiError.from('List ingredient units', error, response);
     }
 
     return data;
   };
+
   return {
     postRecipe,
     putRecipe,
+    deleteRecipe,
     getRecipes,
     getRecipe,
     getIngredientUnits,

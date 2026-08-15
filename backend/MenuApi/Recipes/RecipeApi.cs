@@ -17,17 +17,23 @@ public static class RecipeApi
 
         group.WithTags("Recipes");
 
+        // Every recipe endpoint reads or writes on behalf of a specific Menu user, so the caller
+        // guard belongs on the group rather than being restated in each handler.
+        group.AddEndpointFilter<RequireCallerFilter>();
+
         group.MapGet("/", GetRecipesAsync)
             .Produces<IEnumerable<RecipeListItem>>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesValidationProblem()
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/{recipeId}", GetRecipeAsync)
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapGet("/{recipeId}/ingredient", GetRecipeIngredientsAsync)
-            .Produces<IEnumerable<RecipeIngredientItem>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<RecipeIngredientItem>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/", CreateRecipeAsync)
             .AddEndpointFilter<ValidationFilter<UpsertRecipe>>()
@@ -56,109 +62,79 @@ public static class RecipeApi
 
     public static async Task<IResult> GetRecipesAsync(
         IRecipeService recipeService,
-        HttpContext httpContext,
+        CallerId caller,
         string? scope,
         int? take)
     {
-        if (httpContext.Items[MenuUserHttpContextKeys.MenuUserId] is not MenuUserId callerId)
-        {
-            return Results.Unauthorized();
-        }
-
-        if (!TryParseScope(scope, out var recipeListScope))
+        if (!RecipeListScopeParser.TryParse(scope, out var recipeListScope))
         {
             var detail = string.IsNullOrEmpty(scope)
-                ? "Missing scope. Expected 'mine' or 'authenticated'."
-                : $"Unknown scope '{scope}'. Expected 'mine' or 'authenticated'.";
+                ? $"Missing scope. Expected one of: {string.Join(", ", RecipeListScopeParser.AllValues)}."
+                : $"Unknown scope '{scope}'. Expected one of: {string.Join(", ", RecipeListScopeParser.AllValues)}.";
 
-            return Results.Problem(
-                detail: detail,
-                statusCode: StatusCodes.Status400BadRequest);
+            // Keyed on the offending parameter so a client can surface it against the right input,
+            // rather than a bare problem the caller has to read prose out of.
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["scope"] = [detail],
+            });
         }
 
         var boundedTake = Math.Clamp(take ?? DefaultTake, 1, MaxTake);
 
-        var recipes = await recipeService.GetRecipesAsync(recipeListScope, callerId, boundedTake);
+        var recipes = await recipeService.GetRecipesAsync(recipeListScope, caller.Value, boundedTake);
         return Results.Ok(recipes);
     }
 
-    private static bool TryParseScope(string? scope, out RecipeListScope recipeListScope)
+    public static async Task<IResult> GetRecipeAsync(IRecipeService recipeService, CallerId caller, RecipeId recipeId)
     {
-        switch (scope?.ToLowerInvariant())
-        {
-            case "mine":
-                recipeListScope = RecipeListScope.Mine;
-                return true;
-            case "authenticated":
-                recipeListScope = RecipeListScope.Authenticated;
-                return true;
-            default:
-                recipeListScope = default;
-                return false;
-        }
-    }
-
-    public static async Task<IResult> GetRecipeAsync(IRecipeService recipeService, RecipeId recipeId)
-    {
-        var recipe = await recipeService.GetRecipeAsync(recipeId);
+        var recipe = await recipeService.GetRecipeAsync(recipeId, caller.Value);
         return recipe is not null
             ? Results.Ok(recipe)
-            : Results.Problem(
-                detail: $"Recipe with ID {recipeId} was not found.",
-                statusCode: StatusCodes.Status404NotFound);
+            : RecipeNotFound(recipeId);
     }
 
-    public static async Task<IEnumerable<RecipeIngredientItem>> GetRecipeIngredientsAsync(IRecipeService recipeService, RecipeId recipeId)
+    public static async Task<IEnumerable<RecipeIngredientItem>> GetRecipeIngredientsAsync(IRecipeService recipeService, CallerId caller, RecipeId recipeId)
     {
-        return await recipeService.GetRecipeIngredientsAsync(recipeId);
+        return await recipeService.GetRecipeIngredientsAsync(recipeId, caller.Value);
     }
 
-    public static async Task<IResult> CreateRecipeAsync(IRecipeService recipeService, HttpContext httpContext, UpsertRecipe upsertRecipe)
+    public static async Task<IResult> CreateRecipeAsync(IRecipeService recipeService, CallerId caller, UpsertRecipe upsertRecipe)
     {
-        if (httpContext.Items[MenuUserHttpContextKeys.MenuUserId] is not MenuUserId callerId)
-        {
-            return Results.Unauthorized();
-        }
-
-        var recipeId = await recipeService.CreateRecipeAsync(upsertRecipe, callerId);
-        var recipe = await recipeService.GetRecipeAsync(recipeId);
+        var recipeId = await recipeService.CreateRecipeAsync(upsertRecipe, caller.Value);
+        var recipe = await recipeService.GetRecipeAsync(recipeId, caller.Value);
         return Results.Ok(recipe ?? throw new InvalidOperationException("Recipe creation failed"));
     }
 
-    public static async Task<IResult> UpdateRecipeAsync(IRecipeService recipeService, HttpContext httpContext, RecipeId recipeId, UpsertRecipe upsertRecipe)
+    public static async Task<IResult> UpdateRecipeAsync(IRecipeService recipeService, CallerId caller, RecipeId recipeId, UpsertRecipe upsertRecipe)
     {
-        if (httpContext.Items[MenuUserHttpContextKeys.MenuUserId] is not MenuUserId callerId)
-        {
-            return Results.Unauthorized();
-        }
-
-        var updated = await recipeService.UpdateRecipeAsync(recipeId, upsertRecipe, callerId);
+        var updated = await recipeService.UpdateRecipeAsync(recipeId, upsertRecipe, caller.Value);
         if (!updated)
         {
-            return Results.Problem(
-                detail: $"Recipe with ID {recipeId} was not found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return RecipeNotFound(recipeId);
         }
 
-        var recipe = await recipeService.GetRecipeAsync(recipeId);
+        var recipe = await recipeService.GetRecipeAsync(recipeId, caller.Value);
         return Results.Ok(recipe ?? throw new InvalidOperationException($"Failed to retrieve the updated recipe with ID {recipeId} after the update operation."));
     }
 
-    public static async Task<IResult> DeleteRecipeAsync(IRecipeService recipeService, HttpContext httpContext, RecipeId recipeId)
+    public static async Task<IResult> DeleteRecipeAsync(IRecipeService recipeService, CallerId caller, RecipeId recipeId)
     {
-        if (httpContext.Items[MenuUserHttpContextKeys.MenuUserId] is not MenuUserId callerId)
-        {
-            return Results.Unauthorized();
-        }
-
-        var deleted = await recipeService.DeleteRecipeAsync(recipeId, callerId);
+        var deleted = await recipeService.DeleteRecipeAsync(recipeId, caller.Value);
         if (!deleted)
         {
-            return Results.Problem(
-                detail: $"Recipe with ID {recipeId} was not found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return RecipeNotFound(recipeId);
         }
 
         return Results.NoContent();
     }
+
+    /// <summary>
+    /// The response for a recipe the caller cannot see, whether or not it exists. Deliberately a 404
+    /// rather than a 403 - the real reason is logged server-side, not handed to the caller, so recipe
+    /// ids cannot be probed for the existence of other people's private recipes.
+    /// </summary>
+    private static IResult RecipeNotFound(RecipeId recipeId) => Results.Problem(
+        detail: $"Recipe with ID {recipeId} was not found.",
+        statusCode: StatusCodes.Status404NotFound);
 }

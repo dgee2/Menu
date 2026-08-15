@@ -43,5 +43,10 @@ public static partial class ViewModelMapper
 
     [MapperIgnoreTarget(nameof(ViewModel.RecipeDetail.Ingredients))]
     [MapperIgnoreTarget(nameof(ViewModel.RecipeDetail.Steps))]
+
+    // Access flags are an evaluation of the caller against the recipe, not a property of the recipe,
+    // so RecipeService fills them in - there is no source member to map them from.
+    [MapperIgnoreTarget(nameof(ViewModel.RecipeDetail.CanEdit))]
+    [MapperIgnoreTarget(nameof(ViewModel.RecipeDetail.CanDelete))]
     public static partial ViewModel.RecipeDetail? MapToRecipeDetail(DBModel.Recipe? recipe);
 }

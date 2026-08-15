@@ -8,6 +8,11 @@ defineProps<{
   rules?: ValidationRule[];
   min?: number;
   step?: number;
+  /**
+   * Greyed-out text shown while the field is empty. Used where a value would be derived if none is
+   * given — a placeholder shows the figure without claiming the user entered it.
+   */
+  placeholder?: string;
 }>();
 
 const onUpdate = (val: string | number | null) => {
@@ -29,6 +34,7 @@ const onUpdate = (val: string | number | null) => {
     :rules="rules"
     :min="min"
     :step="step"
+    :placeholder="placeholder"
     @update:model-value="onUpdate"
   />
 </template>

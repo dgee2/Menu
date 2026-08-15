@@ -8,6 +8,7 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
     public DbSet<MenuUserEntity> MenuUsers { get; set; }
 
     public DbSet<RecipeEntity> Recipes { get; set; }
+    public DbSet<RecipeAccessScopeEntity> RecipeAccessScopes { get; set; }
     public DbSet<IngredientEntity> Ingredients { get; set; }
     public DbSet<UnitTypeEntity> UnitTypes { get; set; }
     public DbSet<UnitEntity> Units { get; set; }

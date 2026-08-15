@@ -1,14 +1,41 @@
 import preview, { router } from '@storybook-config/preview';
-import NewRecipeForm from './new-recipe-form.vue';
+import RecipeForm from './recipe-form.vue';
 import {
   recipeCreateErrorHandler,
   recipeCreateSuccessHandler,
 } from '@storybook-config/msw-handlers';
 import { expect, userEvent, within } from 'storybook/test';
+import type { RecipeDetail } from '@/services/recipe-api';
+
+const existingRecipe = {
+  id: 7,
+  title: 'Existing Lasagne',
+  accessScope: 'AuthenticatedUsers',
+  summary: 'Layers.',
+  yieldText: 'One tray',
+  servings: 6,
+  prepTimeMinutes: 20,
+  cookTimeMinutes: 40,
+  totalTimeMinutes: null,
+  effectiveTotalTimeMinutes: 60,
+  canEdit: true,
+  canDelete: true,
+  ingredients: [
+    {
+      sortOrder: 0,
+      ingredientText: 'Pasta',
+      measureText: '250g',
+      sectionTitle: 'For the layers',
+      preparationText: null,
+      isOptional: false,
+    },
+  ],
+  steps: [{ sortOrder: 0, instructionText: 'Assemble', title: null, durationMinutes: null }],
+} as unknown as RecipeDetail;
 
 const meta = preview.meta({
-  title: 'Organisms/Recipe/NewRecipeForm',
-  component: NewRecipeForm,
+  title: 'Organisms/Recipe/RecipeForm',
+  component: RecipeForm,
   tags: ['autodocs'],
   args: {},
 });
@@ -122,12 +149,53 @@ export const FullyPopulated = meta.story({
   },
 });
 
+// Create mode opens with one blank ingredient row and one blank step row already present, so
+// these stories start from a row count of 1 rather than 0.
+export const SeedsOneBlankRowOfEach = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getAllByLabelText('Ingredient')).toHaveLength(1);
+    await expect(canvas.getAllByLabelText('Instructions')).toHaveLength(1);
+  },
+});
+
+export const BlankSeededRowsDoNotBlockSubmit = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByLabelText('Name'), 'Lasagne');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
+
+    // "A recipe with zero ingredients and zero steps is valid" has to survive the seeding.
+    await expect(canvas.queryByText('Ingredient is required')).not.toBeInTheDocument();
+    await expect(canvas.queryByText('Instructions are required')).not.toBeInTheDocument();
+  },
+});
+
+export const TotalTimeShowsTheDerivedValueAsAPlaceholder = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByLabelText('Prep time (minutes)'), '20');
+    await userEvent.type(canvas.getByLabelText('Cook time (minutes)'), '30');
+
+    // A placeholder, never a value: filling the input in would make a derived total look identical
+    // to an explicitly chosen one.
+    const totalTime = canvas.getByLabelText('Total time (minutes)');
+    await expect(totalTime).toHaveValue(null);
+    await expect(totalTime).toHaveAttribute('placeholder', '50');
+    await expect(
+      canvas.getByText('Calculated: 50 min — enter a value to override'),
+    ).toBeInTheDocument();
+  },
+});
+
 export const AddEditRemoveIngredientRows = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const addButton = canvas.getByRole('button', { name: 'Add ingredient' });
 
-    await userEvent.click(addButton);
     await userEvent.click(addButton);
 
     const ingredientInputs = canvas.getAllByLabelText('Ingredient');
@@ -153,10 +221,8 @@ export const AddEditRemoveIngredientRows = meta.story({
 export const ReorderIngredientRows = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const addButton = canvas.getByRole('button', { name: 'Add ingredient' });
 
-    await userEvent.click(addButton);
-    await userEvent.click(addButton);
+    await userEvent.click(canvas.getByRole('button', { name: 'Add ingredient' }));
 
     const ingredientInputs = () => canvas.getAllByLabelText('Ingredient');
     await userEvent.type(ingredientInputs()[0], 'Flour');
@@ -171,29 +237,41 @@ export const ReorderIngredientRows = meta.story({
   },
 });
 
-export const EmptyIngredientRowBlocksSubmit = meta.story({
+export const PartlyFilledIngredientRowBlocksSubmit = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const nameInput = canvas.getByLabelText('Name');
-    const addButton = canvas.getByRole('button', { name: 'Add ingredient' });
-    const submitButton = canvas.getByRole('button', { name: 'Save recipe' });
 
-    await userEvent.type(nameInput, 'Lasagne');
-    await userEvent.click(addButton);
-    await userEvent.click(submitButton);
+    await userEvent.type(canvas.getByLabelText('Name'), 'Lasagne');
+    // A row the user has started is no longer blank, so its required fields apply again.
+    await userEvent.type(canvas.getAllByLabelText('Ingredient')[0], 'Flour');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
 
-    await expect(await canvas.findByText('Ingredient is required')).toBeInTheDocument();
-    await expect(canvas.getByText('Measure is required')).toBeInTheDocument();
+    await expect(await canvas.findByText('Measure is required')).toBeInTheDocument();
+  },
+});
+
+// Section is free text with suggestions, not a closed list — the first row to use a new section
+// has to be able to invent it. This story covers that entry path; the suggestion list itself
+// (sections already used in this recipe being offered to later rows) is asserted in
+// recipe-form.test.ts and ingredient-row-editor.test.ts, where the props can be inspected directly
+// rather than through a portalled QSelect menu.
+export const SectionAcceptsANewTitle = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const firstSection = canvas.getAllByLabelText('Section')[0];
+    await userEvent.type(firstSection, 'For the sauce');
+    await userEvent.keyboard('{Enter}');
+
+    await expect(firstSection).toHaveValue('For the sauce');
   },
 });
 
 export const AddEditRemoveStepRows = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const addButton = canvas.getByRole('button', { name: 'Add step' });
 
-    await userEvent.click(addButton);
-    await userEvent.click(addButton);
+    await userEvent.click(canvas.getByRole('button', { name: 'Add step' }));
 
     const instructionInputs = canvas.getAllByLabelText('Instructions');
     await expect(instructionInputs).toHaveLength(2);
@@ -216,10 +294,8 @@ export const AddEditRemoveStepRows = meta.story({
 export const ReorderStepRows = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const addButton = canvas.getByRole('button', { name: 'Add step' });
 
-    await userEvent.click(addButton);
-    await userEvent.click(addButton);
+    await userEvent.click(canvas.getByRole('button', { name: 'Add step' }));
 
     const instructionInputs = () => canvas.getAllByLabelText('Instructions');
     await userEvent.type(instructionInputs()[0], 'Preheat the oven');
@@ -234,16 +310,13 @@ export const ReorderStepRows = meta.story({
   },
 });
 
-export const EmptyStepRowBlocksSubmit = meta.story({
+export const PartlyFilledStepRowBlocksSubmit = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const nameInput = canvas.getByLabelText('Name');
-    const addButton = canvas.getByRole('button', { name: 'Add step' });
-    const submitButton = canvas.getByRole('button', { name: 'Save recipe' });
 
-    await userEvent.type(nameInput, 'Lasagne');
-    await userEvent.click(addButton);
-    await userEvent.click(submitButton);
+    await userEvent.type(canvas.getByLabelText('Name'), 'Lasagne');
+    await userEvent.type(canvas.getAllByLabelText('Title')[0], 'Preheat');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
 
     await expect(await canvas.findByText('Instructions are required')).toBeInTheDocument();
   },
@@ -252,20 +325,36 @@ export const EmptyStepRowBlocksSubmit = meta.story({
 export const ZeroStepDurationBlocksSubmit = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const nameInput = canvas.getByLabelText('Name');
-    const addButton = canvas.getByRole('button', { name: 'Add step' });
-    const submitButton = canvas.getByRole('button', { name: 'Save recipe' });
 
-    await userEvent.type(nameInput, 'Lasagne');
-    await userEvent.click(addButton);
+    await userEvent.type(canvas.getByLabelText('Name'), 'Lasagne');
     await userEvent.type(canvas.getByLabelText('Instructions'), 'Preheat the oven');
     await userEvent.type(canvas.getByLabelText('Duration (minutes)'), '0');
-    await userEvent.click(submitButton);
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
 
     await expect(await canvas.findByText('Must be greater than 0')).toBeInTheDocument();
   },
 });
 
+// Edit mode is the same component with `initialRecipe` supplied - there is no second form.
+export const EditingAnExistingRecipe = meta.story({
+  args: { initialRecipe: existingRecipe },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByLabelText('Name')).toHaveValue('Existing Lasagne');
+    await expect(canvas.getByRole('combobox', { name: 'Visibility' })).toHaveValue(
+      'Visible to all Menu users',
+    );
+    await expect(canvas.getByRole('button', { name: 'Save changes' })).toBeInTheDocument();
+    // Edit mode seeds nothing: a recipe saved with one ingredient shows exactly one.
+    await expect(canvas.getAllByLabelText('Ingredient')).toHaveLength(1);
+    await expect(canvas.getAllByLabelText('Ingredient')[0]).toHaveValue('Pasta');
+  },
+});
+
+// A 500 is not a 4xx, so it gets the generic banner rather than a server-supplied message. The
+// request payload and the 409 -> title-field path are covered in recipe-form.test.ts, which mocks
+// the API layer and can produce an exact problem-details body.
 export const SubmitFailureShowsError = meta.story({
   beforeEach({ msw }) {
     msw.use(recipeCreateErrorHandler);

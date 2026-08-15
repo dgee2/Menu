@@ -95,6 +95,36 @@ namespace MenuDB.Migrations
                     b.ToTable("MenuUser", "identity");
                 });
 
+            modelBuilder.Entity("MenuDB.Data.RecipeAccessScopeEntity", b =>
+                {
+                    b.Property<byte>("Id")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("UX_RecipeAccessScope_Name");
+
+                    b.ToTable("RecipeAccessScope", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = (byte)1,
+                            Name = "Private"
+                        },
+                        new
+                        {
+                            Id = (byte)2,
+                            Name = "AuthenticatedUsers"
+                        });
+                });
+
             modelBuilder.Entity("MenuDB.Data.RecipeEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -103,11 +133,10 @@ namespace MenuDB.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AccessScope")
-                        .IsRequired()
+                    b.Property<byte>("AccessScopeId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(30)")
-                        .HasDefaultValue("Private");
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)1);
 
                     b.Property<int?>("CookTimeMinutes")
                         .HasColumnType("int");
@@ -145,6 +174,8 @@ namespace MenuDB.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AccessScopeId");
 
                     b.HasIndex("OwnerUserId", "Title")
                         .IsUnique()
@@ -363,11 +394,20 @@ namespace MenuDB.Migrations
 
             modelBuilder.Entity("MenuDB.Data.RecipeEntity", b =>
                 {
+                    b.HasOne("MenuDB.Data.RecipeAccessScopeEntity", "AccessScope")
+                        .WithMany("Recipes")
+                        .HasForeignKey("AccessScopeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Recipe_ToRecipeAccessScope");
+
                     b.HasOne("MenuDB.Data.MenuUserEntity", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("FK_Recipe_ToMenuUser");
+
+                    b.Navigation("AccessScope");
 
                     b.Navigation("Owner");
                 });
@@ -425,6 +465,11 @@ namespace MenuDB.Migrations
             modelBuilder.Entity("MenuDB.Data.IngredientEntity", b =>
                 {
                     b.Navigation("IngredientUnits");
+                });
+
+            modelBuilder.Entity("MenuDB.Data.RecipeAccessScopeEntity", b =>
+                {
+                    b.Navigation("Recipes");
                 });
 
             modelBuilder.Entity("MenuDB.Data.RecipeEntity", b =>

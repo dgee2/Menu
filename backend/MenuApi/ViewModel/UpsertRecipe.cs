@@ -16,7 +16,7 @@ public class UpsertRecipe
     public List<RecipeStepItem> Steps { get; init; }
 
     [Required]
-    public string AccessScope { get; init; }
+    public RecipeAccessScope AccessScope { get; init; }
 #pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
 
     public string? Summary { get; init; }
