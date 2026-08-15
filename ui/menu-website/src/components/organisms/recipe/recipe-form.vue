@@ -176,6 +176,9 @@ const isDirty = () => isArmed.value && JSON.stringify(buildPayload()) !== baseli
 const warnOnUnload = (event: BeforeUnloadEvent) => {
   if (!isDirty()) return;
   event.preventDefault();
+  // preventDefault() is what the spec asks for, but Chromium and WebKit still gate the prompt on a
+  // non-empty returnValue, so both are set. No current browser displays the value itself.
+  event.returnValue = true;
 };
 
 // onBeforeRouteLeave never fires for a tab close or a reload, so the browser-level guard is needed

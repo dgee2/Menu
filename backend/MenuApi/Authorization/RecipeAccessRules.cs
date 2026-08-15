@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using MenuApi.ValueObjects;
 using MenuDB.Data;
 
-namespace MenuApi.Repositories;
+namespace MenuApi.Authorization;
 
 /// <summary>
 /// The single evaluation of who may do what to a recipe. Read filtering and the

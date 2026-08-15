@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using MenuDB;
 using MenuDB.Data;
+using MenuApi.Authorization;
 using MenuApi.DBModel;
 using MenuApi.Exceptions;
 using MenuApi.ValueObjects;

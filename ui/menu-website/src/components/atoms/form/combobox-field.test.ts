@@ -1,14 +1,28 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { Quasar } from 'quasar';
 import ComboboxField from './combobox-field.vue';
 
-const mountField = (props: Record<string, unknown> = {}) =>
-  mount(ComboboxField, {
+const mounted: { unmount: () => void }[] = [];
+
+// QSelect debounces its virtual-scroll handler on a timer and only cancels it in onBeforeUnmount.
+// Left mounted, that timer can outlive the file and fire after jsdom has torn `window` down, which
+// Vitest reports as an unhandled `ReferenceError: window is not defined` and fails the whole run
+// even though every test passed.
+afterEach(() => {
+  while (mounted.length) mounted.pop()?.unmount();
+});
+
+const mountField = (props: Record<string, unknown> = {}) => {
+  const wrapper = mount(ComboboxField, {
     props: { label: 'Section', ...props },
     global: { plugins: [Quasar] },
     attachTo: document.body,
   });
+
+  mounted.push(wrapper);
+  return wrapper;
+};
 
 const input = (wrapper: ReturnType<typeof mountField>) =>
   wrapper.find<HTMLInputElement>('input');

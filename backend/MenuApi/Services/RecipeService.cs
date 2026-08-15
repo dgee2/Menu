@@ -1,4 +1,5 @@
 using MenuDB;
+using MenuApi.Authorization;
 using MenuApi.Exceptions;
 using MenuApi.MappingProfiles;
 using MenuApi.Repositories;

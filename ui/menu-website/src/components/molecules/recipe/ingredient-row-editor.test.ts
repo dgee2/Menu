@@ -1,15 +1,28 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { QSelect, Quasar } from 'quasar';
 import { nextTick } from 'vue';
 import IngredientRowEditor from './ingredient-row-editor.vue';
 
-const mountRow = (props: Record<string, unknown> = {}) =>
-  mount(IngredientRowEditor, {
+const mounted: VueWrapper[] = [];
+
+// The section field is a QSelect, whose debounced virtual-scroll timer is only cancelled in
+// onBeforeUnmount. Left mounted it can fire after jsdom has torn `window` down and fail the run
+// as an unhandled error. See combobox-field.test.ts.
+afterEach(() => {
+  while (mounted.length) mounted.pop()?.unmount();
+});
+
+const mountRow = (props: Record<string, unknown> = {}) => {
+  const wrapper = mount(IngredientRowEditor, {
     props: { canMoveUp: false, canMoveDown: false, ...props },
     global: { plugins: [Quasar] },
     attachTo: document.body,
   });
+
+  mounted.push(wrapper);
+  return wrapper;
+};
 
 const field = (wrapper: VueWrapper, label: string) => {
   const found = wrapper

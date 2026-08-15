@@ -15,6 +15,24 @@ export interface ProblemDetails {
 const isProblemDetails = (value: unknown): value is ProblemDetails =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+const firstValidationError = (problem: ProblemDetails | undefined): string | undefined =>
+  Object.values(problem?.errors ?? {})
+    .flat()
+    .find((message) => !!message);
+
+/**
+ * The server's own explanation, when it gave one worth showing.
+ *
+ * A validation problem carries no `detail` and a fixed, useless `title` ("One or more validation
+ * errors occurred."), so the first field message is preferred over it - that is the part the user
+ * can actually act on until field-level mapping arrives.
+ *
+ * A free function rather than only a getter, so `ApiError.from` can compute the message before
+ * constructing rather than building a throwaway instance to ask it.
+ */
+const detailOf = (problem: ProblemDetails | undefined): string | undefined =>
+  problem?.detail ?? firstValidationError(problem) ?? problem?.title;
+
 /**
  * An API call that came back with a non-2xx status, carrying the parsed problem details.
  *
@@ -48,21 +66,9 @@ export class ApiError extends Error {
     return this.problem?.errors;
   }
 
-  /**
-   * The server's own explanation, when it gave one worth showing.
-   *
-   * A validation problem carries no `detail` and a fixed, useless `title` ("One or more validation
-   * errors occurred."), so the first field message is preferred over it - that is the part the user
-   * can actually act on until field-level mapping arrives.
-   */
+  /** The server's own explanation, when it gave one worth showing. See {@link detailOf}. */
   get detail(): string | undefined {
-    return this.problem?.detail ?? this.firstValidationError ?? this.problem?.title;
-  }
-
-  private get firstValidationError(): string | undefined {
-    return Object.values(this.validationErrors ?? {})
-      .flat()
-      .find((message) => !!message);
+    return detailOf(this.problem);
   }
 
   /**
@@ -83,7 +89,6 @@ export class ApiError extends Error {
     const problem = isProblemDetails(error) ? error : undefined;
     const fallback = `${operation} failed (${response.status})`;
 
-    const apiError = new ApiError(fallback, response.status, problem);
-    return new ApiError(apiError.detail ?? fallback, response.status, problem);
+    return new ApiError(detailOf(problem) ?? fallback, response.status, problem);
   }
 }

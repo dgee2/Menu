@@ -80,6 +80,8 @@ public class RecipeServiceTests
     [Theory, CustomAutoData]
     public async Task GetRecipe_NotReadableByCaller_ReturnsNull(RecipeId recipeId, MenuUserId callerId)
     {
+        // The cast is load-bearing: a bare null is ambiguous between FakeItEasy's two Returns
+        // overloads (CS0121), since the call returns Task<DBModel.Recipe?>.
         A.CallTo(() => recipeRepository.GetReadableRecipeAsync(recipeId, callerId)).Returns((DBModel.Recipe?)null);
 
         var result = await sut.GetRecipeAsync(recipeId, callerId);

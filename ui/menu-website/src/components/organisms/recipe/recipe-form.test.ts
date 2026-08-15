@@ -807,9 +807,14 @@ describe('recipe-form', () => {
       await fillField(wrapper, 'Name', 'Lasagne');
 
       const event = new Event('beforeunload', { cancelable: true });
+      const setReturnValue = vi.fn();
+      Object.defineProperty(event, 'returnValue', { set: setReturnValue, get: () => undefined });
       window.dispatchEvent(event);
 
       expect(event.defaultPrevented).toBe(true);
+      // Chromium and WebKit gate the prompt on returnValue as well as preventDefault(), so both
+      // have to happen or the warning silently does nothing in those browsers.
+      expect(setReturnValue).toHaveBeenCalled();
     });
 
     it('does not warn on tab close when clean', async () => {
