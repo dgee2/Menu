@@ -212,8 +212,8 @@ jobs:
         with:
           node-version: 22.x
 
-      - name: Enable pnpm with corepack
-        run: corepack enable pnpm
+      - name: Install latest pnpm
+        run: npm install -g pnpm@latest
 
       - name: Get pnpm store directory
         id: pnpm-cache
