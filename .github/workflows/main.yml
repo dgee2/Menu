@@ -221,7 +221,7 @@ jobs:
         working-directory: ./ui/menu-website
 
       - name: Cache pnpm store
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('ui/menu-website/pnpm-lock.yaml', 'ui/menu-website/package.json') }}
@@ -252,7 +252,7 @@ jobs:
         working-directory: ./ui/menu-website
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
