@@ -1,6 +1,6 @@
 ---
 name: agent-identity
-description: Ensure every PR review thread comment and every commit Claude makes clearly identifies Claude as the author, so reviewers and contributors can immediately tell who wrote it.
+description: Ensure every PR review thread comment and every commit Codex makes clearly identifies Codex as the author, so reviewers and contributors can immediately tell who wrote it.
 ---
 
 # Agent Identity
@@ -9,14 +9,14 @@ description: Ensure every PR review thread comment and every commit Claude makes
 
 Use this skill whenever you write content into git or GitHub on this repository — a pull request review thread comment, or a commit message. Readers must never have to guess whether a human or an agent wrote something.
 
-Always identify yourself as **Claude**. Never attribute your work to a human, and never attribute it to another agent.
+Always identify yourself as **Codex**. Never attribute your work to a human, and never attribute it to another agent.
 
 ## PR review thread comments
 
 Every PR review thread comment must begin with this attribution block, on its own line, before any substantive content:
 
 ```
-> 🤖 **This comment was written by Claude.**
+> 🤖 **This comment was written by Codex.**
 ```
 
 Rules:
@@ -32,15 +32,15 @@ Rules:
 Every commit you create must carry a `Co-authored-by:` trailer as the last line(s) of the commit message, separated from the body by a blank line:
 
 ```
-Co-authored-by: Claude <noreply@anthropic.com>
+Co-authored-by: Codex <codex@openai.com>
 ```
 
 Rules:
 
 - The trailer is the identity marker for commits — do **not** put the `> 🤖` PR-comment attribution block in a commit message, and do not put an agent name in the subject line.
 - Keep the subject line a normal, descriptive summary of the change.
-- If a human and Claude genuinely co-authored the change, list both `Co-authored-by:` trailers.
-- You may append your model name (e.g. `Co-authored-by: Claude Opus 5 <noreply@anthropic.com>`); what matters is that "Claude" appears.
+- If a human and Codex genuinely co-authored the change, list both `Co-authored-by:` trailers.
+- You may append your model name (e.g. `Co-authored-by: Codex GPT-5 <codex@openai.com>`); what matters is that "Codex" appears.
 
 ## Example commit message
 
@@ -50,13 +50,13 @@ Add ownership-aware recipe list endpoint
 Adds a `scope` query parameter accepting `mine` or `authenticated`, so
 callers can choose between owner-only and all visible recipes.
 
-Co-authored-by: Claude <noreply@anthropic.com>
+Co-authored-by: Codex <codex@openai.com>
 ```
 
 ## Example PR comment
 
 ````markdown
-> 🤖 **This comment was written by Claude.**
+> 🤖 **This comment was written by Codex.**
 
 The `RecipeService.CreateAsync` method currently calls `_repository.InsertAsync` without first
 deduplicating the ingredient list. Per the `set-like-write-dedupe` pattern, duplicates should be
