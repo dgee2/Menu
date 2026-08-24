@@ -11,6 +11,15 @@
 - **Menu.ServiceDefaults / Menu.ApiServiceDefaults** – Shared Aspire service defaults (OpenTelemetry, health checks, Swagger).
 - **ui/menu-website** – Vue 3 + Quasar + Vite frontend (pnpm). Connected to the API via Aspire's `AddJavaScriptApp`.
 
+## Additional Reference Docs
+
+Consult these before working in the relevant area:
+
+- `docs/database-migrations.md` — EF Core migration creation and review workflow, naming conventions, and what not to hand-edit.
+- `docs/integration-tests.md` — `ApiTestFixture` architecture, Auth0 M2M test authentication, seed data, and the sequential execution model.
+- `docs/ci-path-filters.md` — CI jobs selected for backend-only, frontend-only, and `open-api/`-only changes.
+- `docs/specs/` — architecture and design specifications for larger features.
+
 ## Layered Model Pattern
 
 Three distinct model layers — never mix them:
@@ -204,31 +213,29 @@ Split the two by what each can verify reliably:
 
 ## Agent identity in git and GitHub
 
-If you are an AI agent (GitHub Copilot, Claude, or Codex), you **must** make it clear which agent you are whenever you write to git or GitHub. Identify yourself as whichever agent you actually are — never attribute your work to a different one.
+When Codex writes to git or GitHub, it **must** make its authorship clear.
 
 **PR review thread comments** — start the comment with this line, then a blank line, then the body:
 
 ```
-> 🤖 **This comment was written by Claude.**
+> 🤖 **This comment was written by Codex.**
 ```
 
-Substitute `GitHub Copilot` or `Codex` as appropriate. Do not add this to PR titles/descriptions, issue bodies, or issue comments.
+Do not add this to PR titles/descriptions, issue bodies, or issue comments.
 
 **Commit messages** — end the message with a `Co-authored-by:` trailer naming the agent:
 
 ```
-Co-authored-by: Claude <noreply@anthropic.com>
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 Co-authored-by: Codex <codex@openai.com>
 ```
 
 Keep the subject line a normal descriptive summary — identity belongs in the trailer, not the subject, and the `🤖` comment block never goes in a commit message.
 
-Full details in `.claude/skills/agent-identity/SKILL.md`.
+Full details in `.agents/skills/agent-identity/SKILL.md`.
 
 ## Agent skills
 
-Repo-local skills live in `.claude/skills/<name>/SKILL.md`, and slash commands in `.claude/commands/<name>.md`.
+Repo-local skills live in `.agents/skills/<name>/SKILL.md`. Invoke a skill with `$<name>` in Codex.
 
 ### Issue tracker
 
