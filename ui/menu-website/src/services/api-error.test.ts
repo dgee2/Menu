@@ -1,9 +1,13 @@
-import { describe, expect, it } from 'vitest';
-import { ApiError } from './api-error';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ApiError, userFacingMessage } from './api-error';
 
 const response = (status: number) => new Response(null, { status });
 
 describe('ApiError', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('prefers the server-supplied detail', () => {
     const error = ApiError.from('Create recipe', { detail: 'Already exists.' }, response(409));
 
@@ -43,5 +47,23 @@ describe('ApiError', () => {
 
     expect(error.detail).toBeUndefined();
     expect(error.message).toBe('Get recipe failed (500)');
+  });
+
+  it('surfaces an unexpected error message during development', () => {
+    vi.stubEnv('DEV', true);
+
+    expect(userFacingMessage(new Error('consent_required'), 'Try again.')).toBe('consent_required');
+  });
+
+  it('keeps unexpected error details out of production messages', () => {
+    vi.stubEnv('DEV', false);
+
+    expect(userFacingMessage(new Error('consent_required'), 'Try again.')).toBe('Try again.');
+  });
+
+  it('keeps the fallback for non-Error failures', () => {
+    vi.stubEnv('DEV', true);
+
+    expect(userFacingMessage('consent_required', 'Try again.')).toBe('Try again.');
   });
 });

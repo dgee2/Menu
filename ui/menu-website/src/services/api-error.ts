@@ -92,3 +92,14 @@ export class ApiError extends Error {
     return new ApiError(detailOf(problem) ?? fallback, response.status, problem);
   }
 }
+
+/**
+ * Keep unexpected failures useful while developing without exposing implementation details in
+ * production. This is especially valuable for authentication failures, which happen before the
+ * API client can wrap the error in an ApiError.
+ */
+export const userFacingMessage = (error: unknown, fallback: string): string => {
+  if (error instanceof ApiError) return error.userFacingMessage(fallback);
+
+  return import.meta.env.DEV && error instanceof Error && error.message ? error.message : fallback;
+};

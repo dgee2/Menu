@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRecipeService } from '@/services/recipe-service';
-import { ApiError } from '@/services/api-error';
+import { userFacingMessage } from '@/services/api-error';
 import type { RecipeListScope } from '@/services/recipe-api';
 
 const { useRecipes } = useRecipeService();
@@ -28,9 +28,7 @@ const emptyMessage = computed(() =>
 );
 
 const errorMessage = computed(() =>
-  error.value instanceof ApiError
-    ? error.value.userFacingMessage('Something went wrong loading recipes.')
-    : 'Something went wrong loading recipes.',
+  userFacingMessage(error.value, 'Something went wrong loading recipes.'),
 );
 
 const timings = (recipe: { effectiveTotalTimeMinutes?: number | null; servings?: number | null }) =>

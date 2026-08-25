@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRecipeService } from '@/services/recipe-service';
-import { ApiError } from '@/services/api-error';
+import { ApiError, userFacingMessage } from '@/services/api-error';
 import { recipeAccessScopeBadgeLabels } from '@/services/recipe-labels';
 import type { RecipeIngredientItem } from '@/services/recipe-api';
 
@@ -22,9 +22,7 @@ const { mutateAsync: deleteRecipe, isPending: isDeleting } = useDeleteRecipe();
 // recipe that is probably fine.
 const isNotFound = computed(() => error.value instanceof ApiError && error.value.status === 404);
 const loadErrorMessage = computed(() =>
-  error.value instanceof ApiError
-    ? error.value.userFacingMessage('Something went wrong loading this recipe.')
-    : 'Something went wrong loading this recipe.',
+  userFacingMessage(error.value, 'Something went wrong loading this recipe.'),
 );
 
 const accessScopeLabel = computed(() =>
@@ -69,10 +67,10 @@ const onDelete = async () => {
     // Closed here too: the banner renders on the page behind the dialog, so leaving the dialog open
     // would hide the only feedback the user gets.
     confirmingDelete.value = false;
-    deleteError.value =
-      deleteFailure instanceof ApiError
-        ? deleteFailure.userFacingMessage('Failed to delete recipe. Please try again.')
-        : 'Failed to delete recipe. Please try again.';
+    deleteError.value = userFacingMessage(
+      deleteFailure,
+      'Failed to delete recipe. Please try again.',
+    );
   }
 };
 </script>
@@ -160,13 +158,7 @@ const onDelete = async () => {
           </q-card-section>
           <q-card-actions align="right">
             <q-btn v-close-popup flat label="Cancel" />
-            <q-btn
-              flat
-              color="negative"
-              label="Delete"
-              :loading="isDeleting"
-              @click="onDelete"
-            />
+            <q-btn flat color="negative" label="Delete" :loading="isDeleting" @click="onDelete" />
           </q-card-actions>
         </q-card>
       </q-dialog>
