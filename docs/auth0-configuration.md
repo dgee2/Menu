@@ -6,8 +6,8 @@ Menu uses an Auth0 Single Page Application (SPA) for browser sign-in and an Auth
 
 In the Auth0 Dashboard, configure the API and the Menu SPA application as follows:
 
-1. Open **Applications → APIs**, select the Menu API, and enable **Allow Offline Access**. Save the change.
-2. Open **Applications → Applications**, select the Menu SPA, and enable **Refresh Token Rotation**. Keep refresh-token reuse detection enabled and use the tenant's normal reuse interval. Save the change.
+1. Open **Applications → APIs**, select the API whose **Identifier** is `http://localhost:65273` (or the identifier used by the deployed environment), and enable **Allow Offline Access**. Save the change.
+2. Open **Applications → Applications**, select the Menu SPA, and enable **Refresh Token Rotation**. Keep refresh-token reuse detection enabled and retain the tenant-approved **Rotation Overlap Period**. The overlap period allows concurrent requests to use the previous refresh token briefly; change it only if the deployment has an explicit requirement for a different value. Save the change.
 3. On the SPA application, add the local Aspire UI URL to each of these fields:
    - **Allowed Callback URLs**: `http://localhost:65276`
    - **Allowed Logout URLs**: `http://localhost:65276`
