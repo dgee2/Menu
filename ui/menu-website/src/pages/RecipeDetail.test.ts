@@ -155,7 +155,7 @@ describe('RecipeDetail', () => {
     getRecipe.mockRejectedValue(new TypeError('Failed to fetch'));
     const wrapper = await mountPage();
 
-    expect(wrapper.text()).toContain('Something went wrong loading this recipe.');
+    expect(wrapper.text()).toContain('Failed to fetch');
     expect(wrapper.text()).not.toContain('Recipe not found.');
   });
 

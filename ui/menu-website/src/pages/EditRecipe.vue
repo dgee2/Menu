@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import RecipeForm from '@/components/organisms/recipe/recipe-form.vue';
 import { useRecipeService } from '@/services/recipe-service';
-import { ApiError } from '@/services/api-error';
+import { ApiError, userFacingMessage } from '@/services/api-error';
 
 /**
  * Editing lives on its own route rather than toggling the detail page into an edit mode, so the
@@ -20,9 +20,7 @@ const { data: recipe, isLoading, isError, error } = useRecipe(recipeId);
 
 const isNotFound = computed(() => error.value instanceof ApiError && error.value.status === 404);
 const loadErrorMessage = computed(() =>
-  error.value instanceof ApiError
-    ? error.value.userFacingMessage('Something went wrong loading this recipe.')
-    : 'Something went wrong loading this recipe.',
+  userFacingMessage(error.value, 'Something went wrong loading this recipe.'),
 );
 </script>
 
