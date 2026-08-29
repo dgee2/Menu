@@ -169,13 +169,20 @@ pnpm build                # Type-check + production build
 pnpm test                 # Vitest: unit + Storybook projects
 pnpm test:unit            # Vitest unit tests only (jsdom)
 pnpm test:storybook       # Storybook interaction tests (run after any UI change)
-pnpm test:e2e             # Playwright end-to-end tests
+pnpm test:e2e             # Full-stack Playwright tests; starts Aspire (Docker, SQL, migrations, API, UI)
 pnpm lint                 # ESLint
 pnpm lint-fix             # ESLint with auto-fix
 pnpm format               # Prettier
 pnpm generate-openapi     # Regenerate API types from OpenAPI spec
 pnpm storybook            # Storybook dev server (port 6006)
 ```
+
+`pnpm test:e2e` requires Docker. It waits up to five minutes for the UI at
+`http://localhost:65276` (API `http://localhost:65273`) and reuses an existing stack on
+that UI address. The command is long-running on Windows, so agents must use the
+`Start-Job` timeout pattern above. The HTML report is written to
+`ui/menu-website/playwright-report/`; failure artifacts and traces are written to
+`ui/menu-website/test-results/`.
 
 Always run `pnpm test:storybook` after making any change under `ui/menu-website/src/` — it catches regressions in components exercised by existing stories, not just changes to story files themselves.
 

@@ -40,22 +40,27 @@ pnpm test
 
 ### Run End-to-End Tests with [Playwright](https://playwright.dev)
 
+The end-to-end command starts the complete Aspire stack: the SQL Server container,
+database migrations, API, and UI. Docker must be running. Playwright waits for the UI at
+`http://localhost:65276` and reuses an already-running stack on that address.
+
 ```sh
 # Install browsers for the first run
 npx playwright install
 
-# When testing on CI, must build the project first
-pnpm build
-
-# Runs the end-to-end tests
+# Starts the Aspire stack and runs the end-to-end tests
 pnpm test:e2e
 # Runs the tests only on Chromium
 pnpm test:e2e --project=chromium
 # Runs the tests of a specific file
-pnpm test:e2e tests/example.spec.ts
+pnpm test:e2e e2e/public.spec.ts
 # Runs the tests in debug mode
 pnpm test:e2e --debug
 ```
+
+The API is available at `http://localhost:65273`. Playwright writes its HTML report to
+`playwright-report/` and failure artifacts, including traces captured on retry, to
+`test-results/`.
 
 ### Lint with [ESLint](https://eslint.org/)
 
