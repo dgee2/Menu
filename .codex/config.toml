@@ -1,3 +1,8 @@
+web_search = "live"
+sandbox_mode = "workspace-write"
 [mcp_servers.aspire]
 command = "aspire"
 args = ["agent", "mcp"]
+
+[sandbox_workspace_write]
+network_access = true
