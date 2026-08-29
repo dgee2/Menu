@@ -1,7 +1,6 @@
 import { defineMain } from '@storybook/vue3-vite/node';
 import { fileURLToPath, URL } from 'node:url';
 import { quasar } from '@quasar/vite-plugin';
-import tsConfigPaths from 'vite-tsconfig-paths';
 import { dirname, resolve } from 'node:path';
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
@@ -23,6 +22,7 @@ export default defineMain({
   },
   viteFinal: (config) => {
     config.resolve = config.resolve ?? {};
+    config.resolve.tsconfigPaths = true;
     config.resolve.alias = {
       ...config.resolve.alias,
       '@auth0/auth0-vue': resolve(currentDir, 'mocks/auth0-vue.ts'),
@@ -32,9 +32,6 @@ export default defineMain({
 
     config.plugins = [
       ...(config.plugins || []),
-      // the vite builder for storybook needs to know how to resolve our import statements, so we use the vite-tsconfig-paths plugin for that
-      tsConfigPaths(),
-
       // we also need the vite quasar plugin to be able to embed our quasar based project (and it's componets) into an existing (this storybook) project
       // see https://quasar.dev/start/vite-plugin/ for reference
       quasar({

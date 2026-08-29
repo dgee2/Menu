@@ -1,7 +1,6 @@
 import { fileURLToPath, URL } from 'node:url';
 
 import { defineConfig } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import vue from '@vitejs/plugin-vue';
 import vueDevTools from 'vite-plugin-vue-devtools';
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
@@ -15,7 +14,6 @@ export default defineConfig({
     emptyOutDir: true,
   },
   plugins: [
-    tsconfigPaths(),
     vue({
       template: { transformAssetUrls },
     }),
@@ -36,6 +34,7 @@ export default defineConfig({
     include: ['pinia', 'quasar/lang/en-GB'],
   },
   resolve: {
+    tsconfigPaths: true,
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
