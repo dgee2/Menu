@@ -184,6 +184,15 @@ that UI address. The command is long-running on Windows, so agents must use the
 `ui/menu-website/playwright-report/`; failure artifacts and traces are written to
 `ui/menu-website/test-results/`.
 
+Authenticated e2e tests require the dedicated Auth0 test-user credentials in the
+gitignored `ui/menu-website/.env.e2e.local` file, using `E2E_AUTH0_USERNAME` and
+`E2E_AUTH0_PASSWORD`. The credentials are obtained from the repository owner. Never
+commit or print the credentials or Playwright `storageState`; verify the local file with
+`git check-ignore -v ui/menu-website/.env.e2e.local` before writing it. If credentials
+are missing, ask the owner rather than replacing the real Auth0 flow with mocks or an
+injected token. The account is local-only; CI must use a separate user and GitHub
+Actions secrets.
+
 Always run `pnpm test:storybook` after making any change under `ui/menu-website/src/` — it catches regressions in components exercised by existing stories, not just changes to story files themselves.
 
 pnpm's version is not pinned — whatever `pnpm` is on your `PATH` is what runs, including when Aspire's `WithPnpm()` shells out to it to start the full stack (via `aspire start`, the agent-preferred path, or `dotnet run --project Menu.AppHost`). `package.json` declares a `>= 10` floor under `engines`, and CI installs the latest pnpm; do not reintroduce a `packageManager` pin or corepack. `pnpm-workspace.yaml` sets `confirmModulesPurge: false` so upgrading your global pnpm across a major version self-heals a stale `node_modules` directory automatically; if you ever see `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` anyway, just run `pnpm install` once by hand from `ui/menu-website/`.
