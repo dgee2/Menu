@@ -15,9 +15,10 @@ const bestEffortDelete = async (
   if (recipeId === undefined || authorization === undefined) return;
 
   try {
-    await page.request.delete(`${apiBaseUrl}/${recipeId}`, {
+    const deleteResponse = await page.request.delete(`${apiBaseUrl}/${recipeId}`, {
       headers: { authorization },
     });
+    expect(deleteResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
   } catch {
     // The UI delete normally removes the fixture; cleanup is best effort after a failure.
   }
@@ -54,6 +55,7 @@ test('edits and deletes an owned recipe', async ({ page }, testInfo) => {
       },
     });
     expect(createResponse.status()).toBe(200);
+    expect(createResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
     const created = (await createResponse.json()) as CreatedRecipe;
     recipeId = String(created.id);
 
@@ -61,7 +63,8 @@ test('edits and deletes an owned recipe', async ({ page }, testInfo) => {
       (response) => response.url() === `${apiBaseUrl}/${recipeId}` && response.status() === 200,
     );
     await page.goto(`/#/recipe/${recipeId}`);
-    await detailResponsePromise;
+    const detailResponse = await detailResponsePromise;
+    expect(detailResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
     await expect(page).toHaveURL(new RegExp(`/\\#/recipe/${recipeId}$`));
     await expect(page.getByRole('heading', { name: uniqueTitle, exact: true })).toBeVisible();
     await expect(page.getByText(`${measure} ${ingredient}`, { exact: true })).toBeVisible();
@@ -80,6 +83,7 @@ test('edits and deletes an owned recipe', async ({ page }, testInfo) => {
     await page.getByRole('button', { name: 'Save changes', exact: true }).click();
     const updateResponse = await updateResponsePromise;
     expect(updateResponse.status()).toBe(200);
+    expect(updateResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
 
     await page.waitForURL((url) => url.hash === `#/recipe/${recipeId}`);
     await expect(page.getByRole('heading', { name: updatedTitle, exact: true })).toBeVisible();
@@ -101,6 +105,7 @@ test('edits and deletes an owned recipe', async ({ page }, testInfo) => {
     await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
     const deleteResponse = await deleteResponsePromise;
     expect(deleteResponse.status()).toBe(204);
+    expect(deleteResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
 
     await page.waitForURL((url) => url.hash === '#/recipes');
     await listResponsePromise;

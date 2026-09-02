@@ -43,6 +43,7 @@ test('opens an owned recipe detail from the recipe list', async ({ page }, testI
       },
     });
     expect(createResponse.status()).toBe(200);
+    expect(createResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
     const created = (await createResponse.json()) as { id: string | number };
     const recipeId = String(created.id);
     seededRecipe = { id: recipeId, title };
@@ -63,6 +64,7 @@ test('opens an owned recipe detail from the recipe list', async ({ page }, testI
 
     const detailResponse = await detailResponsePromise;
     expect(detailResponse.status()).toBe(200);
+    expect(detailResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
     await expect(page).toHaveURL(new RegExp(`/\\#/recipe/${recipeId}$`));
     await expect(page.locator('h1')).toHaveText(title);
     await expect(page.getByText(`${measure} ${ingredient}`, { exact: true })).toBeVisible();
@@ -73,6 +75,7 @@ test('opens an owned recipe detail from the recipe list', async ({ page }, testI
         const deleteResponse = await page.request.delete(`${apiBaseUrl}/${seededRecipe.id}`, {
           headers: { authorization },
         });
+        expect(deleteResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
         expect([204, 404]).toContain(deleteResponse.status());
       }
     }

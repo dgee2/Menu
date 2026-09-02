@@ -16,6 +16,7 @@ The Create OpenAPI spec job (`backend-build`) runs when any of these paths chang
 
 - `backend/**` - All backend projects, solution files, and backend-specific configuration grouped under the `backend/` directory
 - `ui/**` - Frontend application changes that should validate against a freshly generated OpenAPI document
+- `open-api/**` - OpenAPI specification changes must regenerate and publish the artifact used by frontend jobs
 - `.github/workflows/main.yml` - The workflow file itself
 
 #### Backend Test Jobs
@@ -88,12 +89,12 @@ protection check yet; promote it only after several days of reliable green runs.
 
 ### Scenario: OpenAPI file changes (e.g., only `open-api/` files)
 
-- ❌ Create OpenAPI spec is skipped
+- ✅ Create OpenAPI spec runs
 - ❌ Backend test jobs are skipped
 - ✅ Frontend job runs to regenerate types
 - ✅ Frontend E2E shards run
-- The frontend job does **not** get a freshly generated OpenAPI spec artifact in this scenario
-- Because the generated JSON spec is not tracked in the repository, `open-api/**`-only changes cannot rely on an existing checked-in spec when `backend-build` is skipped
+- The frontend and E2E jobs download the freshly generated OpenAPI spec artifact
+- The backend-build job still does not run backend tests; it only creates the artifact needed by frontend validation
 
 ### Scenario: Both backend and frontend changes
 
@@ -126,7 +127,7 @@ if: |
   (needs.backend-build.result == 'success' || needs.backend-build.result == 'skipped')
 ```
 
-This allows the frontend to run after Create OpenAPI spec for backend-only and frontend-only changes, while still supporting `open-api/**`-only changes when `backend-build` is skipped.
+This allows the frontend to run after Create OpenAPI spec for backend-only, frontend-only, and `open-api/**`-only changes. OpenAPI-only changes now always receive a freshly generated artifact because the generated JSON is not tracked in the repository.
 
 ### OpenAPI Artifact Handling
 
@@ -139,7 +140,7 @@ The "Download OpenAPI document" step in the frontend job is conditional:
 ```
 
 - If backend-build runs and succeeds, the new OpenAPI spec is downloaded
-- If backend-build is skipped, the existing OpenAPI spec from the repository is used
+- For pull requests matching backend, frontend, or `open-api/**`, backend-build generates and uploads the artifact before the frontend jobs run
 
 ## Performance Benefits
 
@@ -147,12 +148,12 @@ Path filters improve CI throughput by:
 
 1. **Reducing backend test time**: Backend test jobs are skipped for frontend-only and `open-api/**`-only PRs
 2. **Preserving fresh API validation**: Create OpenAPI spec still runs for backend and frontend app changes so frontend validation uses a current artifact
-3. **Reducing runner usage**: Documentation-only and `open-api/**`-only PRs still skip unaffected jobs
+3. **Reducing runner usage**: Documentation-only PRs and backend test jobs for `open-api/**`-only PRs still skip unaffected work, while frontend jobs retain a fresh generated artifact
 
 ### Example Savings
 
 - **Frontend-only PR**: Saves ~3-5 minutes (skips backend test jobs while still regenerating OpenAPI)
-- **OpenAPI-only PR**: Saves ~5-7 minutes (skips backend jobs and runs only frontend validation)
+- **OpenAPI-only PR**: Saves ~3-5 minutes (skips backend test jobs while generating the OpenAPI artifact and running frontend validation)
 - **Documentation-only PR**: Saves ~7-10 minutes (skips all build/test jobs, runs only `changes` and `dependency-review`)
 
 ## Guardrails
@@ -178,7 +179,7 @@ To test the path filters work correctly:
    - Verify all jobs run
 
 4. Create a PR with only `open-api/` changes
-   - Verify Create OpenAPI spec and backend test jobs are skipped, and frontend job runs
+   - Verify Create OpenAPI spec runs, backend test jobs are skipped, and frontend jobs download the generated artifact
 
 5. Create a PR with only documentation changes (e.g., modify a `.md` file)
    - Verify the `changes` job runs, `dependency-review` runs, and build/test jobs are skipped
@@ -204,4 +205,4 @@ This can happen if:
 - The backend changed but wasn't included in the PR
 - The OpenAPI spec in the repo is out of sync
 
-**Solution**: Include both backend and frontend changes in the same PR when the OpenAPI contract changes.
+**Solution**: Confirm that `openapi` includes the changed path and that `backend-build` completed successfully before the frontend job attempts to download the artifact.
