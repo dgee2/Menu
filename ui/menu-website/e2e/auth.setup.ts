@@ -4,6 +4,10 @@ import { expect, test as setup } from '@playwright/test';
 
 const authFile = path.join('.playwright', '.auth', 'user.json');
 const apiUrl = 'http://localhost:65273/api/recipe?scope=mine';
+const isAuth0Page = (page: { url(): string }) => {
+  const hostname = new URL(page.url()).hostname;
+  return hostname === 'auth0.com' || hostname.endsWith('.auth0.com');
+};
 
 setup('authenticate with Auth0', async ({ page }) => {
   const username = process.env.E2E_AUTH0_USERNAME;
@@ -26,7 +30,7 @@ setup('authenticate with Auth0', async ({ page }) => {
 
   await page.goto('/#/recipes');
 
-  if (new URL(page.url()).hostname.endsWith('auth0.com')) {
+  if (isAuth0Page(page)) {
     const usernameField = page.locator('input[name="username"], input[type="email"]').first();
     const passwordField = page.locator('input[type="password"]').first();
     const submit = page.getByRole('button', { name: /^(continue|log in|login)$/i }).first();
@@ -40,13 +44,17 @@ setup('authenticate with Auth0', async ({ page }) => {
     await passwordField.fill(password);
     await submit.click();
 
-    const consent = page.getByRole('button', { name: /^(accept|allow|authorize|continue)$/i }).first();
+    const consent = page
+      .getByRole('button', { name: /^(accept|allow|authorize|continue)$/i })
+      .first();
     await consent.waitFor({ state: 'visible', timeout: 5000 }).catch(() => undefined);
-    if (new URL(page.url()).hostname.endsWith('auth0.com') && (await consent.isVisible().catch(() => false))) {
+    if (isAuth0Page(page) && (await consent.isVisible().catch(() => false))) {
       await consent.click();
     }
 
-    await page.waitForURL((url) => !url.hostname.endsWith('auth0.com'));
+    await page.waitForURL(
+      (url) => url.hostname !== 'auth0.com' && !url.hostname.endsWith('.auth0.com'),
+    );
   }
 
   const response = await authenticatedResponse;

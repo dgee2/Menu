@@ -419,7 +419,6 @@ jobs:
         with:
           pattern: playwright-blob-*
           path: ui/menu-website/all-blob-reports
-          merge-multiple: true
       - name: Merge reports into HTML
         run: pnpm exec playwright merge-reports --reporter html ./all-blob-reports
         working-directory: ./ui/menu-website
