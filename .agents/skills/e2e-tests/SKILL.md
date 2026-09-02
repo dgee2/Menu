@@ -27,7 +27,7 @@ Before authenticated tests, confirm:
 
 - Docker is available and the AppHost can run.
 - AppHost user secrets contain `Parameters:Auth0Domain` and `Parameters:Auth0Audience` (environment form: `Parameters__Auth0Domain` and `Parameters__Auth0Audience`); the audience normally matches `http://localhost:65273`.
-- `ui/menu-website/.env.e2e.local` exists, is ignored, and contains `E2E_AUTH0_USERNAME` and `E2E_AUTH0_PASSWORD` for the dedicated local E2E user. Verify with `git check-ignore -v ui/menu-website/.env.e2e.local` before writing it. Obtain missing credentials from the repository owner; never substitute mocks or an injected token.
+- `ui/menu-website/.env.e2e` contains `Parameters__Auth0Domain` and `Parameters__Auth0Audience`, and `E2E_AUTH0_USERNAME` plus `E2E_AUTH0_PASSWORD` are set in the Windows environment of the shell running Playwright. Obtain missing credentials from the repository owner; never substitute mocks or an injected token.
 
 The setup project performs the real Auth0 login and saves temporary state at `.playwright/.auth/user.json`. Auth0 consent may appear on a fresh browser profile: complete it deliberately and treat `consent_required`, missing bearer authorization, or a failed authenticated API response as a product/authentication failure. Never print credentials, cookies, tokens, or storage state; never commit `.env.e2e.local` or any `storageState` file. CI uses a separate user and secrets.
 

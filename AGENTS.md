@@ -188,12 +188,12 @@ that UI address. The command is long-running on Windows, so agents must use the
 `ui/menu-website/playwright-report/`; failure artifacts and traces are written to
 `ui/menu-website/test-results/`.
 
-Authenticated e2e tests require the dedicated Auth0 test-user credentials in the
-gitignored `ui/menu-website/.env.e2e.local` file, using `E2E_AUTH0_USERNAME` and
-`E2E_AUTH0_PASSWORD`. The credentials are obtained from the repository owner. Never
-commit or print the credentials or Playwright `storageState`; verify the local file with
-`git check-ignore -v ui/menu-website/.env.e2e.local` before writing it. If credentials
-are missing, ask the owner rather than replacing the real Auth0 flow with mocks or an
+Authenticated e2e tests use a dedicated Auth0 test user. Set `E2E_AUTH0_USERNAME` and
+`E2E_AUTH0_PASSWORD` as Windows environment variables in the shell running Playwright.
+Keep `Parameters__Auth0Domain` and `Parameters__Auth0Audience` in the ignored
+`ui/menu-website/.env.e2e` file. Credentials are obtained from the repository owner;
+never commit or print credentials or Playwright `storageState`. If credentials are
+missing, ask the owner rather than replacing the real Auth0 flow with mocks or an
 injected token. The account is local-only; CI must use a separate user and GitHub
 Actions secrets.
 

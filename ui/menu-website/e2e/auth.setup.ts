@@ -15,7 +15,7 @@ setup('authenticate with Auth0', async ({ page }) => {
 
   if (!username || !password) {
     throw new Error(
-      'E2E_AUTH0_USERNAME and E2E_AUTH0_PASSWORD are required in .env.e2e.local to run authenticated e2e tests.',
+      'E2E_AUTH0_USERNAME and E2E_AUTH0_PASSWORD must be set in the Windows environment to run authenticated e2e tests.',
     );
   }
 

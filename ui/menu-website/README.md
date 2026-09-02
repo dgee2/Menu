@@ -62,13 +62,14 @@ The API is available at `http://localhost:65273`. Playwright writes its HTML rep
 `playwright-report/` and failure artifacts, including traces captured on retry, to
 `test-results/`.
 
-Authenticated end-to-end tests require a dedicated local Auth0 Database user. Copy
-`.env.e2e.example` to `.env.e2e.local` and set `E2E_AUTH0_USERNAME` and
-`E2E_AUTH0_PASSWORD`. The local file is gitignored and its real values must never be
-committed. Confirm the protection before saving credentials:
+Authenticated end-to-end tests require a dedicated local Auth0 Database user. Set
+`E2E_AUTH0_USERNAME` and `E2E_AUTH0_PASSWORD` as Windows environment variables in the
+shell that runs Playwright. Copy `.env.e2e.example` to `.env.e2e` and set the
+`Parameters__Auth0Domain` and `Parameters__Auth0Audience` values there. Credentials
+must never be committed or printed:
 
 ```sh
-git check-ignore -v ui/menu-website/.env.e2e.local
+git check-ignore -v ui/menu-website/.env.e2e
 ```
 
 The Auth0 setup project must handle the localhost API consent screen both when it is
