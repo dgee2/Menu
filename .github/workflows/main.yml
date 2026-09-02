@@ -355,9 +355,6 @@ jobs:
         working-directory: ./ui/menu-website
         env:
           CI: true
-          AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
-          AUTH0_CLIENT_ID: ${{ vars.AUTH0_CLIENT_ID }}
-          AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
           parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
           parameters__Auth0Audience: http://localhost:65273
           E2E_AUTH0_USERNAME: ${{ secrets.E2E_AUTH0_USERNAME }}
@@ -393,7 +390,7 @@ jobs:
   merge-e2e-reports:
     name: Merge frontend E2E reports
     needs: frontend-e2e
-    if: always() && needs.frontend-e2e.result == 'success'
+    if: always() && (needs.frontend-e2e.result == 'success' || needs.frontend-e2e.result == 'failure')
     runs-on: ubuntu-latest
     permissions:
       contents: read
