@@ -34,12 +34,26 @@ The frontend job (`frontend`) runs when any of these files change, or when the C
 - `open-api/**` - OpenAPI specification files (triggers type regeneration)
 - `.github/workflows/main.yml` - The workflow file itself
 
+#### Frontend E2E Job
+
+The frontend E2E job runs for backend, frontend, OpenAPI, or workflow changes:
+
+- `backend/**`
+- `ui/**`
+- `open-api/**`
+- `.github/workflows/main.yml`
+
+It runs as three Playwright shards with `fail-fast: false`. Matching fork pull
+requests receive a successful explanatory skip because repository secrets are
+unavailable to fork workflows.
+
 ## Behavior by Event Type
 
 ### Pull Requests
 
 - **Changes detected**: Only jobs matching the changed files run
 - **No changes detected**: Backend/frontend build and test jobs are skipped when no relevant files change
+- **E2E**: Documentation-only pull requests skip E2E; matching fork pull requests skip it with a clear non-failing message.
 - **Workflow file changes**: Both frontend and backend jobs run (conservative approach)
 
 ### Push Events (main/master branches)
@@ -51,6 +65,9 @@ The frontend job (`frontend`) runs when any of these files change, or when the C
 
 - **All jobs always run**: Manual triggers run complete validation
 
+Pushes and manual dispatches run all jobs. Frontend E2E is not a required branch
+protection check yet; promote it only after several days of reliable green runs.
+
 ## Cross-Stack Scenarios
 
 ### Scenario: Backend-only changes (e.g., only files under `backend/`)
@@ -58,6 +75,7 @@ The frontend job (`frontend`) runs when any of these files change, or when the C
 - ✅ Create OpenAPI spec runs
 - ✅ Backend test jobs run
 - ✅ Frontend job runs
+- ✅ Frontend E2E shards run
 - The frontend validates against the freshly generated OpenAPI spec artifact
 
 ### Scenario: Frontend-only changes (e.g., only `ui/` files)
@@ -65,6 +83,7 @@ The frontend job (`frontend`) runs when any of these files change, or when the C
 - ✅ Create OpenAPI spec runs
 - ❌ Backend test jobs are skipped
 - ✅ Frontend job runs
+- ✅ Frontend E2E shards run
 - The frontend validates against the freshly generated OpenAPI spec artifact
 
 ### Scenario: OpenAPI file changes (e.g., only `open-api/` files)
@@ -72,6 +91,7 @@ The frontend job (`frontend`) runs when any of these files change, or when the C
 - ❌ Create OpenAPI spec is skipped
 - ❌ Backend test jobs are skipped
 - ✅ Frontend job runs to regenerate types
+- ✅ Frontend E2E shards run
 - The frontend job does **not** get a freshly generated OpenAPI spec artifact in this scenario
 - Because the generated JSON spec is not tracked in the repository, `open-api/**`-only changes cannot rely on an existing checked-in spec when `backend-build` is skipped
 
@@ -80,12 +100,14 @@ The frontend job (`frontend`) runs when any of these files change, or when the C
 - ✅ Create OpenAPI spec runs
 - ✅ Backend test jobs run
 - ✅ Frontend job runs
+- ✅ Frontend E2E shards run
 - Normal full validation
 
 ### Scenario: Workflow file changes
 
 - ✅ Backend jobs run
 - ✅ Frontend job runs
+- ✅ Frontend E2E shards run
 - Conservative approach to ensure workflow changes don't break validation
 
 ## Frontend Job Dependencies
