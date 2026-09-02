@@ -69,8 +69,11 @@ shell that runs Playwright. Copy `.env.e2e.example` to `.env.e2e` and set the
 must never be committed or printed:
 
 ```sh
-git check-ignore -v ui/menu-website/.env.e2e
+Copy-Item .env.e2e.example .env.e2e
 ```
+
+The `.env.e2e` file contains non-secret connection parameters and may be committed;
+keep credentials exclusively in the Windows environment.
 
 The Auth0 setup project must handle the localhost API consent screen both when it is
 shown on first login and when consent has already been granted. This account is for

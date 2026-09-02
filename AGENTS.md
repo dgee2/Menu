@@ -190,8 +190,8 @@ that UI address. The command is long-running on Windows, so agents must use the
 
 Authenticated e2e tests use a dedicated Auth0 test user. Set `E2E_AUTH0_USERNAME` and
 `E2E_AUTH0_PASSWORD` as Windows environment variables in the shell running Playwright.
-Keep `Parameters__Auth0Domain` and `Parameters__Auth0Audience` in the ignored
-`ui/menu-website/.env.e2e` file. Credentials are obtained from the repository owner;
+Keep non-secret `Parameters__Auth0Domain` and `Parameters__Auth0Audience` in
+`ui/menu-website/.env.e2e`. Credentials are obtained from the repository owner;
 never commit or print credentials or Playwright `storageState`. If credentials are
 missing, ask the owner rather than replacing the real Auth0 flow with mocks or an
 injected token. The account is local-only; CI must use a separate user and GitHub
