@@ -44,6 +44,7 @@ jobs:
             openapi:
               - 'backend/**'
               - 'ui/**'
+              - 'open-api/**'
               - '.github/workflows/main.yml'
             frontend:
               - 'ui/**'
@@ -311,6 +312,12 @@ jobs:
       - name: Restore backend
         run: dotnet restore MenuApi.sln
         working-directory: ./backend
+      - name: Install Aspire CLI
+        run: |
+          dotnet tool install --global Aspire.Cli
+          export PATH="$HOME/.dotnet/tools:$PATH"
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+          aspire --version
       - name: Use Node.js 22.x
         uses: actions/setup-node@v7
         with:
