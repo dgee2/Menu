@@ -1,5 +1,13 @@
 import process from 'node:process';
 import { defineConfig, devices } from '@playwright/test';
+import { loadEnv } from 'vite';
+
+const env = loadEnv('e2e', process.cwd(), '');
+for (const [name, value] of Object.entries(env)) {
+  if (!(name in process.env)) {
+    process.env[name] = value;
+  }
+}
 
 /**
  * Read environment variables from file.
@@ -45,21 +53,34 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium',
+      name: 'setup',
+      testMatch: /auth\.setup\.ts/,
       use: {
         ...devices['Desktop Chrome'],
       },
     },
     {
+      name: 'chromium',
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: '.playwright/.auth/user.json',
+      },
+    },
+    {
       name: 'firefox',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Firefox'],
+        storageState: '.playwright/.auth/user.json',
       },
     },
     {
       name: 'webkit',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Safari'],
+        storageState: '.playwright/.auth/user.json',
       },
     },
 
