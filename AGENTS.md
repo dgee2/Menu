@@ -104,6 +104,10 @@ if ($state -ne 'Completed') { throw "Command failed (job state: $state)" }
 - **Integration tests** (`MenuApi.Integration.Tests`): Aspire Testing spins up the full AppHost with a containerised SQL Server. All test classes must use `[Collection("API Host Collection")]` for sequential execution against a shared host. `ShortStringAutoDataAttribute` limits string length to fit `varchar(50)` columns and empties collection properties.
 - Assertions use **AwesomeAssertions** (`.Should()`) — not FluentAssertions.
 
+### End-to-end tests
+
+For full-stack Playwright execution, Auth0/AppHost prerequisites, reuse and cold-start behavior, report/trace triage, and assertion/data-isolation rules, read [`.agents/skills/e2e-tests/SKILL.md`](.agents/skills/e2e-tests/SKILL.md). Run `pnpm test:e2e` before merging changes to `ui/menu-website/src/boot/auth0.ts`, `ui/menu-website/src/services/auth.ts`, `ui/menu-website/src/services/recipe-api.ts`, `ui/menu-website/src/router/`, AppHost wiring, or recipe CRUD endpoints. A new page-level route warrants an E2E smoke path; a new component alone does not. An unexplained failure is a diagnosis task: preserve auth, network, status, and UI assertions, and never silence it with a removed assertion, skip/fixme/only, weakened status check, or mocked real path.
+
 ## Code Style
 
 - `TreatWarningsAsErrors` is enabled in Debug and Release for all projects.
