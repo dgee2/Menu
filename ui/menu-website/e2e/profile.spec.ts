@@ -1,4 +1,5 @@
-// This spec relies on the setup project's authenticated storageState; do not run it without that dependency.
+// This protects the authenticated /profile route and the test user's identity rendering.
+// It relies on the setup project's authenticated storageState; do not run it without that dependency.
 import { expect, test } from '@playwright/test';
 
 test('renders the authenticated user profile', async ({ page }) => {
