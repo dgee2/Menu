@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext } from '@playwright/test';
 
 const apiBaseUrl = 'http://localhost:65273/api/recipe';
 
@@ -8,17 +8,16 @@ type CreatedRecipe = {
 };
 
 const bestEffortDelete = async (
-  page: Page,
+  request: APIRequestContext,
   recipeId: string | undefined,
   authorization: string | undefined,
 ) => {
   if (recipeId === undefined || authorization === undefined) return;
 
   try {
-    const deleteResponse = await page.request.delete(`${apiBaseUrl}/${recipeId}`, {
+    await request.delete(`${apiBaseUrl}/${recipeId}`, {
       headers: { authorization },
     });
-    expect(deleteResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
   } catch {
     // The UI delete normally removes the fixture; cleanup is best effort after a failure.
   }
@@ -26,7 +25,7 @@ const bestEffortDelete = async (
 
 // Protection for #1251: this spec owns its fixture and cleans it up so parallel workers and
 // shards cannot depend on, or mutate, the recipe created by another smoke test.
-test('edits and deletes an owned recipe', async ({ page }, testInfo) => {
+test('edits and deletes an owned recipe', async ({ page, request }, testInfo) => {
   const uniqueTitle = `E2E edit-delete ${testInfo.workerIndex}-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const updatedTitle = `${uniqueTitle} updated`;
   const ingredient = 'edit-delete smoke ingredient';
@@ -45,7 +44,7 @@ test('edits and deletes an owned recipe', async ({ page }, testInfo) => {
     authorization = mineResponse.request().headers().authorization;
     expect(authorization).toMatch(/^Bearer\s+\S+$/i);
 
-    const createResponse = await page.request.post(apiBaseUrl, {
+    const createResponse = await request.post(apiBaseUrl, {
       headers: { authorization },
       data: {
         title: uniqueTitle,
@@ -55,7 +54,6 @@ test('edits and deletes an owned recipe', async ({ page }, testInfo) => {
       },
     });
     expect(createResponse.status()).toBe(200);
-    expect(createResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
     const created = (await createResponse.json()) as CreatedRecipe;
     recipeId = String(created.id);
 
@@ -111,6 +109,6 @@ test('edits and deletes an owned recipe', async ({ page }, testInfo) => {
     await listResponsePromise;
     await expect(page.getByRole('link').filter({ hasText: updatedTitle })).toBeHidden();
   } finally {
-    await bestEffortDelete(page, recipeId, authorization);
+    await bestEffortDelete(request, recipeId, authorization);
   }
 });

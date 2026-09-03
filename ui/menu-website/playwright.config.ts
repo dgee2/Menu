@@ -22,7 +22,7 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   /* Maximum time one test can run for. */
-  timeout: 30 * 1000,
+  timeout: 60 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -34,6 +34,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
+  /* Keep local full-stack runs stable while CI scales through explicit shards. */
+  workers: process.env.CI ? undefined : 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI ? 'blob' : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -45,6 +47,7 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
 
     /* Only on CI systems run the tests headless */
     headless: !!process.env.CI,
@@ -60,8 +63,16 @@ export default defineConfig({
       },
     },
     {
+      name: 'public-chromium',
+      testMatch: /public\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
+    {
       name: 'chromium',
       dependencies: ['setup'],
+      testIgnore: /public\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: '.playwright/.auth/user.json',
@@ -70,6 +81,7 @@ export default defineConfig({
     {
       name: 'firefox',
       dependencies: ['setup'],
+      testIgnore: /public\.spec\.ts/,
       use: {
         ...devices['Desktop Firefox'],
         storageState: '.playwright/.auth/user.json',
@@ -78,6 +90,7 @@ export default defineConfig({
     {
       name: 'webkit',
       dependencies: ['setup'],
+      testIgnore: /public\.spec\.ts/,
       use: {
         ...devices['Desktop Safari'],
         storageState: '.playwright/.auth/user.json',

@@ -4,7 +4,7 @@ const apiBaseUrl = 'http://localhost:65273/api/recipe';
 
 // Regression guard for recipe creation: this proves the authenticated form writes a complete
 // recipe, shows the saved detail, and invalidates the owned-recipe list.
-test('creates a recipe through the authenticated form', async ({ page }, testInfo) => {
+test('creates a recipe through the authenticated form', async ({ page, request }, testInfo) => {
   const uniqueTitle = `E2E create ${testInfo.project.name}-${testInfo.workerIndex}-${Date.now()}`;
   const ingredientText = 'coriander';
   const measureText = '1 bunch';
@@ -52,7 +52,7 @@ test('creates a recipe through the authenticated form', async ({ page }, testInf
     await expect(page.getByRole('link').filter({ hasText: uniqueTitle })).toBeVisible();
   } finally {
     if (recipeId !== undefined && authorization !== undefined) {
-      const cleanupResponse = await page.request.delete(`${apiBaseUrl}/${recipeId}`, {
+      const cleanupResponse = await request.delete(`${apiBaseUrl}/${recipeId}`, {
         headers: { authorization },
       });
       expect([204, 404]).toContain(cleanupResponse.status());

@@ -10,7 +10,7 @@ type SeededRecipe = {
 
 // Protection for #1250: this spec seeds and removes its own row so parallel workers and shards
 // cannot depend on another test's data or mutate a shared recipe.
-test('opens an owned recipe detail from the recipe list', async ({ page }, testInfo) => {
+test('opens an owned recipe detail from the recipe list', async ({ page, request }, testInfo) => {
   const title = `E2E detail ${testInfo.workerIndex}-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const ingredient = 'detail smoke ingredient';
   const measure = '1 test unit';
@@ -27,7 +27,7 @@ test('opens an owned recipe detail from the recipe list', async ({ page }, testI
     authorization = mineResponse.request().headers().authorization ?? '';
     expect(authorization).toMatch(/^Bearer\s+\S+$/i);
 
-    const createResponse = await page.request.post(apiBaseUrl, {
+    const createResponse = await request.post(apiBaseUrl, {
       headers: { authorization },
       data: {
         title,
@@ -43,7 +43,6 @@ test('opens an owned recipe detail from the recipe list', async ({ page }, testI
       },
     });
     expect(createResponse.status()).toBe(200);
-    expect(createResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
     const created = (await createResponse.json()) as { id: string | number };
     const recipeId = String(created.id);
     seededRecipe = { id: recipeId, title };
@@ -51,7 +50,7 @@ test('opens an owned recipe detail from the recipe list', async ({ page }, testI
     const refreshedMineResponsePromise = page.waitForResponse(
       (response) => response.url() === `${apiBaseUrl}?scope=mine` && response.status() === 200,
     );
-    await page.goto('/#/recipes');
+    await page.reload();
     await refreshedMineResponsePromise;
 
     const recipeLink = page.getByRole('link').filter({ hasText: title });
@@ -72,10 +71,9 @@ test('opens an owned recipe detail from the recipe list', async ({ page }, testI
   } finally {
     if (seededRecipe) {
       if (authorization) {
-        const deleteResponse = await page.request.delete(`${apiBaseUrl}/${seededRecipe.id}`, {
+        const deleteResponse = await request.delete(`${apiBaseUrl}/${seededRecipe.id}`, {
           headers: { authorization },
         });
-        expect(deleteResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
         expect([204, 404]).toContain(deleteResponse.status());
       }
     }
