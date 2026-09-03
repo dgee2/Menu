@@ -140,7 +140,6 @@ jobs:
         shell: pwsh
         working-directory: ./backend
 
-
   backend-integration-tests:
     name: Backend integration tests
     needs: changes
@@ -265,9 +264,13 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.PLAYWRIGHT_VERSION }}
 
+      - name: Install Playwright system dependencies
+        run: pnpm exec playwright install-deps
+        working-directory: ./ui/menu-website
+
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps
+        run: pnpm exec playwright install
         working-directory: ./ui/menu-website
 
       - name: Run frontend tests
@@ -353,12 +356,15 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.PLAYWRIGHT_VERSION }}
+      - name: Install Playwright system dependencies
+        run: pnpm exec playwright install-deps
+        working-directory: ./ui/menu-website
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps
+        run: pnpm exec playwright install
         working-directory: ./ui/menu-website
       - name: Run Playwright shard
-        run: pnpm run test:e2e -- --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporter=blob
+        run: pnpm run test:e2e --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporter=blob
         working-directory: ./ui/menu-website
         env:
           CI: true
@@ -419,6 +425,7 @@ jobs:
         with:
           pattern: playwright-blob-*
           path: ui/menu-website/all-blob-reports
+          merge-multiple: true
       - name: Merge reports into HTML
         run: pnpm exec playwright merge-reports --reporter html ./all-blob-reports
         working-directory: ./ui/menu-website
