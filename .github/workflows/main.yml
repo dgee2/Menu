@@ -281,12 +281,13 @@ jobs:
     name: Frontend E2E (shard ${{ matrix.shard }})
     needs: [changes, backend-build]
     if: |
-      !cancelled() &&
+      needs.backend-build.result == 'success' &&
       (
         github.event_name != 'pull_request' ||
         (
           needs.changes.outputs.e2e == 'true' &&
-          github.event.pull_request.head.repo.full_name == github.repository
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          github.event.pull_request.user.login != 'dependabot[bot]'
         )
       )
     strategy:
@@ -368,8 +369,8 @@ jobs:
         working-directory: ./ui/menu-website
         env:
           CI: true
-          parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
-          parameters__Auth0Audience: http://localhost:65273
+          Parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
+          Parameters__Auth0Audience: http://localhost:65273
           E2E_AUTH0_USERNAME: ${{ secrets.E2E_AUTH0_USERNAME }}
           E2E_AUTH0_PASSWORD: ${{ secrets.E2E_AUTH0_PASSWORD }}
       - name: Upload Playwright blob report
@@ -416,7 +417,7 @@ jobs:
         with:
           node-version: 22.x
       - name: Install pnpm
-        run: npm install -g pnpm@latest
+        run: npm install -g --ignore-scripts pnpm@latest # NOSONAR intentional latest pnpm per repository policy
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
         working-directory: ./ui/menu-website

@@ -14,12 +14,17 @@ const bestEffortDelete = async (
 ) => {
   if (recipeId === undefined || authorization === undefined) return;
 
+  let response: Awaited<ReturnType<APIRequestContext['delete']>>;
   try {
-    await request.delete(`${apiBaseUrl}/${recipeId}`, {
+    response = await request.delete(`${apiBaseUrl}/${recipeId}`, {
       headers: { authorization },
     });
   } catch {
-    // The UI delete normally removes the fixture; cleanup is best effort after a failure.
+    // Preserve the original test failure when cleanup cannot reach the API.
+    return;
+  }
+  if (![204, 404].includes(response.status())) {
+    throw new Error(`Cleanup delete returned unexpected status ${response.status()}.`);
   }
 };
 

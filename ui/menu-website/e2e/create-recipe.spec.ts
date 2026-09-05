@@ -13,7 +13,18 @@ test('creates a recipe through the authenticated form', async ({ page, request }
   let authorization: string | undefined;
 
   try {
-    await page.goto('/#/new-recipe');
+    const initialListResponsePromise = page.waitForResponse(
+      (response) => response.url() === `${apiBaseUrl}?scope=mine` && response.status() === 200,
+    );
+    await page.goto('/#/recipes');
+    const initialListResponse = await initialListResponsePromise;
+    authorization = initialListResponse.request().headers().authorization;
+    expect(authorization).toMatch(/^Bearer\s+\S+$/i);
+
+    await page.evaluate(() => {
+      window.location.hash = '#/new-recipe';
+    });
+    await expect(page).toHaveURL(/\/\#\/new-recipe$/);
 
     await page.getByLabel('Name').fill(uniqueTitle);
     await page.getByLabel('Summary').fill('A recipe created by the authenticated E2E smoke test.');
@@ -51,9 +62,24 @@ test('creates a recipe through the authenticated form', async ({ page, request }
     expect(listResponse.request().headers().authorization).toMatch(/^Bearer\s+\S+$/i);
     await expect(page.getByRole('link').filter({ hasText: uniqueTitle })).toBeVisible();
   } finally {
-    if (recipeId !== undefined && authorization !== undefined) {
+    if (authorization !== undefined) {
+      if (recipeId === undefined) {
+        const lookupResponse = await request.get(`${apiBaseUrl}?scope=mine`, {
+          headers: { authorization },
+        });
+        expect(lookupResponse.status()).toBe(200);
+        const recipes = (await lookupResponse.json()) as Array<{
+          id: number | string;
+          title: string;
+        }>;
+        recipeId = String(recipes.find((recipe) => recipe.title === uniqueTitle)?.id ?? '');
+      }
+    }
+    if (recipeId) {
+      const cleanupAuthorization = authorization;
+      if (cleanupAuthorization === undefined) return;
       const cleanupResponse = await request.delete(`${apiBaseUrl}/${recipeId}`, {
-        headers: { authorization },
+        headers: { authorization: cleanupAuthorization },
       });
       expect([204, 404]).toContain(cleanupResponse.status());
     }

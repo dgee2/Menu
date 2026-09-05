@@ -60,6 +60,8 @@ export default defineConfig({
       testMatch: /auth\.setup\.ts/,
       use: {
         ...devices['Desktop Chrome'],
+        trace: 'off',
+        screenshot: 'off',
       },
     },
     {

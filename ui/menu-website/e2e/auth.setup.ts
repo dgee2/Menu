@@ -30,6 +30,13 @@ setup('authenticate with Auth0', async ({ page }) => {
 
   await page.goto('/#/recipes');
 
+  await Promise.race([
+    authenticatedResponse,
+    page
+      .waitForURL((url) => url.hostname === 'auth0.com' || url.hostname.endsWith('.auth0.com'))
+      .catch(() => undefined),
+  ]);
+
   if (isAuth0Page(page)) {
     const usernameField = page.locator('input[name="username"], input[type="email"]').first();
     const passwordField = page.locator('input[type="password"]').first();
