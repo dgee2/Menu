@@ -24,7 +24,7 @@ test('creates a recipe through the authenticated form', async ({ page, request }
     await page.evaluate(() => {
       window.location.hash = '#/new-recipe';
     });
-    await expect(page).toHaveURL(/\/\#\/new-recipe$/);
+    await expect(page).toHaveURL(/\/#\/new-recipe$/);
 
     await page.getByLabel('Name').fill(uniqueTitle);
     await page.getByLabel('Summary').fill('A recipe created by the authenticated E2E smoke test.');
@@ -77,11 +77,12 @@ test('creates a recipe through the authenticated form', async ({ page, request }
     }
     if (recipeId) {
       const cleanupAuthorization = authorization;
-      if (cleanupAuthorization === undefined) return;
-      const cleanupResponse = await request.delete(`${apiBaseUrl}/${recipeId}`, {
-        headers: { authorization: cleanupAuthorization },
-      });
-      expect([204, 404]).toContain(cleanupResponse.status());
+      if (cleanupAuthorization !== undefined) {
+        const cleanupResponse = await request.delete(`${apiBaseUrl}/${recipeId}`, {
+          headers: { authorization: cleanupAuthorization },
+        });
+        expect([204, 404]).toContain(cleanupResponse.status());
+      }
     }
   }
 });
