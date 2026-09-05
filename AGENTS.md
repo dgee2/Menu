@@ -104,6 +104,10 @@ if ($state -ne 'Completed') { throw "Command failed (job state: $state)" }
 - **Integration tests** (`MenuApi.Integration.Tests`): Aspire Testing spins up the full AppHost with a containerised SQL Server. All test classes must use `[Collection("API Host Collection")]` for sequential execution against a shared host. `ShortStringAutoDataAttribute` limits string length to fit `varchar(50)` columns and empties collection properties.
 - Assertions use **AwesomeAssertions** (`.Should()`) — not FluentAssertions.
 
+### End-to-end tests
+
+For full-stack Playwright execution, Auth0/AppHost prerequisites, reuse and cold-start behavior, report/trace triage, and assertion/data-isolation rules, read [`.agents/skills/e2e-tests/SKILL.md`](.agents/skills/e2e-tests/SKILL.md). Run `pnpm test:e2e` before merging changes to `ui/menu-website/src/boot/auth0.ts`, `ui/menu-website/src/services/auth.ts`, `ui/menu-website/src/services/recipe-api.ts`, `ui/menu-website/src/router/`, AppHost wiring, or recipe CRUD endpoints. A new page-level route warrants an E2E smoke path; a new component alone does not. An unexplained failure is a diagnosis task: preserve auth, network, status, and UI assertions, and never silence it with a removed assertion, skip/fixme/only, weakened status check, or mocked real path.
+
 ## Code Style
 
 - `TreatWarningsAsErrors` is enabled in Debug and Release for all projects.
@@ -169,13 +173,29 @@ pnpm build                # Type-check + production build
 pnpm test                 # Vitest: unit + Storybook projects
 pnpm test:unit            # Vitest unit tests only (jsdom)
 pnpm test:storybook       # Storybook interaction tests (run after any UI change)
-pnpm test:e2e             # Playwright end-to-end tests
+pnpm test:e2e             # Full-stack Playwright tests; starts Aspire (Docker, SQL, migrations, API, UI)
 pnpm lint                 # ESLint
 pnpm lint-fix             # ESLint with auto-fix
 pnpm format               # Prettier
 pnpm generate-openapi     # Regenerate API types from OpenAPI spec
 pnpm storybook            # Storybook dev server (port 6006)
 ```
+
+`pnpm test:e2e` requires Docker. It waits up to five minutes for the UI at
+`http://localhost:65276` (API `http://localhost:65273`) and reuses an existing stack on
+that UI address. The command is long-running on Windows, so agents must use the
+`Start-Job` timeout pattern above. The HTML report is written to
+`ui/menu-website/playwright-report/`; failure artifacts and traces are written to
+`ui/menu-website/test-results/`.
+
+Authenticated e2e tests use a dedicated Auth0 test user. Set `E2E_AUTH0_USERNAME` and
+`E2E_AUTH0_PASSWORD` as Windows environment variables in the shell running Playwright.
+Keep non-secret `Parameters__Auth0Domain` and `Parameters__Auth0Audience` in
+`ui/menu-website/.env.e2e`. Credentials are obtained from the repository owner;
+never commit or print credentials or Playwright `storageState`. If credentials are
+missing, ask the owner rather than replacing the real Auth0 flow with mocks or an
+injected token. The account is local-only; CI must use a separate user and GitHub
+Actions secrets.
 
 Always run `pnpm test:storybook` after making any change under `ui/menu-website/src/` — it catches regressions in components exercised by existing stories, not just changes to story files themselves.
 
