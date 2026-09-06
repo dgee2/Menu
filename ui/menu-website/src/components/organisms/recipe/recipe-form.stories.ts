@@ -4,7 +4,7 @@ import {
   recipeCreateErrorHandler,
   recipeCreateSuccessHandler,
 } from '@storybook-config/msw-handlers';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import type { RecipeDetail } from '@/services/recipe-api';
 
 const existingRecipe = {
@@ -372,5 +372,20 @@ export const SubmitFailureShowsError = meta.story({
     ).toBeInTheDocument();
     // The form stays put rather than navigating to a recipe that was never created.
     await expect(router.currentRoute.value.path).toBe('/');
+  },
+});
+
+export const SubmitSuccessNavigatesToRecipe = meta.story({
+  beforeEach({ msw }) {
+    msw.use(recipeCreateSuccessHandler);
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByLabelText('Name'), 'Chocolate Cake');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
+
+    await router.isReady();
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/1'));
   },
 });
