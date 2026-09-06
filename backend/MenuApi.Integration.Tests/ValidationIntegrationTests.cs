@@ -145,7 +145,7 @@ public class ValidationIntegrationTests
         await updateResponse.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
     }
 
-    private async Task<int> CreateRecipeAsync(HttpClient client, string recipeTitle)
+    private async Task<Guid> CreateRecipeAsync(HttpClient client, string recipeTitle)
     {
         var createBody = new UpsertRecipe
         {
@@ -158,7 +158,7 @@ public class ValidationIntegrationTests
 
         using var createStream = await createResponse.Content.ReadAsStreamAsync();
         using var createDoc = await JsonDocument.ParseAsync(createStream);
-        return createDoc.RootElement.GetProperty("id").GetInt32();
+        return createDoc.RootElement.GetProperty("id").GetGuid();
     }
 
     public class UpsertRecipe

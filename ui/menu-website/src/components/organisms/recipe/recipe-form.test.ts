@@ -19,6 +19,7 @@ vi.mock('@/services/recipe-api', () => ({
     postRecipe,
     putRecipe,
     deleteRecipe: vi.fn(),
+    restoreRecipe: vi.fn(),
     getRecipes: vi.fn(),
     getRecipe: vi.fn(),
     getIngredientUnits: vi.fn(),

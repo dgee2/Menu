@@ -35,6 +35,7 @@ public class MenuUserRepository(MenuDbContext db) : IMenuUserRepository
 
         var entity = new MenuUserEntity
         {
+            Id = Guid.CreateVersion7(),
             AuthSubject = authSubject,
             DisplayName = displayName ?? authSubject,
             Email = email,

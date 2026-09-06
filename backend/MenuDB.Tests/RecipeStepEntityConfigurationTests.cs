@@ -9,6 +9,17 @@ namespace MenuDB.Tests;
 public class RecipeStepEntityConfigurationTests
 {
     [Fact]
+    public void RecipeStep_Uses_ApplicationGenerated_Guid_Key()
+    {
+        using var db = CreateDbContext();
+        var property = db.Model.FindEntityType(typeof(Data.RecipeStepEntity))!
+            .FindProperty(nameof(Data.RecipeStepEntity.Id))!;
+
+        property.ClrType.Should().Be<Guid>();
+        property.ValueGenerated.Should().Be(Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never);
+    }
+
+    [Fact]
     public void RecipeStep_Table_Has_Correct_Name()
     {
         using var db = CreateDbContext();

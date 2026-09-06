@@ -27,7 +27,7 @@ public class UserProvisioningIntegrationTests(ApiTestFixture fixture)
 
         var profile = await response.Content.ReadFromJsonAsync<UserProfileResponse>(JsonOptions);
         profile.Should().NotBeNull();
-        profile!.Id.Should().BeGreaterThan(0);
+        profile!.Id.Should().NotBe(Guid.Empty);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class UserProvisioningIntegrationTests(ApiTestFixture fixture)
 
         var profile = await response.Content.ReadFromJsonAsync<UserProfileResponse>(JsonOptions);
         profile.Should().NotBeNull();
-        profile!.Id.Should().BeGreaterThan(0);
+        profile!.Id.Should().NotBe(Guid.Empty);
         profile.AuthSubject.Should().NotBeNullOrWhiteSpace();
         profile.DisplayName.Should().NotBeNullOrWhiteSpace();
         profile.CreatedAtUtc.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(5));
@@ -65,7 +65,7 @@ public class UserProvisioningIntegrationTests(ApiTestFixture fixture)
 
         profile1!.Id.Should().Be(profile2!.Id);
         profile1.AuthSubject.Should().Be(profile2.AuthSubject);
-        profile1.Id.Should().BeGreaterThan(0);
+        profile1.Id.Should().NotBe(Guid.Empty);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class UserProvisioningIntegrationTests(ApiTestFixture fixture)
         profiles.Should().AllSatisfy(p =>
         {
             p.Should().NotBeNull();
-            p!.Id.Should().BeGreaterThan(0);
+            p!.Id.Should().NotBe(Guid.Empty);
         });
         profiles.Select(p => p!.Id).Distinct().Should().HaveCount(1);
     }
@@ -92,7 +92,7 @@ public class UserProvisioningIntegrationTests(ApiTestFixture fixture)
     private sealed class UserProfileResponse
     {
         [JsonPropertyName("id")]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [JsonPropertyName("authSubject")]
         public string AuthSubject { get; set; } = null!;

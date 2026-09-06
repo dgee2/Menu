@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useRecipeService } from '@/services/recipe-service';
 import { ApiError, userFacingMessage } from '@/services/api-error';
@@ -11,11 +12,13 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
-const { useRecipe, useDeleteRecipe } = useRecipeService();
+const quasar = useQuasar();
+const { useRecipe, useDeleteRecipe, useRestoreRecipe } = useRecipeService();
 
 const recipeId = computed(() => props.recipeId);
 const { data: recipe, isLoading, isError, error } = useRecipe(recipeId);
 const { mutateAsync: deleteRecipe, isPending: isDeleting } = useDeleteRecipe();
+const { mutateAsync: restoreRecipe } = useRestoreRecipe();
 
 // A 404 means this recipe is not there (or not ours to see). Anything else — a dropped connection,
 // a 500 — is a failure to load, and telling the user "not found" would send them looking for a
@@ -57,12 +60,36 @@ const ingredientSections = computed(() => {
 const confirmingDelete = ref(false);
 const deleteError = ref<string | null>(null);
 
+const restoreDeletedRecipe = async (recipeId: string) => {
+  try {
+    await restoreRecipe(recipeId);
+    quasar.notify({ type: 'positive', message: 'Recipe restored.' });
+  } catch (restoreFailure) {
+    quasar.notify({
+      type: 'negative',
+      message: userFacingMessage(restoreFailure, 'Failed to restore recipe.'),
+    });
+  }
+};
+
 const onDelete = async () => {
   deleteError.value = null;
   try {
     await deleteRecipe(props.recipeId);
     confirmingDelete.value = false;
     await router.push('/recipes');
+    quasar.notify({
+      type: 'positive',
+      message: 'Recipe deleted.',
+      timeout: 8000,
+      actions: [
+        {
+          label: 'Undo',
+          color: 'white',
+          handler: () => void restoreDeletedRecipe(props.recipeId),
+        },
+      ],
+    });
   } catch (deleteFailure) {
     // Closed here too: the banner renders on the page behind the dialog, so leaving the dialog open
     // would hide the only feedback the user gets.
@@ -154,7 +181,7 @@ const onDelete = async () => {
         <q-card>
           <q-card-section class="text-h6">Delete this recipe?</q-card-section>
           <q-card-section>
-            "{{ recipe.title }}" will be removed, along with its ingredients and steps.
+            "{{ recipe.title }}" will be hidden. You can undo this for a few seconds.
           </q-card-section>
           <q-card-actions align="right">
             <q-btn v-close-popup flat label="Cancel" />

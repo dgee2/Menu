@@ -21,7 +21,7 @@ public class MenuUserServiceTests
     [Fact]
     public async Task ProvisionAsync_CallsRepository_WithCorrectArguments()
     {
-        var expected = MenuUserId.From(42);
+        var expected = MenuUserId.From(Guid.CreateVersion7());
         A.CallTo(() => repository.UpsertAsync("auth0|123", "Alice", "alice@example.com", "https://example.com/pic.png"))
             .Returns(expected);
 
@@ -35,7 +35,7 @@ public class MenuUserServiceTests
     [Fact]
     public async Task ProvisionAsync_CallsRepository_WithNullDisplayNameAndOptionalFields()
     {
-        var expected = MenuUserId.From(7);
+        var expected = MenuUserId.From(Guid.CreateVersion7());
         A.CallTo(() => repository.UpsertAsync("auth0|456", null, null, null))
             .Returns(expected);
 

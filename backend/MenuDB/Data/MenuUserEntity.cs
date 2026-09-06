@@ -2,7 +2,7 @@ namespace MenuDB.Data;
 
 public class MenuUserEntity
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     public required string AuthSubject { get; set; }
 
