@@ -84,7 +84,7 @@ public class ValidationIntegrationTests
     public async Task GetRecipe_NonExistentId_Returns404()
     {
         using var client = await fixture.GetHttpClient();
-        using var response = await client.GetAsync("/api/recipe/99999");
+        using var response = await client.GetAsync($"/api/recipe/{Guid.NewGuid()}");
 
         await response.ShouldHaveStatusCode(HttpStatusCode.NotFound);
 
