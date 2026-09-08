@@ -115,7 +115,7 @@ public class RecipeDeleteIntegrationTests
         var firstId = firstDoc.RootElement.GetProperty("id").GetGuid();
         await (await client.DeleteAsync($"/api/recipe/{firstId}")).ShouldHaveStatusCode(HttpStatusCode.NoContent);
 
-        using var secondContent = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, JsonMediaType);
+        using var secondContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, JsonMediaType);
         using var secondResponse = await client.PostAsync(RecipeEndpoint, secondContent);
         await secondResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
         using var secondDoc = JsonDocument.Parse(await secondResponse.Content.ReadAsStringAsync());

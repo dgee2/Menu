@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
-
-const apiBaseUrl = 'http://localhost:65273/api/recipe';
+import { apiBaseUrl, hardDeleteRecipe } from './test-helpers';
 
 // Regression guard for recipe creation: this proves the authenticated form writes a complete
 // recipe, shows the saved detail, and invalidates the owned-recipe list.
@@ -76,13 +75,7 @@ test('creates a recipe through the authenticated form', async ({ page, request }
       }
     }
     if (recipeId) {
-      const cleanupAuthorization = authorization;
-      if (cleanupAuthorization !== undefined) {
-        const cleanupResponse = await request.delete(`${apiBaseUrl}/${recipeId}`, {
-          headers: { authorization: cleanupAuthorization },
-        });
-        expect([204, 404]).toContain(cleanupResponse.status());
-      }
+      await hardDeleteRecipe(request, recipeId, authorization);
     }
   }
 });

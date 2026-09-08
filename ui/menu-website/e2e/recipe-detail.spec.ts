@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
-
-const apiBaseUrl = 'http://localhost:65273/api/recipe';
+import { apiBaseUrl, hardDeleteRecipe } from './test-helpers';
 
 type SeededRecipe = {
   id: string;
@@ -71,10 +70,7 @@ test('opens an owned recipe detail from the recipe list', async ({ page, request
   } finally {
     if (seededRecipe) {
       if (authorization) {
-        const deleteResponse = await request.delete(`${apiBaseUrl}/${seededRecipe.id}`, {
-          headers: { authorization },
-        });
-        expect([204, 404]).toContain(deleteResponse.status());
+        await hardDeleteRecipe(request, seededRecipe.id, authorization);
       }
     }
   }
