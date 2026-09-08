@@ -2,7 +2,7 @@ import addonA11y from '@storybook/addon-a11y';
 import addonDocs from '@storybook/addon-docs';
 import addonLinks from '@storybook/addon-links';
 import { setup, definePreview } from '@storybook/vue3-vite';
-import { QLayout, QPageContainer, Quasar } from 'quasar';
+import { Notify, QLayout, QPageContainer, Quasar } from 'quasar';
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
 import { setupWorker } from 'msw/browser';
 import addonMsw from 'msw-storybook-addon';
@@ -32,6 +32,7 @@ setup((app) => {
 
   app.use(Quasar, {
     config: {},
+    plugins: { Notify },
   });
   app.use(VueQueryPlugin, { queryClient });
   if (!app.config.globalProperties.$router) {
@@ -124,4 +125,3 @@ export default definePreview({
     }),
   ],
 });
-
