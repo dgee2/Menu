@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
-import { apiBaseUrl, hardDeleteRecipe } from './test-helpers';
+import { apiBaseUrl, assertE2eCleanupAvailable, hardDeleteRecipe } from './test-helpers';
 
 type CreatedRecipe = {
   id: string;
@@ -41,6 +41,7 @@ test('edits and deletes an owned recipe', async ({ page, request }, testInfo) =>
     const mineResponse = await mineResponsePromise;
     authorization = mineResponse.request().headers().authorization;
     expect(authorization).toMatch(/^Bearer\s+\S+$/i);
+    await assertE2eCleanupAvailable(request, authorization);
 
     const createResponse = await request.post(apiBaseUrl, {
       headers: { authorization },
