@@ -287,7 +287,8 @@ public class RecipeServiceTests
     [Theory, CustomAutoData]
     public async Task RestoreRecipe_RecipeNotFound_ReturnsFalse(RecipeId recipeId, MenuUserId callerId)
     {
-        A.CallTo(() => recipeRepository.GetRecipeIncludingDeletedAsync(recipeId)).Returns((DBModel.Recipe?)null);
+        A.CallTo(() => recipeRepository.GetRecipeIncludingDeletedAsync(recipeId))
+            .Returns(Task.FromResult<DBModel.Recipe?>(null));
 
         var result = await sut.RestoreRecipeAsync(recipeId, callerId);
 

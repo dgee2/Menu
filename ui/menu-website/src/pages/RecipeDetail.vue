@@ -64,10 +64,10 @@ const restoreDeletedRecipe = async (recipeId: string) => {
   try {
     await restoreRecipe(recipeId);
     quasar.notify({ type: 'positive', message: 'Recipe restored.' });
-  } catch (restoreFailure) {
+  } catch (error_) {
     quasar.notify({
       type: 'negative',
-      message: userFacingMessage(restoreFailure, 'Failed to restore recipe.'),
+      message: userFacingMessage(error_, 'Failed to restore recipe.'),
     });
   }
 };

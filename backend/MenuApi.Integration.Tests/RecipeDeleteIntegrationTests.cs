@@ -10,6 +10,10 @@ namespace MenuApi.Integration.Tests;
 [Collection("API Host Collection")]
 public class RecipeDeleteIntegrationTests
 {
+    private const string JsonMediaType = "application/json";
+    private const string PrivateAccessScope = "Private";
+    private const string RecipeEndpoint = "/api/recipe";
+
     private readonly JsonSerializerOptions jsonOptions;
     private readonly ApiTestFixture fixture;
 
@@ -29,12 +33,12 @@ public class RecipeDeleteIntegrationTests
         var body = new
         {
             Title = recipeTitle,
-            AccessScope = "Private",
+            AccessScope = PrivateAccessScope,
             Ingredients = new[] { new { SortOrder = 0, IngredientText = "Flour", MeasureText = "200g", IsOptional = false } },
             Steps = new[] { new { SortOrder = 0, InstructionText = "Mix well." } },
         };
-        using var createContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
-        using var createResponse = await client.PostAsync("/api/recipe", createContent);
+        using var createContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, JsonMediaType);
+        using var createResponse = await client.PostAsync(RecipeEndpoint, createContent);
         await createResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
 
         using var createStream = await createResponse.Content.ReadAsStreamAsync();
@@ -68,13 +72,13 @@ public class RecipeDeleteIntegrationTests
         var body = new
         {
             Title = title,
-            AccessScope = "Private",
+            AccessScope = PrivateAccessScope,
             Ingredients = new[] { new { SortOrder = 0, IngredientText = "Flour", MeasureText = "200g", IsOptional = false } },
             Steps = new[] { new { SortOrder = 0, InstructionText = "Mix well." } },
         };
 
-        using var createContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
-        using var createResponse = await client.PostAsync("/api/recipe", createContent);
+        using var createContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, JsonMediaType);
+        using var createResponse = await client.PostAsync(RecipeEndpoint, createContent);
         await createResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
         using var createDoc = JsonDocument.Parse(await createResponse.Content.ReadAsStringAsync());
         var recipeId = createDoc.RootElement.GetProperty("id").GetGuid();
@@ -99,20 +103,20 @@ public class RecipeDeleteIntegrationTests
         var body = new
         {
             Title = title,
-            AccessScope = "Private",
+            AccessScope = PrivateAccessScope,
             Ingredients = Array.Empty<object>(),
             Steps = Array.Empty<object>(),
         };
 
-        using var firstContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, "application/json");
-        using var firstResponse = await client.PostAsync("/api/recipe", firstContent);
+        using var firstContent = new StringContent(JsonSerializer.Serialize(body, jsonOptions), Encoding.UTF8, JsonMediaType);
+        using var firstResponse = await client.PostAsync(RecipeEndpoint, firstContent);
         await firstResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
         using var firstDoc = JsonDocument.Parse(await firstResponse.Content.ReadAsStringAsync());
         var firstId = firstDoc.RootElement.GetProperty("id").GetGuid();
         await (await client.DeleteAsync($"/api/recipe/{firstId}")).ShouldHaveStatusCode(HttpStatusCode.NoContent);
 
-        using var secondContent = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
-        using var secondResponse = await client.PostAsync("/api/recipe", secondContent);
+        using var secondContent = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, JsonMediaType);
+        using var secondResponse = await client.PostAsync(RecipeEndpoint, secondContent);
         await secondResponse.ShouldHaveStatusCode(HttpStatusCode.OK);
         using var secondDoc = JsonDocument.Parse(await secondResponse.Content.ReadAsStringAsync());
         secondDoc.RootElement.GetProperty("id").GetGuid().Should().NotBe(firstId);
@@ -129,7 +133,7 @@ public class RecipeDeleteIntegrationTests
 
         var otherOwnerId = await TestDatabaseSeeder.AddMenuUserAsync(fixture, $"other-user-{Guid.NewGuid()}", cancellationToken);
         var recipeId = await TestDatabaseSeeder.AddRecipeAsync(
-            fixture, $"Someone Else's Recipe {Guid.NewGuid()}", otherOwnerId, "Private", cancellationToken);
+            fixture, $"Someone Else's Recipe {Guid.NewGuid()}", otherOwnerId, PrivateAccessScope, cancellationToken);
 
         using var response = await client.DeleteAsync($"/api/recipe/{recipeId}");
 
@@ -153,7 +157,7 @@ public class RecipeDeleteIntegrationTests
         using var client = await fixture.GetHttpClient();
         var otherOwnerId = await TestDatabaseSeeder.AddMenuUserAsync(fixture, $"restore-owner-{Guid.NewGuid()}", cancellationToken);
         var recipeId = await TestDatabaseSeeder.AddRecipeAsync(
-            fixture, $"Deleted Other Recipe {Guid.NewGuid()}", otherOwnerId, "Private", cancellationToken);
+            fixture, $"Deleted Other Recipe {Guid.NewGuid()}", otherOwnerId, PrivateAccessScope, cancellationToken);
         await TestDatabaseSeeder.SoftDeleteRecipeAsync(fixture, recipeId, cancellationToken);
 
         using var response = await client.PostAsync($"/api/recipe/{recipeId}/restore", content: null);
