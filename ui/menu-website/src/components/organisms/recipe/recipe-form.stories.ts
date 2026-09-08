@@ -1,8 +1,10 @@
 import preview, { router } from '@storybook-config/preview';
 import RecipeForm from './recipe-form.vue';
 import {
+  recipeCreateConflictHandler,
   recipeCreateErrorHandler,
   recipeCreateSuccessHandler,
+  recipeUpdateSuccessHandler,
 } from '@storybook-config/msw-handlers';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import type { RecipeDetail } from '@/services/recipe-api';
@@ -77,6 +79,16 @@ export const EmptyTitleBlocksSubmit = meta.story({
     await userEvent.click(submitButton);
 
     await expect(await canvas.findByText('Name is required')).toBeInTheDocument();
+  },
+});
+
+export const CancelCreateNavigatesToRecipes = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
+    await router.isReady();
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipes'));
   },
 });
 
@@ -349,6 +361,54 @@ export const EditingAnExistingRecipe = meta.story({
     // Edit mode seeds nothing: a recipe saved with one ingredient shows exactly one.
     await expect(canvas.getAllByLabelText('Ingredient')).toHaveLength(1);
     await expect(canvas.getAllByLabelText('Ingredient')[0]).toHaveValue('Pasta');
+  },
+});
+
+export const CancelEditNavigatesToRecipe = meta.story({
+  args: { initialRecipe: existingRecipe },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
+    await router.isReady();
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/7'));
+  },
+});
+
+export const SubmitConflictShowsTitleError = meta.story({
+  beforeEach({ msw }) {
+    msw.use(recipeCreateConflictHandler);
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByLabelText('Name'), 'Chocolate Cake');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
+
+    await expect(
+      await canvas.findByText('A recipe with this name already exists.'),
+    ).toBeInTheDocument();
+    await expect(
+      canvas.queryByText('Failed to save recipe. Please try again.'),
+    ).not.toBeInTheDocument();
+  },
+});
+
+export const SubmitEditSuccessNavigatesToRecipe = meta.story({
+  args: { initialRecipe: existingRecipe },
+  beforeEach({ msw }) {
+    msw.use(recipeUpdateSuccessHandler);
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nameInput = canvas.getByLabelText('Name');
+
+    await userEvent.clear(nameInput);
+    await userEvent.type(nameInput, 'Updated Lasagne');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save changes' }));
+
+    await router.isReady();
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/7'));
   },
 });
 
