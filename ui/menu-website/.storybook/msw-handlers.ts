@@ -72,6 +72,11 @@ export const recipeDeleteSuccessHandler = http.delete(recipeDetailPath, async ()
   return new HttpResponse(null, { status: 204 });
 });
 
+export const recipeRestoreSuccessHandler = http.post('*/api/recipe/:recipeId/restore', async () => {
+  await delay(150);
+  return HttpResponse.json(sampleRecipeDetail, { status: 200 });
+});
+
 export const recipeDeleteErrorHandler = http.delete(recipeDetailPath, async () => {
   await delay(150);
   return HttpResponse.json({ title: 'Internal Server Error', status: 500 }, { status: 500 });

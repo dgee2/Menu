@@ -8,6 +8,7 @@ import {
   recipeDetailErrorHandler,
   recipeDetailLoadingHandler,
   recipeDeleteSuccessHandler,
+  recipeRestoreSuccessHandler,
   recipeDeleteErrorHandler,
 } from '@storybook-config/msw-handlers';
 
@@ -88,7 +89,7 @@ export const Loading = meta.story({
 
 export const DeleteSuccess = meta.story({
   beforeEach({ msw }) {
-    msw.use(recipeDetailEditableHandler, recipeDeleteSuccessHandler);
+    msw.use(recipeDetailEditableHandler, recipeDeleteSuccessHandler, recipeRestoreSuccessHandler);
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -100,6 +101,9 @@ export const DeleteSuccess = meta.story({
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipes'));
+
+    await userEvent.click(await body.findByRole('button', { name: 'Undo' }));
+    await expect(await body.findByText('Recipe restored.')).toBeInTheDocument();
   },
 });
 
