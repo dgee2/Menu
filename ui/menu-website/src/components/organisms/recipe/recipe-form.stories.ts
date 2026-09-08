@@ -106,6 +106,22 @@ export const ValidTitlePassesValidation = meta.story({
   },
 });
 
+export const SubmitShowsPendingState = meta.story({
+  beforeEach({ msw }) {
+    msw.use(recipeCreateSuccessHandler);
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const submitButton = canvas.getByRole('button', { name: 'Save recipe' });
+
+    await userEvent.type(canvas.getByLabelText('Name'), 'Chocolate Cake');
+    await userEvent.click(submitButton);
+
+    await waitFor(() => expect(submitButton.querySelector('.q-spinner')).not.toBeNull());
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/1'));
+  },
+});
+
 export const NegativeServingsBlocksSubmit = meta.story({
   args: {},
   play: async ({ canvasElement }) => {
@@ -447,5 +463,27 @@ export const SubmitSuccessNavigatesToRecipe = meta.story({
 
     await router.isReady();
     await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/1'));
+  },
+});
+
+export const DirtyFormWarnsBeforeUnload = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByLabelText('Name'), 'Chocolate Cake');
+
+    const event = new Event('beforeunload', { cancelable: true });
+    let returnValue: unknown;
+    Object.defineProperty(event, 'returnValue', {
+      configurable: true,
+      get: () => returnValue,
+      set: (value: unknown) => {
+        returnValue = value;
+      },
+    });
+    window.dispatchEvent(event);
+
+    await expect(event.defaultPrevented).toBe(true);
+    await expect(returnValue).toBe(true);
   },
 });

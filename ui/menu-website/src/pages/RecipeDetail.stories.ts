@@ -31,6 +31,8 @@ export const Success = meta.story({
     await expect(await canvas.findByText('A rich, moist chocolate cake.')).toBeInTheDocument();
     await expect(await canvas.findByText('2 cups Flour')).toBeInTheDocument();
     await expect(await canvas.findByText('Preheat the oven to 180C.')).toBeInTheDocument();
+    await expect(canvas.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
   },
 });
 
