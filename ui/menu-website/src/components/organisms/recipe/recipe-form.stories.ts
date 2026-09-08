@@ -1,10 +1,12 @@
 import preview, { router } from '@storybook-config/preview';
 import RecipeForm from './recipe-form.vue';
 import {
+  recipeCreateConflictHandler,
   recipeCreateErrorHandler,
   recipeCreateSuccessHandler,
+  recipeUpdateSuccessHandler,
 } from '@storybook-config/msw-handlers';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import type { RecipeDetail } from '@/services/recipe-api';
 
 const existingRecipe = {
@@ -80,6 +82,16 @@ export const EmptyTitleBlocksSubmit = meta.story({
   },
 });
 
+export const CancelCreateNavigatesToRecipes = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
+    await router.isReady();
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipes'));
+  },
+});
+
 export const ValidTitlePassesValidation = meta.story({
   args: {},
   play: async ({ canvasElement }) => {
@@ -91,6 +103,22 @@ export const ValidTitlePassesValidation = meta.story({
     await userEvent.click(submitButton);
 
     await expect(canvas.queryByText('Name is required')).not.toBeInTheDocument();
+  },
+});
+
+export const SubmitShowsPendingState = meta.story({
+  beforeEach({ msw }) {
+    msw.use(recipeCreateSuccessHandler);
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const submitButton = canvas.getByRole('button', { name: 'Save recipe' });
+
+    await userEvent.type(canvas.getByLabelText('Name'), 'Chocolate Cake');
+    await userEvent.click(submitButton);
+
+    await waitFor(() => expect(submitButton.querySelector('.q-spinner')).not.toBeNull());
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/1'));
   },
 });
 
@@ -352,6 +380,54 @@ export const EditingAnExistingRecipe = meta.story({
   },
 });
 
+export const CancelEditNavigatesToRecipe = meta.story({
+  args: { initialRecipe: existingRecipe },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
+    await router.isReady();
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/7'));
+  },
+});
+
+export const SubmitConflictShowsTitleError = meta.story({
+  beforeEach({ msw }) {
+    msw.use(recipeCreateConflictHandler);
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByLabelText('Name'), 'Chocolate Cake');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
+
+    await expect(
+      await canvas.findByText('A recipe with this name already exists.'),
+    ).toBeInTheDocument();
+    await expect(
+      canvas.queryByText('Failed to save recipe. Please try again.'),
+    ).not.toBeInTheDocument();
+  },
+});
+
+export const SubmitEditSuccessNavigatesToRecipe = meta.story({
+  args: { initialRecipe: existingRecipe },
+  beforeEach({ msw }) {
+    msw.use(recipeUpdateSuccessHandler);
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nameInput = canvas.getByLabelText('Name');
+
+    await userEvent.clear(nameInput);
+    await userEvent.type(nameInput, 'Updated Lasagne');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save changes' }));
+
+    await router.isReady();
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/7'));
+  },
+});
+
 // A 500 is not a 4xx, so it gets the generic banner rather than a server-supplied message. The
 // request payload and the 409 -> title-field path are covered in recipe-form.test.ts, which mocks
 // the API layer and can produce an exact problem-details body.
@@ -372,5 +448,42 @@ export const SubmitFailureShowsError = meta.story({
     ).toBeInTheDocument();
     // The form stays put rather than navigating to a recipe that was never created.
     await expect(router.currentRoute.value.path).toBe('/');
+  },
+});
+
+export const SubmitSuccessNavigatesToRecipe = meta.story({
+  beforeEach({ msw }) {
+    msw.use(recipeCreateSuccessHandler);
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByLabelText('Name'), 'Chocolate Cake');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
+
+    await router.isReady();
+    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/1'));
+  },
+});
+
+export const DirtyFormWarnsBeforeUnload = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByLabelText('Name'), 'Chocolate Cake');
+
+    const event = new Event('beforeunload', { cancelable: true });
+    let returnValue: unknown;
+    Object.defineProperty(event, 'returnValue', {
+      configurable: true,
+      get: () => returnValue,
+      set: (value: unknown) => {
+        returnValue = value;
+      },
+    });
+    window.dispatchEvent(event);
+
+    await expect(event.defaultPrevented).toBe(true);
+    await expect(returnValue).toBe(true);
   },
 });
