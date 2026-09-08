@@ -9,6 +9,10 @@ for (const [name, value] of Object.entries(env)) {
   }
 }
 
+// The AppHost uses this explicit marker to expose the owner-scoped physical cleanup route used by
+// E2E teardown. Normal AppHost/API runs never receive this marker and retain soft-delete behavior.
+process.env.MENU_E2E_TEST_MODE = 'true';
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv

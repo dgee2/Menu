@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 
-import { Quasar } from 'quasar';
+import { Notify, Quasar } from 'quasar';
 import quasarLang from 'quasar/lang/en-GB';
 
 // Import icon libraries
@@ -35,7 +35,7 @@ const queryClient = new QueryClient({
 app.use(VueQueryPlugin, { queryClient, enableDevtoolsV6Plugin: true });
 
 app.use(Quasar, {
-  plugins: {}, // import Quasar plugins and add here
+  plugins: { Notify },
   lang: quasarLang,
   /*
   config: {

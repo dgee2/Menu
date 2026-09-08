@@ -100,6 +100,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         var now = DateTime.UtcNow;
         var entity = new RecipeEntity
         {
+            Id = Guid.CreateVersion7(),
             Title = recipe.Title.Value,
             AccessScopeId = (byte)recipe.AccessScope,
             OwnerUserId = recipe.OwnerUserId?.Value,
@@ -138,6 +139,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         var entities = recipeIngredients
             .Select(i => new RecipeIngredientEntity
             {
+                Id = Guid.CreateVersion7(),
                 RecipeId = recipeId.Value,
                 SortOrder = i.SortOrder,
                 IngredientText = i.IngredientText,
@@ -187,7 +189,34 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         await db.Recipes
             .Where(r => r.Id == recipeId.Value)
-            .ExecuteDeleteAsync()
+            .ExecuteUpdateAsync(s => s.SetProperty(r => r.DeletedAtUtc, DateTime.UtcNow))
+            .ConfigureAwait(false);
+    }
+
+    public async Task RestoreRecipeAsync(RecipeId recipeId)
+    {
+        try
+        {
+            await db.Recipes
+                .IgnoreQueryFilters()
+                .Where(r => r.Id == recipeId.Value)
+                .ExecuteUpdateAsync(s => s.SetProperty(r => r.DeletedAtUtc, (DateTime?)null))
+                .ConfigureAwait(false);
+        }
+        catch (SqlException ex) when (ex.IsUniqueConstraintViolation())
+        {
+            throw new ConflictException("A recipe with the same title already exists.");
+        }
+    }
+
+    public async Task<DBModel.Recipe?> GetRecipeIncludingDeletedAsync(RecipeId recipeId)
+    {
+        return await db.Recipes
+            .IgnoreQueryFilters()
+            .Where(r => r.Id == recipeId.Value)
+            .Select(ToDbModel)
+            .AsNoTracking()
+            .FirstOrDefaultAsync()
             .ConfigureAwait(false);
     }
 }

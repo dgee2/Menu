@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { expect, test, type APIRequestContext } from '@playwright/test';
-
-const apiBaseUrl = 'http://localhost:65273/api/recipe';
+import { expect, test } from '@playwright/test';
+import { apiBaseUrl, hardDeleteRecipe } from './test-helpers';
 
 type CreatedRecipe = {
   id: string;
@@ -14,17 +13,11 @@ const bestEffortDelete = async (
 ) => {
   if (recipeId === undefined || authorization === undefined) return;
 
-  let response: Awaited<ReturnType<APIRequestContext['delete']>>;
   try {
-    response = await request.delete(`${apiBaseUrl}/${recipeId}`, {
-      headers: { authorization },
-    });
+    await hardDeleteRecipe(request, recipeId, authorization);
   } catch {
     // Preserve the original test failure when cleanup cannot reach the API.
     return;
-  }
-  if (![204, 404].includes(response.status())) {
-    throw new Error(`Cleanup delete returned unexpected status ${response.status()}.`);
   }
 };
 

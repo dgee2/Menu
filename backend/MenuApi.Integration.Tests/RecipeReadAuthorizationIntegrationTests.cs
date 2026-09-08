@@ -130,7 +130,7 @@ public class RecipeReadAuthorizationIntegrationTests
         doc.RootElement.GetProperty("effectiveTotalTimeMinutes").GetInt32().Should().Be(50);
     }
 
-    private async Task<int> PostRecipeAsync(HttpClient client, string title, string accessScope)
+    private async Task<Guid> PostRecipeAsync(HttpClient client, string title, string accessScope)
     {
         var body = new
         {
@@ -146,6 +146,6 @@ public class RecipeReadAuthorizationIntegrationTests
 
         using var stream = await response.Content.ReadAsStreamAsync();
         using var doc = await JsonDocument.ParseAsync(stream);
-        return doc.RootElement.GetProperty("id").GetInt32();
+        return doc.RootElement.GetProperty("id").GetGuid();
     }
 }

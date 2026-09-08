@@ -78,6 +78,22 @@ export const useRecipeApi = () => {
     }
   };
 
+  const restoreRecipe = async (recipeId: string): Promise<RecipeDetail> => {
+    const { data, error, response } = await client.POST('/api/recipe/{recipeId}/restore', {
+      params: {
+        path: {
+          recipeId,
+        },
+      },
+    });
+
+    if (error) {
+      throw ApiError.from('Restore recipe', error, response);
+    }
+
+    return data;
+  };
+
   const getRecipes = async (scope: RecipeListScope = 'mine'): Promise<RecipeListItem[]> => {
     const { data, error, response } = await client.GET('/api/recipe', {
       params: {
@@ -124,6 +140,7 @@ export const useRecipeApi = () => {
     postRecipe,
     putRecipe,
     deleteRecipe,
+    restoreRecipe,
     getRecipes,
     getRecipe,
     getIngredientUnits,

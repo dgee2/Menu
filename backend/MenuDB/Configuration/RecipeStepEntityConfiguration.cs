@@ -10,7 +10,7 @@ public class RecipeStepEntityConfiguration : IEntityTypeConfiguration<RecipeStep
     {
         builder.ToTable("RecipeStep");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).ValueGeneratedOnAdd();
+        builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.Title).HasColumnType("nvarchar(200)").IsRequired(false);
         builder.Property(x => x.InstructionText).HasColumnType("nvarchar(max)").IsRequired();
         builder.Property(x => x.DurationMinutes).IsRequired(false);
