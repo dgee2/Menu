@@ -12,7 +12,7 @@ namespace MenuApi.Integration.Tests.Factory;
 /// </summary>
 internal static class TestDatabaseSeeder
 {
-    public static async Task<int> AddMenuUserAsync(
+    public static async Task<Guid> AddMenuUserAsync(
         ApiTestFixture fixture,
         string authSubject,
         CancellationToken cancellationToken)
@@ -22,6 +22,7 @@ internal static class TestDatabaseSeeder
         var now = DateTime.UtcNow;
         var entity = new MenuUserEntity
         {
+            Id = Guid.CreateVersion7(),
             AuthSubject = authSubject,
             DisplayName = authSubject,
             CreatedAtUtc = now,
@@ -34,10 +35,10 @@ internal static class TestDatabaseSeeder
         return entity.Id;
     }
 
-    public static async Task<int> AddRecipeAsync(
+    public static async Task<Guid> AddRecipeAsync(
         ApiTestFixture fixture,
         string title,
-        int ownerUserId,
+        Guid ownerUserId,
         string accessScopeName,
         CancellationToken cancellationToken)
     {
@@ -52,6 +53,7 @@ internal static class TestDatabaseSeeder
 
         var entity = new RecipeEntity
         {
+            Id = Guid.CreateVersion7(),
             Title = title,
             OwnerUserId = ownerUserId,
             AccessScopeId = accessScopeId,
@@ -65,12 +67,35 @@ internal static class TestDatabaseSeeder
 
     public static async Task<int> CountStepsForRecipeAsync(
         ApiTestFixture fixture,
-        int recipeId,
+        Guid recipeId,
         CancellationToken cancellationToken)
     {
         await using var db = await CreateDbContextAsync(fixture, cancellationToken);
 
         return await db.RecipeSteps.CountAsync(s => s.RecipeId == recipeId, cancellationToken);
+    }
+
+    public static async Task<int> CountIngredientsForRecipeAsync(
+        ApiTestFixture fixture,
+        Guid recipeId,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await CreateDbContextAsync(fixture, cancellationToken);
+
+        return await db.RecipeIngredients.CountAsync(i => i.RecipeId == recipeId, cancellationToken);
+    }
+
+    public static async Task SoftDeleteRecipeAsync(
+        ApiTestFixture fixture,
+        Guid recipeId,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await CreateDbContextAsync(fixture, cancellationToken);
+
+        await db.Recipes
+            .IgnoreQueryFilters()
+            .Where(r => r.Id == recipeId)
+            .ExecuteUpdateAsync(s => s.SetProperty(r => r.DeletedAtUtc, DateTime.UtcNow), cancellationToken);
     }
 
     private static async Task<MenuDbContext> CreateDbContextAsync(ApiTestFixture fixture, CancellationToken cancellationToken)

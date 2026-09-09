@@ -11,8 +11,15 @@ const RECIPE_LIST_QUERY_KEY = 'recipe-list' as const;
 const INGREDIENT_UNIT_QUERY_KEY = 'ingredient-unit-list' as const;
 
 export const useRecipeService = () => {
-  const { getRecipes, getRecipe, getIngredientUnits, postRecipe, putRecipe, deleteRecipe } =
-    useRecipeApi();
+  const {
+    getRecipes,
+    getRecipe,
+    getIngredientUnits,
+    postRecipe,
+    putRecipe,
+    deleteRecipe,
+    restoreRecipe,
+  } = useRecipeApi();
   const queryClient = useQueryClient();
   const recipeListQueryKey = [RECIPE_LIST_QUERY_KEY] as const;
   const recipeDetailQueryKey = (recipeId: string) => [RECIPE_QUERY_KEY, String(recipeId)] as const;
@@ -42,7 +49,7 @@ export const useRecipeService = () => {
   const useCreateRecipe = () => {
     return useMutation({
       mutationFn: postRecipe,
-      onSuccess: async (data) => invalidateRecipeQueries(data.id.toString()),
+      onSuccess: async (data) => invalidateRecipeQueries(data.id),
     });
   };
 
@@ -50,7 +57,14 @@ export const useRecipeService = () => {
     return useMutation({
       mutationFn: ({ recipeId, recipe }: { recipeId: string; recipe: UpsertRecipe }) =>
         putRecipe(recipeId, recipe),
-      onSuccess: async (data) => invalidateRecipeQueries(data.id.toString()),
+      onSuccess: async (data) => invalidateRecipeQueries(data.id),
+    });
+  };
+
+  const useRestoreRecipe = () => {
+    return useMutation({
+      mutationFn: (recipeId: string) => restoreRecipe(recipeId),
+      onSuccess: async (data) => invalidateRecipeQueries(data.id),
     });
   };
 
@@ -75,6 +89,7 @@ export const useRecipeService = () => {
     useCreateRecipe,
     useUpdateRecipe,
     useDeleteRecipe,
+    useRestoreRecipe,
     useIngredientUnits,
   };
 };

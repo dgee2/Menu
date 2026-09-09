@@ -75,6 +75,10 @@ var api = app.MapGroup("/api")
     .RequireAuthorization();
 
 api.MapRecipes();
+if (string.Equals(builder.Configuration["E2eCleanupEnabled"], "true", StringComparison.OrdinalIgnoreCase))
+{
+    api.MapE2eTestCleanup();
+}
 api.MapIngredients();
 api.MapUsers();
 

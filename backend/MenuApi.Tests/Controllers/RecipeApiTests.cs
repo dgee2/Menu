@@ -112,7 +112,7 @@ public class RecipeApiTests
     public async Task GetRecipesAsync_NonMemberNameScope_ReturnsValidationProblem(string scope)
     {
         // The enum's ordinals must not become a second, undocumented spelling of the contract.
-        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(MenuUserId.From(1)), scope, null);
+        var result = await RecipeApi.GetRecipesAsync(recipeService, Caller(MenuUserId.From(Guid.CreateVersion7())), scope, null);
 
         result.Should().BeOfType<ValidationProblem>();
     }
@@ -217,5 +217,27 @@ public class RecipeApiTests
 
         var problemResult = result.Should().BeOfType<ProblemHttpResult>().Subject;
         problemResult.StatusCode.Should().Be(404);
+    }
+
+    [Theory, CustomAutoData]
+    public async Task RestoreRecipeAsync_Success(MenuUserId callerId, RecipeId recipeId, RecipeDetail recipe)
+    {
+        A.CallTo(() => recipeService.RestoreRecipeAsync(recipeId, callerId)).Returns(true);
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId)).Returns(recipe);
+
+        var result = await RecipeApi.RestoreRecipeAsync(recipeService, Caller(callerId), recipeId);
+
+        A.CallTo(() => recipeService.RestoreRecipeAsync(recipeId, callerId)).MustHaveHappenedOnceExactly();
+        result.Should().BeOfType<Ok<RecipeDetail>>().Subject.Value.Should().Be(recipe);
+    }
+
+    [Theory, CustomAutoData]
+    public async Task RestoreRecipeAsync_NotFound_Returns404(MenuUserId callerId, RecipeId recipeId)
+    {
+        A.CallTo(() => recipeService.RestoreRecipeAsync(recipeId, callerId)).Returns(false);
+
+        var result = await RecipeApi.RestoreRecipeAsync(recipeService, Caller(callerId), recipeId);
+
+        result.Should().BeOfType<ProblemHttpResult>().Subject.StatusCode.Should().Be(404);
     }
 }

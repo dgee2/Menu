@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
-import { QLayout, QPageContainer, Quasar } from 'quasar';
+import { Notify, QLayout, QPageContainer, Quasar } from 'quasar';
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query';
 import { createMemoryHistory, createRouter, type Router } from 'vue-router';
 import { defineComponent } from 'vue';
@@ -10,11 +10,13 @@ import type { RecipeDetail as RecipeDetailModel } from '@/services/recipe-api';
 
 const getRecipe = vi.fn();
 const deleteRecipe = vi.fn();
+const restoreRecipe = vi.fn();
 
 vi.mock('@/services/recipe-api', () => ({
   useRecipeApi: () => ({
     getRecipe,
     deleteRecipe,
+    restoreRecipe,
     postRecipe: vi.fn(),
     putRecipe: vi.fn(),
     getRecipes: vi.fn(),
@@ -82,7 +84,9 @@ const mountPage = async () => {
   });
 
   const wrapper = mount(LayoutHost, {
-    global: { plugins: [Quasar, [VueQueryPlugin, { queryClient }], router] },
+    global: {
+      plugins: [[Quasar, { plugins: { Notify } }], [VueQueryPlugin, { queryClient }], router],
+    },
     attachTo: document.body,
   });
 
@@ -102,7 +106,9 @@ describe('RecipeDetail', () => {
   beforeEach(() => {
     getRecipe.mockReset();
     deleteRecipe.mockReset();
+    restoreRecipe.mockReset();
     deleteRecipe.mockResolvedValue(undefined);
+    restoreRecipe.mockResolvedValue(recipe());
   });
 
   afterEach(() => {
@@ -259,6 +265,30 @@ describe('RecipeDetail', () => {
       expect(deleteRecipe.mock.calls[0]?.[0]).toBe('1');
       // The redirect waits on the mutation's cache invalidation, so poll rather than assume a tick.
       await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/recipes'));
+    });
+
+    it('offers an undo action that restores the recipe after navigation', async () => {
+      getRecipe.mockResolvedValue(recipe());
+      const wrapper = await mountPage();
+
+      await clickButton(wrapper, 'Delete');
+      await flushPromises();
+
+      const dialogDelete = Array.from(document.body.querySelectorAll('button')).find(
+        (button) => button.textContent?.trim() === 'Delete' && button.closest('.q-dialog'),
+      );
+      dialogDelete?.click();
+      await flushPromises();
+      await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/recipes'));
+
+      const undo = Array.from(document.body.querySelectorAll('button')).find(
+        (button) => button.textContent?.trim() === 'Undo',
+      );
+      expect(undo).toBeDefined();
+      undo?.click();
+      await flushPromises();
+
+      expect(restoreRecipe).toHaveBeenCalledWith('1');
     });
   });
 });

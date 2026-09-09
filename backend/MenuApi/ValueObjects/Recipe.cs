@@ -2,7 +2,7 @@
 
 namespace MenuApi.ValueObjects;
 
-[ValueObject<int>]
+[ValueObject<Guid>]
 public readonly partial struct RecipeId { }
 
 [ValueObject<string>]

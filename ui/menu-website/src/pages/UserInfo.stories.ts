@@ -30,8 +30,9 @@ export const Authenticated = meta.story({
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getAllByText(/jane@example.com/i)).toHaveLength(2);
-    await expect(canvas.getByRole('img')).toBeInTheDocument();
+    await expect(canvas.getByRole('heading', { name: 'Profile' })).toBeInTheDocument();
+    await expect(canvas.getByText('jane@example.com')).toBeInTheDocument();
+    await expect(canvas.getByRole('img', { name: 'Jane Doe profile picture' })).toBeInTheDocument();
   },
 });
 
@@ -42,5 +43,9 @@ export const Anonymous = meta.story({
       components: { UserInfo },
       template: '<user-info />',
     };
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Profile unavailable.')).toBeInTheDocument();
   },
 });
