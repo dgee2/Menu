@@ -200,10 +200,17 @@ jobs:
     permissions:
       contents: read
       actions: read
+    env:
+      VOLTA_FEATURE_PNPM: "1"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Setup Volta
+        uses: volta-cli/action@5c175f92dea6f48441c436471e6479dbc192e194 # v4
+        with:
+          package-json-path: ui/menu-website/package.json
 
       - name: Download OpenAPI document
         if: needs.backend-build.result == 'success'
@@ -212,14 +219,6 @@ jobs:
           name: openapi-spec
           path: open-api
           merge-multiple: true
-
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22.x
-
-      - name: Install latest pnpm
-        run: npm install -g pnpm@latest
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -299,9 +298,15 @@ jobs:
     permissions:
       contents: read
       actions: read
+    env:
+      VOLTA_FEATURE_PNPM: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Setup Volta
+        uses: volta-cli/action@5c175f92dea6f48441c436471e6479dbc192e194 # v4
+        with:
+          package-json-path: ui/menu-website/package.json
       - name: Download OpenAPI document
         if: needs.backend-build.result == 'success'
         uses: actions/download-artifact@v8
@@ -322,12 +327,6 @@ jobs:
           export PATH="$HOME/.dotnet/tools:$PATH"
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
           aspire --version
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22.x
-      - name: Install latest pnpm
-        run: npm install -g pnpm@latest
       - name: Get pnpm store directory
         id: pnpm-cache
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
@@ -409,15 +408,15 @@ jobs:
     permissions:
       contents: read
       actions: read
+    env:
+      VOLTA_FEATURE_PNPM: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Setup Node.js 22.x
-        uses: actions/setup-node@v7
+      - name: Setup Volta
+        uses: volta-cli/action@5c175f92dea6f48441c436471e6479dbc192e194 # v4
         with:
-          node-version: 22.x
-      - name: Install pnpm
-        run: npm install -g --ignore-scripts pnpm@latest # NOSONAR intentional latest pnpm per repository policy
+          package-json-path: ui/menu-website/package.json
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
         working-directory: ./ui/menu-website
