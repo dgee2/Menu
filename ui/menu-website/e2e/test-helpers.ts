@@ -6,7 +6,7 @@ const e2eCleanupBaseUrl = `${apiHost}/api/e2e-test/recipe`;
 
 export const requireAuthorizationHeader = (authorization: string | undefined): string => {
   if (authorization === undefined) {
-    throw new Error('Authenticated recipe list response did not include an authorization header.');
+    throw new Error('Authenticated recipe list request did not include an authorization header.');
   }
 
   return authorization;
