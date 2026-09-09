@@ -74,7 +74,10 @@ export const recipeDeleteSuccessHandler = http.delete(recipeDetailPath, async ()
 
 export const recipeRestoreSuccessHandler = http.post('*/api/recipe/:recipeId/restore', async () => {
   await delay(150);
-  return HttpResponse.json(sampleRecipeDetail, { status: 200 });
+  return HttpResponse.json(
+    { ...sampleRecipeDetail, canEdit: true, canDelete: true },
+    { status: 200 },
+  );
 });
 
 export const recipeDeleteErrorHandler = http.delete(recipeDetailPath, async () => {

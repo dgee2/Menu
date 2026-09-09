@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { apiBaseUrl, assertE2eCleanupAvailable, hardDeleteRecipe } from './test-helpers';
+import {
+  apiBaseUrl,
+  assertE2eCleanupAvailable,
+  hardDeleteRecipe,
+  requireAuthorizationHeader,
+} from './test-helpers';
 
 // Regression guard for recipe creation: this proves the authenticated form writes a complete
 // recipe, shows the saved detail, and invalidates the owned-recipe list.
@@ -19,7 +24,7 @@ test('creates a recipe through the authenticated form', async ({ page, request }
     const initialListResponse = await initialListResponsePromise;
     authorization = initialListResponse.request().headers().authorization;
     expect(authorization).toMatch(/^Bearer\s+\S+$/i);
-    await assertE2eCleanupAvailable(request, authorization);
+    await assertE2eCleanupAvailable(request, requireAuthorizationHeader(authorization));
 
     await page.evaluate(() => {
       window.location.hash = '#/new-recipe';

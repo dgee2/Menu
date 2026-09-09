@@ -19,7 +19,8 @@ public static class E2eTestCleanupApi
             .AddEndpointFilter<RequireCallerFilter>();
 
         group.MapGet("/status", () => Results.NoContent())
-            .Produces(StatusCodes.Status204NoContent);
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         group.MapDelete("/{recipeId}", HardDeleteRecipeAsync)
             .Produces(StatusCodes.Status204NoContent)
