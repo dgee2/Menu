@@ -20,6 +20,10 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 pnpm install
 ```
 
+Volta is the supported Node.js and pnpm toolchain. The project versions are pinned
+in `package.json`. Because Volta's pnpm support is experimental, set
+`VOLTA_FEATURE_PNPM=1` in your environment before running pnpm commands.
+
 ### Compile and Hot-Reload for Development
 
 ```sh

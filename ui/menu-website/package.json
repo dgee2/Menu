@@ -84,6 +84,10 @@
     "pnpm": ">= 10",
     "yarn": ">= 1.21.1"
   },
+  "volta": {
+    "node": "22.22.2",
+    "pnpm": "11.21.0"
+  },
   "msw": {
     "workerDirectory": [
       "public"
