@@ -208,7 +208,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup Volta
-        uses: volta-cli/action@5c175f92dea6f48441c436471e6479dbc192e194 # v4
+        uses: volta-cli/action@615a78f6c83e116339c53b94f3f82b4d6c0b7d18 # v5.0.0
         with:
           package-json-path: ui/menu-website/package.json
 
@@ -304,7 +304,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Setup Volta
-        uses: volta-cli/action@5c175f92dea6f48441c436471e6479dbc192e194 # v4
+        uses: volta-cli/action@615a78f6c83e116339c53b94f3f82b4d6c0b7d18 # v5.0.0
         with:
           package-json-path: ui/menu-website/package.json
       - name: Download OpenAPI document
@@ -414,7 +414,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Setup Volta
-        uses: volta-cli/action@5c175f92dea6f48441c436471e6479dbc192e194 # v4
+        uses: volta-cli/action@615a78f6c83e116339c53b94f3f82b4d6c0b7d18 # v5.0.0
         with:
           package-json-path: ui/menu-website/package.json
       - name: Install frontend dependencies
