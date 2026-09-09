@@ -1,6 +1,43 @@
 import type { APIRequestContext } from '@playwright/test';
 
-export const apiBaseUrl = 'http://localhost:65273/api/recipe';
+const apiHost = 'http://localhost:65273';
+export const apiBaseUrl = `${apiHost}/api/recipe`;
+const e2eCleanupBaseUrl = `${apiHost}/api/e2e-test/recipe`;
+
+export const requireAuthorizationHeader = (authorization: string | undefined): string => {
+  if (authorization === undefined) {
+    throw new Error('Authenticated recipe list request did not include an authorization header.');
+  }
+
+  return authorization;
+};
+
+export const assertE2eCleanupAvailable = async (
+  request: APIRequestContext,
+  authorization: string,
+) => {
+  const response = await request.get(`${e2eCleanupBaseUrl}/status`, {
+    headers: { authorization },
+  });
+
+  if (response.status() !== 204) {
+    if (response.status() === 401) {
+      throw new Error(
+        'E2E cleanup endpoint returned HTTP 401. Ensure the authenticated E2E caller is configured for cleanup access.',
+      );
+    }
+
+    if (response.status() >= 500) {
+      throw new Error(
+        `E2E cleanup endpoint returned HTTP ${response.status()}. The API is unhealthy; inspect the AppHost/API logs before retrying.`,
+      );
+    }
+
+    throw new Error(
+      `E2E cleanup endpoint is unavailable (HTTP ${response.status()}). Restart the Aspire stack so it starts with the current E2E configuration.`,
+    );
+  }
+};
 
 export const hardDeleteRecipe = async (
   request: APIRequestContext,
@@ -9,7 +46,7 @@ export const hardDeleteRecipe = async (
 ) => {
   if (recipeId === undefined || authorization === undefined) return;
 
-  const response = await request.delete(`http://localhost:65273/api/e2e-test/recipe/${recipeId}`, {
+  const response = await request.delete(`${e2eCleanupBaseUrl}/${recipeId}`, {
     headers: { authorization },
   });
 
