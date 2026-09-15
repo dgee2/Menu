@@ -14,9 +14,6 @@ updates:
     schedule:
       interval: "weekly"
     groups:
-      node-types:
-        patterns:
-          - "@types/node"
       frontend-dependencies:
         patterns:
           - "*"
