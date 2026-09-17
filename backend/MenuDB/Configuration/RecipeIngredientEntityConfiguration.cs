@@ -10,7 +10,7 @@ public class RecipeIngredientEntityConfiguration : IEntityTypeConfiguration<Reci
     {
         builder.ToTable("RecipeIngredient");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).ValueGeneratedOnAdd();
+        builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.IngredientText).HasColumnType("nvarchar(200)").IsRequired();
         builder.Property(x => x.MeasureText).HasColumnType("nvarchar(100)").IsRequired();
         builder.Property(x => x.SectionTitle).HasColumnType("nvarchar(100)");

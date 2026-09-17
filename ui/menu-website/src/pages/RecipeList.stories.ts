@@ -23,6 +23,7 @@ export const Success = meta.story({
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('heading', { name: 'My recipes' })).toBeInTheDocument();
     await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
+    await expect(await canvas.findByText('Tomato Soup')).toBeInTheDocument();
   },
 });
 

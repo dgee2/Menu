@@ -19,7 +19,10 @@ var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
        .WithReference(menuDb)
        .WaitForCompletion(migrations)
        .WithEnvironment("Auth0Domain", auth0Domain)
-       .WithEnvironment("Auth0Audience", auth0Audience);
+       .WithEnvironment("Auth0Audience", auth0Audience)
+       .WithEnvironment(
+           "E2eCleanupEnabled",
+           Environment.GetEnvironmentVariable("MENU_E2E_TEST_MODE") == "true" ? "true" : "false");
 
 var isTestMode = Environment.GetEnvironmentVariable("ASPIRE_TEST_MODE") == "true";
 if (!isTestMode)

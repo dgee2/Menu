@@ -65,7 +65,7 @@ public class RecipeCreateUpdateIntegrationTests
 
         using var createStream = await createResponse.Content.ReadAsStreamAsync();
         using var createDoc = await JsonDocument.ParseAsync(createStream);
-        var recipeId = createDoc.RootElement.GetProperty("id").GetInt32();
+        var recipeId = createDoc.RootElement.GetProperty("id").GetGuid();
 
         var updateBody = new
         {
@@ -153,7 +153,7 @@ public class RecipeCreateUpdateIntegrationTests
             Steps = Array.Empty<object>(),
         };
         using var content = new StringContent(JsonSerializer.Serialize(updateBody, jsonOptions), Encoding.UTF8, "application/json");
-        using var response = await client.PutAsync("/api/recipe/999999999", content);
+        using var response = await client.PutAsync($"/api/recipe/{Guid.NewGuid()}", content);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.NotFound);
     }

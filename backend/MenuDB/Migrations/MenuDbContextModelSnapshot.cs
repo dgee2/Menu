@@ -17,7 +17,7 @@ namespace MenuDB.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -60,11 +60,8 @@ namespace MenuDB.Migrations
 
             modelBuilder.Entity("MenuDB.Data.MenuUserEntity", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AuthSubject")
                         .IsRequired()
@@ -127,11 +124,8 @@ namespace MenuDB.Migrations
 
             modelBuilder.Entity("MenuDB.Data.RecipeEntity", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte>("AccessScopeId")
                         .ValueGeneratedOnAdd()
@@ -146,8 +140,11 @@ namespace MenuDB.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int?>("OwnerUserId")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("PrepTimeMinutes")
                         .HasColumnType("int");
@@ -179,18 +176,16 @@ namespace MenuDB.Migrations
 
                     b.HasIndex("OwnerUserId", "Title")
                         .IsUnique()
-                        .HasDatabaseName("UX_Recipe_OwnerUserId_Title");
+                        .HasDatabaseName("UX_Recipe_OwnerUserId_Title")
+                        .HasFilter("[DeletedAtUtc] IS NULL");
 
                     b.ToTable("Recipe", (string)null);
                 });
 
             modelBuilder.Entity("MenuDB.Data.RecipeIngredientEntity", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("Amount")
                         .HasColumnType("decimal(10,4)");
@@ -215,8 +210,8 @@ namespace MenuDB.Migrations
                     b.Property<string>("PreparationText")
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SectionTitle")
                         .HasColumnType("nvarchar(100)");
@@ -240,11 +235,8 @@ namespace MenuDB.Migrations
 
             modelBuilder.Entity("MenuDB.Data.RecipeStepEntity", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("DurationMinutes")
                         .HasColumnType("int");
@@ -253,8 +245,8 @@ namespace MenuDB.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");

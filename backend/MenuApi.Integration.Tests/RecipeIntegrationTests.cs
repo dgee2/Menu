@@ -197,7 +197,7 @@ public class RecipeIntegrationTests
         await response.ShouldHaveStatusCode(HttpStatusCode.Conflict);
     }
 
-    private static async Task<(int Id, string Title)> PostRecipeAsync(HttpClient client, UpsertRecipe recipe)
+    private static async Task<(Guid Id, string Title)> PostRecipeAsync(HttpClient client, UpsertRecipe recipe)
     {
         using var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
         using var response = await client.PostAsync("/api/recipe", requestContent);
@@ -210,7 +210,7 @@ public class RecipeIntegrationTests
         return GetRecipeFromJson(jsonDoc);
     }
 
-    private static async Task<(int Id, string Title)> PutRecipeAsync(HttpClient client, int id, UpsertRecipe recipe)
+    private static async Task<(Guid Id, string Title)> PutRecipeAsync(HttpClient client, Guid id, UpsertRecipe recipe)
     {
         using var requestContent = new StringContent(JsonSerializer.Serialize(recipe), Encoding.UTF8, "application/json");
         using var response = await client.PutAsync($"/api/recipe/{id}", requestContent);
@@ -223,7 +223,7 @@ public class RecipeIntegrationTests
         return GetRecipeFromJson(jsonDoc);
     }
 
-    private static async Task<(int Id, string Title)> GetRecipeAsync(HttpClient client, int id)
+    private static async Task<(Guid Id, string Title)> GetRecipeAsync(HttpClient client, Guid id)
     {
         using var response = await client.GetAsync($"/api/recipe/{id}");
 
@@ -235,11 +235,11 @@ public class RecipeIntegrationTests
         return GetRecipeFromJson(jsonDoc);
     }
 
-    private static (int Id, string Title) GetRecipeFromJson(JsonDocument doc)
+    private static (Guid Id, string Title) GetRecipeFromJson(JsonDocument doc)
     {
         var rootElement = doc.RootElement;
         return (
-            rootElement.GetProperty("id").GetInt32(),
+            rootElement.GetProperty("id").GetGuid(),
             rootElement.GetProperty("title").GetString()!
         );
     }
@@ -247,7 +247,7 @@ public class RecipeIntegrationTests
     private class RecipeListItem
     {
 #pragma warning disable S1144 // Unused private types or members should be removed
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public string Title { get; set; } = null!;
 #pragma warning restore S1144 // Unused private types or members should be removed

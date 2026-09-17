@@ -105,6 +105,23 @@ public class RecipeService(
         return true;
     }
 
+    public async Task<bool> RestoreRecipeAsync(RecipeId recipeId, MenuUserId callerId)
+    {
+        var existing = await recipeRepository.GetRecipeIncludingDeletedAsync(recipeId).ConfigureAwait(false);
+        if (existing is null)
+        {
+            return false;
+        }
+
+        if (!RecipeAccessRules.CanEdit(existing, callerId))
+        {
+            throw new ForbiddenAccessException($"You do not own recipe {recipeId}.");
+        }
+
+        await recipeRepository.RestoreRecipeAsync(recipeId).ConfigureAwait(false);
+        return true;
+    }
+
     /// <summary>
     /// The caller sees an undifferentiated 404, so record server-side which of the two it actually
     /// was. Only runs on the miss path, where an extra round trip costs nothing worth saving.

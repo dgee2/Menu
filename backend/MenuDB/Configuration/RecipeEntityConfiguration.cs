@@ -10,7 +10,7 @@ public class RecipeEntityConfiguration : IEntityTypeConfiguration<RecipeEntity>
     {
         builder.ToTable("Recipe");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseIdentityColumn();
+        builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.Title).HasColumnType("nvarchar(200)").IsRequired();
         builder.Property(x => x.OwnerUserId).IsRequired(false);
         builder.Property(x => x.AccessScopeId).HasColumnType("tinyint").IsRequired().HasDefaultValue((byte)1);
@@ -22,10 +22,12 @@ public class RecipeEntityConfiguration : IEntityTypeConfiguration<RecipeEntity>
         builder.Property(x => x.TotalTimeMinutes).IsRequired(false);
         builder.Property(x => x.CreatedAtUtc).HasColumnType("datetime2").IsRequired().HasDefaultValueSql("GETUTCDATE()");
         builder.Property(x => x.UpdatedAtUtc).HasColumnType("datetime2").IsRequired().HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(x => x.DeletedAtUtc).HasColumnType("datetime2").IsRequired(false);
         builder.HasIndex(x => new { x.OwnerUserId, x.Title })
             .IsUnique()
             .HasDatabaseName("UX_Recipe_OwnerUserId_Title")
-            .HasFilter(null);
+            .HasFilter("[DeletedAtUtc] IS NULL");
+        builder.HasQueryFilter(x => x.DeletedAtUtc == null);
         builder.HasOne(x => x.AccessScope)
             .WithMany(x => x.Recipes)
             .HasForeignKey(x => x.AccessScopeId)

@@ -10,7 +10,7 @@ public class MenuUserEntityConfiguration : IEntityTypeConfiguration<MenuUserEnti
     {
         builder.ToTable("MenuUser", "identity");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseIdentityColumn();
+        builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.AuthSubject).HasColumnType("nvarchar(256)").IsRequired();
         builder.Property(x => x.DisplayName).HasColumnType("nvarchar(100)").IsRequired();
         builder.Property(x => x.Email).HasColumnType("nvarchar(256)");

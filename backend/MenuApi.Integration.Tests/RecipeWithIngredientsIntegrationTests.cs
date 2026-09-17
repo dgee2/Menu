@@ -39,7 +39,7 @@ public class RecipeWithIngredientsIntegrationTests
 
         var (recipeId, returnedTitle, returnedIngredients) = await PostRecipeAsync(client, newRecipe);
 
-        recipeId.Should().BeGreaterThan(0);
+        recipeId.Should().NotBe(Guid.Empty);
         returnedTitle.Should().Be(recipeTitle);
         returnedIngredients.Should().HaveCount(1);
         returnedIngredients[0].IngredientText.Should().Be(ingredientText);
@@ -118,15 +118,15 @@ public class RecipeWithIngredientsIntegrationTests
         returnedIngredients[0].IngredientText.Should().Be(ingredientText2);
     }
 
-    private async Task<(int Id, string Title, List<RecipeIngredientItem> Ingredients)> PostRecipeAsync(
+    private async Task<(Guid Id, string Title, List<RecipeIngredientItem> Ingredients)> PostRecipeAsync(
         HttpClient client, UpsertRecipe recipe)
     {
         using var response = await SendRecipeAsync(client, HttpMethod.Post, ApiRecipeRoute, recipe);
         return await DeserializeRecipeResponseAsync(response);
     }
 
-    private async Task<(int Id, string Title, List<RecipeIngredientItem> Ingredients)> PutRecipeAsync(
-        HttpClient client, int id, UpsertRecipe recipe)
+    private async Task<(Guid Id, string Title, List<RecipeIngredientItem> Ingredients)> PutRecipeAsync(
+        HttpClient client, Guid id, UpsertRecipe recipe)
     {
         using var response = await SendRecipeAsync(client, HttpMethod.Put, $"{ApiRecipeRoute}/{id}", recipe);
         return await DeserializeRecipeResponseAsync(response);
@@ -152,7 +152,7 @@ public class RecipeWithIngredientsIntegrationTests
         return response;
     }
 
-    private async Task<(int Id, string Title, List<RecipeIngredientItem> Ingredients)> DeserializeRecipeResponseAsync(
+    private async Task<(Guid Id, string Title, List<RecipeIngredientItem> Ingredients)> DeserializeRecipeResponseAsync(
         HttpResponseMessage response)
     {
         using var stream = await response.Content.ReadAsStreamAsync();
@@ -160,7 +160,7 @@ public class RecipeWithIngredientsIntegrationTests
         var root = jsonDoc.RootElement;
 
         return (
-            root.GetProperty("id").GetInt32(),
+            root.GetProperty("id").GetGuid(),
             root.GetProperty("title").GetString()!,
             JsonSerializer.Deserialize<List<RecipeIngredientItem>>(root.GetProperty("ingredients").GetRawText(), jsonOptions) ?? []);
     }

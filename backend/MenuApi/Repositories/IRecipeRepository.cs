@@ -28,4 +28,8 @@ public interface IRecipeRepository
     Task UpdateRecipeAsync(RecipeId recipeId, DBModel.Recipe recipe);
 
     Task DeleteRecipeAsync(RecipeId recipeId);
+
+    Task RestoreRecipeAsync(RecipeId recipeId);
+
+    Task<DBModel.Recipe?> GetRecipeIncludingDeletedAsync(RecipeId recipeId);
 }

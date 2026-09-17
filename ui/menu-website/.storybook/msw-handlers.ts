@@ -31,7 +31,12 @@ const sampleRecipeDetail = {
     },
   ],
   steps: [
-    { sortOrder: 0, instructionText: 'Preheat the oven to 180C.', title: null, durationMinutes: null },
+    {
+      sortOrder: 0,
+      instructionText: 'Preheat the oven to 180C.',
+      title: null,
+      durationMinutes: null,
+    },
     { sortOrder: 1, instructionText: 'Mix dry ingredients.', title: null, durationMinutes: 5 },
   ],
 };
@@ -60,6 +65,24 @@ export const recipeDetailErrorHandler = http.get(recipeDetailPath, async () => {
 export const recipeDetailLoadingHandler = http.get(recipeDetailPath, async () => {
   await delay(3000);
   return HttpResponse.json(sampleRecipeDetail);
+});
+
+export const recipeDeleteSuccessHandler = http.delete(recipeDetailPath, async () => {
+  await delay(150);
+  return new HttpResponse(null, { status: 204 });
+});
+
+export const recipeRestoreSuccessHandler = http.post('*/api/recipe/:recipeId/restore', async () => {
+  await delay(150);
+  return HttpResponse.json(
+    { ...sampleRecipeDetail, canEdit: true, canDelete: true },
+    { status: 200 },
+  );
+});
+
+export const recipeDeleteErrorHandler = http.delete(recipeDetailPath, async () => {
+  await delay(150);
+  return HttpResponse.json({ title: 'Internal Server Error', status: 500 }, { status: 500 });
 });
 
 export const recipesSuccessHandler = http.get(recipePath, async () => {
@@ -98,10 +121,22 @@ export const recipeCreateErrorHandler = http.post(recipePath, async () => {
   return HttpResponse.json({ title: 'Internal Server Error', status: 500 }, { status: 500 });
 });
 
+export const recipeCreateConflictHandler = http.post(recipePath, async () => {
+  await delay(150);
+  return HttpResponse.json(
+    { title: 'Conflict', detail: 'A recipe with this name already exists.', status: 409 },
+    { status: 409 },
+  );
+});
+
+export const recipeUpdateSuccessHandler = http.put(recipeDetailPath, async () => {
+  await delay(150);
+  return HttpResponse.json({ ...sampleRecipeDetail, id: 7 }, { status: 200 });
+});
+
 export const ingredientUnitsHandler = http.get(ingredientUnitsPath, () => {
   return HttpResponse.json([
     { id: 1, name: 'g' },
     { id: 2, name: 'ml' },
   ]);
 });
-

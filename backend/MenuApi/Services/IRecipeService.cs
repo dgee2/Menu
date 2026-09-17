@@ -20,4 +20,6 @@ public interface IRecipeService
     Task<bool> UpdateRecipeAsync(RecipeId recipeId, UpsertRecipe upsertRecipe, MenuUserId callerId);
 
     Task<bool> DeleteRecipeAsync(RecipeId recipeId, MenuUserId callerId);
+
+    Task<bool> RestoreRecipeAsync(RecipeId recipeId, MenuUserId callerId);
 }

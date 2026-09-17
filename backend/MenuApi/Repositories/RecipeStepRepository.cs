@@ -31,6 +31,7 @@ public class RecipeStepRepository(MenuDbContext db) : IRecipeStepRepository
         var entities = steps
             .Select(s => new RecipeStepEntity
             {
+                Id = Guid.CreateVersion7(),
                 RecipeId = recipeId.Value,
                 SortOrder = s.SortOrder,
                 InstructionText = s.InstructionText,

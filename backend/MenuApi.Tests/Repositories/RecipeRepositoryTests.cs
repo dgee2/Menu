@@ -15,6 +15,44 @@ namespace MenuApi.Tests.Repositories;
 public class RecipeRepositoryTests
 {
     [Fact]
+    public async Task CreateRecipeAsync_Generates_UUIDv7_Ids()
+    {
+        var sut = new RecipeRepository(CreateDbContext());
+
+        var firstId = await sut.CreateRecipeAsync(new DBModel.Recipe
+        {
+            Title = RecipeTitle.From("First UUID recipe"),
+            AccessScope = RecipeAccessScope.Private,
+        });
+        var secondId = await sut.CreateRecipeAsync(new DBModel.Recipe
+        {
+            Title = RecipeTitle.From("Second UUID recipe"),
+            AccessScope = RecipeAccessScope.Private,
+        });
+
+        firstId.Value.Version.Should().Be(7);
+        secondId.Value.Version.Should().Be(7);
+        secondId.Should().NotBe(firstId);
+    }
+
+    [Fact]
+    public async Task Global_Query_Filter_Hides_SoftDeleted_Recipes_But_IgnoreQueryFilters_Sees_Them()
+    {
+        await using var db = CreateDbContext();
+        db.Recipes.Add(new RecipeEntity
+        {
+            Id = Guid.CreateVersion7(),
+            Title = "Deleted",
+            DeletedAtUtc = DateTime.UtcNow,
+            AccessScopeId = (byte)RecipeAccessScope.Private,
+        });
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        (await db.Recipes.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
+        (await db.Recipes.IgnoreQueryFilters().CountAsync(TestContext.Current.CancellationToken)).Should().Be(1);
+    }
+
+    [Fact]
     public async Task CreateRecipeAsync_Sets_Audit_Timestamps()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
@@ -43,8 +81,8 @@ public class RecipeRepositoryTests
         await using var db = CreateDbContext();
         var sut = new RecipeRepository(db);
 
-        var owner = MenuUserId.From(1);
-        var otherOwner = MenuUserId.From(2);
+        var owner = MenuUserId.From(Guid.CreateVersion7());
+        var otherOwner = MenuUserId.From(Guid.CreateVersion7());
         AddRecipe(db, "Mine 1", owner, RecipeAccessScope.Private);
         AddRecipe(db, "Someone Else's", otherOwner, RecipeAccessScope.Private);
         await db.SaveChangesAsync(cancellationToken);
@@ -61,8 +99,8 @@ public class RecipeRepositoryTests
         await using var db = CreateDbContext();
         var sut = new RecipeRepository(db);
 
-        var caller = MenuUserId.From(1);
-        var otherOwner = MenuUserId.From(2);
+        var caller = MenuUserId.From(Guid.CreateVersion7());
+        var otherOwner = MenuUserId.From(Guid.CreateVersion7());
         AddRecipe(db, "Private Mine", caller, RecipeAccessScope.Private);
         AddRecipe(db, "Shared By Me", caller, RecipeAccessScope.AuthenticatedUsers);
         AddRecipe(db, "Shared By Someone Else", otherOwner, RecipeAccessScope.AuthenticatedUsers);
@@ -80,7 +118,7 @@ public class RecipeRepositoryTests
         await using var db = CreateDbContext();
         var sut = new RecipeRepository(db);
 
-        var owner = MenuUserId.From(1);
+        var owner = MenuUserId.From(Guid.CreateVersion7());
         AddRecipe(db, "Recipe 1", owner, RecipeAccessScope.Private);
         AddRecipe(db, "Recipe 2", owner, RecipeAccessScope.Private);
         AddRecipe(db, "Recipe 3", owner, RecipeAccessScope.Private);
@@ -98,7 +136,7 @@ public class RecipeRepositoryTests
         await using var db = CreateDbContext();
         var sut = new RecipeRepository(db);
 
-        var caller = MenuUserId.From(1);
+        var caller = MenuUserId.From(Guid.CreateVersion7());
         AddRecipe(db, "Private Mine", caller, RecipeAccessScope.Private);
         await db.SaveChangesAsync(cancellationToken);
         var recipeId = RecipeId.From(db.Recipes.Single().Id);
@@ -115,8 +153,8 @@ public class RecipeRepositoryTests
         await using var db = CreateDbContext();
         var sut = new RecipeRepository(db);
 
-        var caller = MenuUserId.From(1);
-        var otherOwner = MenuUserId.From(2);
+        var caller = MenuUserId.From(Guid.CreateVersion7());
+        var otherOwner = MenuUserId.From(Guid.CreateVersion7());
         AddRecipe(db, "Private Theirs", otherOwner, RecipeAccessScope.Private);
         await db.SaveChangesAsync(cancellationToken);
         var recipeId = RecipeId.From(db.Recipes.Single().Id);
@@ -133,8 +171,8 @@ public class RecipeRepositoryTests
         await using var db = CreateDbContext();
         var sut = new RecipeRepository(db);
 
-        var caller = MenuUserId.From(1);
-        var otherOwner = MenuUserId.From(2);
+        var caller = MenuUserId.From(Guid.CreateVersion7());
+        var otherOwner = MenuUserId.From(Guid.CreateVersion7());
         AddRecipe(db, "Shared Theirs", otherOwner, RecipeAccessScope.AuthenticatedUsers);
         await db.SaveChangesAsync(cancellationToken);
         var recipeId = RecipeId.From(db.Recipes.Single().Id);
@@ -153,8 +191,8 @@ public class RecipeRepositoryTests
         await using var db = CreateDbContext();
         var sut = new RecipeRepository(db);
 
-        var caller = MenuUserId.From(1);
-        var otherOwner = MenuUserId.From(2);
+        var caller = MenuUserId.From(Guid.CreateVersion7());
+        var otherOwner = MenuUserId.From(Guid.CreateVersion7());
         AddRecipe(db, "Private Theirs", otherOwner, RecipeAccessScope.Private);
         await db.SaveChangesAsync(cancellationToken);
         var recipeId = RecipeId.From(db.Recipes.Single().Id);
@@ -180,14 +218,14 @@ public class RecipeRepositoryTests
         await using var db = CreateDbContext();
         var sut = new RecipeRepository(db);
 
-        var caller = MenuUserId.From(1);
+        var caller = MenuUserId.From(Guid.CreateVersion7());
         AddRecipe(db, "Mine", caller, RecipeAccessScope.Private);
         await db.SaveChangesAsync(cancellationToken);
         var recipeId = RecipeId.From(db.Recipes.Single().Id);
 
         db.RecipeIngredients.AddRange(
-            new RecipeIngredientEntity { RecipeId = recipeId.Value, SortOrder = 1, IngredientText = "Second", MeasureText = "1" },
-            new RecipeIngredientEntity { RecipeId = recipeId.Value, SortOrder = 0, IngredientText = "First", MeasureText = "1" });
+            new RecipeIngredientEntity { Id = Guid.CreateVersion7(), RecipeId = recipeId.Value, SortOrder = 1, IngredientText = "Second", MeasureText = "1" },
+            new RecipeIngredientEntity { Id = Guid.CreateVersion7(), RecipeId = recipeId.Value, SortOrder = 0, IngredientText = "First", MeasureText = "1" });
         await db.SaveChangesAsync(cancellationToken);
 
         var result = await sut.GetRecipeIngredientsAsync(recipeId, caller);
@@ -199,6 +237,7 @@ public class RecipeRepositoryTests
     {
         db.Recipes.Add(new RecipeEntity
         {
+            Id = Guid.CreateVersion7(),
             Title = title,
             OwnerUserId = ownerId.Value,
             AccessScopeId = (byte)accessScope,

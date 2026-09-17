@@ -11,8 +11,8 @@ export const router = createRouter({
     { path: '/', component: StoryRouteView },
     { path: '/recipes', component: StoryRouteView },
     { path: '/recipe/:recipeId', component: StoryRouteView },
+    { path: '/recipe/:recipeId/edit', component: StoryRouteView },
     { path: '/new-recipe', component: StoryRouteView },
     { path: '/profile', component: StoryRouteView },
   ],
 });
-

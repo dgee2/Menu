@@ -2,9 +2,9 @@ namespace MenuDB.Data;
 
 public class RecipeStepEntity
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
-    public int RecipeId { get; set; }
+    public Guid RecipeId { get; set; }
 
     public RecipeEntity Recipe { get; set; } = null!;
 

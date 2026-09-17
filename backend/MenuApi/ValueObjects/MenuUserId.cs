@@ -2,5 +2,5 @@ using Vogen;
 
 namespace MenuApi.ValueObjects;
 
-[ValueObject<int>]
+[ValueObject<Guid>]
 public readonly partial struct MenuUserId { }

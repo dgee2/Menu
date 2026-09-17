@@ -104,6 +104,10 @@ if ($state -ne 'Completed') { throw "Command failed (job state: $state)" }
 - **Integration tests** (`MenuApi.Integration.Tests`): Aspire Testing spins up the full AppHost with a containerised SQL Server. All test classes must use `[Collection("API Host Collection")]` for sequential execution against a shared host. `ShortStringAutoDataAttribute` limits string length to fit `varchar(50)` columns and empties collection properties.
 - Assertions use **AwesomeAssertions** (`.Should()`) — not FluentAssertions.
 
+### End-to-end tests
+
+For full-stack Playwright execution, Auth0/AppHost prerequisites, reuse and cold-start behavior, report/trace triage, and assertion/data-isolation rules, read [`.agents/skills/e2e-tests/SKILL.md`](.agents/skills/e2e-tests/SKILL.md). Run `pnpm test:e2e` before merging changes to `ui/menu-website/src/boot/auth0.ts`, `ui/menu-website/src/services/auth.ts`, `ui/menu-website/src/services/recipe-api.ts`, `ui/menu-website/src/router/`, AppHost wiring, or recipe CRUD endpoints. A new page-level route warrants an E2E smoke path; a new component alone does not. An unexplained failure is a diagnosis task: preserve auth, network, status, and UI assertions, and never silence it with a removed assertion, skip/fixme/only, weakened status check, or mocked real path.
+
 ## Code Style
 
 - `TreatWarningsAsErrors` is enabled in Debug and Release for all projects.
@@ -169,7 +173,7 @@ pnpm build                # Type-check + production build
 pnpm test                 # Vitest: unit + Storybook projects
 pnpm test:unit            # Vitest unit tests only (jsdom)
 pnpm test:storybook       # Storybook interaction tests (run after any UI change)
-pnpm test:e2e             # Playwright end-to-end tests
+pnpm test:e2e             # Full-stack Playwright tests; starts Aspire (Docker, SQL, migrations, API, UI)
 pnpm lint                 # ESLint
 pnpm lint-fix             # ESLint with auto-fix
 pnpm format               # Prettier
@@ -177,9 +181,25 @@ pnpm generate-openapi     # Regenerate API types from OpenAPI spec
 pnpm storybook            # Storybook dev server (port 6006)
 ```
 
+`pnpm test:e2e` requires Docker. It waits up to five minutes for the UI at
+`http://localhost:65276` (API `http://localhost:65273`) and reuses an existing stack on
+that UI address. The command is long-running on Windows, so agents must use the
+`Start-Job` timeout pattern above. The HTML report is written to
+`ui/menu-website/playwright-report/`; failure artifacts and traces are written to
+`ui/menu-website/test-results/`.
+
+Authenticated e2e tests use a dedicated Auth0 test user. Set `E2E_AUTH0_USERNAME` and
+`E2E_AUTH0_PASSWORD` as Windows environment variables in the shell running Playwright.
+Keep non-secret `Parameters__Auth0Domain` and `Parameters__Auth0Audience` in
+`ui/menu-website/.env.e2e`. Credentials are obtained from the repository owner;
+never commit or print credentials or Playwright `storageState`. If credentials are
+missing, ask the owner rather than replacing the real Auth0 flow with mocks or an
+injected token. The account is local-only; CI must use a separate user and GitHub
+Actions secrets.
+
 Always run `pnpm test:storybook` after making any change under `ui/menu-website/src/` — it catches regressions in components exercised by existing stories, not just changes to story files themselves.
 
-pnpm's version is not pinned — whatever `pnpm` is on your `PATH` is what runs, including when Aspire's `WithPnpm()` shells out to it to start the full stack (via `aspire start`, the agent-preferred path, or `dotnet run --project Menu.AppHost`). `package.json` declares a `>= 10` floor under `engines`, and CI installs the latest pnpm; do not reintroduce a `packageManager` pin or corepack. `pnpm-workspace.yaml` sets `confirmModulesPurge: false` so upgrading your global pnpm across a major version self-heals a stale `node_modules` directory automatically; if you ever see `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` anyway, just run `pnpm install` once by hand from `ui/menu-website/`.
+Volta is the supported Node.js and pnpm toolchain for `ui/menu-website/`. Its `package.json` pins the project Node.js and pnpm versions. Volta's pnpm support is experimental, so set `VOLTA_FEATURE_PNPM=1` in local environments before running pnpm; Volta then selects the pinned tools when commands run from the frontend directory. GitHub Actions uses `volta-cli/action@v4` with the nested frontend `package.json` and the same feature flag. `pnpm-workspace.yaml` sets `confirmModulesPurge: false` so changing pnpm versions self-heals a stale `node_modules` directory automatically; if you ever see `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`, run `pnpm install` once by hand from `ui/menu-website/`.
 
 ### Component Test Coverage
 

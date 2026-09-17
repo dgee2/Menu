@@ -9,6 +9,16 @@ namespace MenuDB.Tests;
 public class MenuUserEntityConfigurationTests
 {
     [Fact]
+    public void MenuUser_Uses_ApplicationGenerated_Guid_Key()
+    {
+        using var db = CreateDbContext();
+        var property = db.Model.FindEntityType(typeof(MenuDB.Data.MenuUserEntity))!
+            .FindProperty(nameof(MenuDB.Data.MenuUserEntity.Id))!;
+
+        property.ClrType.Should().Be<Guid>();
+        property.ValueGenerated.Should().Be(Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never);
+    }
+    [Fact]
     public void MenuUser_Table_Has_Correct_Name_And_Schema()
     {
         using var db = CreateDbContext();

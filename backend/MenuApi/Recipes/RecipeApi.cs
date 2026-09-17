@@ -57,6 +57,13 @@ public static class RecipeApi
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPost("{recipeId}/restore", RestoreRecipeAsync)
+            .Produces<RecipeDetail>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         return group;
     }
 
@@ -127,6 +134,18 @@ public static class RecipeApi
         }
 
         return Results.NoContent();
+    }
+
+    public static async Task<IResult> RestoreRecipeAsync(IRecipeService recipeService, CallerId caller, RecipeId recipeId)
+    {
+        var restored = await recipeService.RestoreRecipeAsync(recipeId, caller.Value);
+        if (!restored)
+        {
+            return RecipeNotFound(recipeId);
+        }
+
+        var recipe = await recipeService.GetRecipeAsync(recipeId, caller.Value);
+        return Results.Ok(recipe ?? throw new InvalidOperationException($"Failed to retrieve the restored recipe with ID {recipeId}."));
     }
 
     /// <summary>
