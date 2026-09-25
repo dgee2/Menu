@@ -12,7 +12,7 @@ public class RecipeEntityConfiguration : IEntityTypeConfiguration<RecipeEntity>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.Title).HasColumnType("nvarchar(200)").IsRequired();
-        builder.Property(x => x.OwnerUserId).IsRequired(false);
+        builder.Property(x => x.OwnerUserId).IsRequired();
         builder.Property(x => x.AccessScopeId).HasColumnType("tinyint").IsRequired().HasDefaultValue((byte)1);
         builder.Property(x => x.Summary).HasColumnType("nvarchar(max)").IsRequired(false);
         builder.Property(x => x.Servings).IsRequired(false);
@@ -37,6 +37,6 @@ public class RecipeEntityConfiguration : IEntityTypeConfiguration<RecipeEntity>
             .WithMany()
             .HasForeignKey(x => x.OwnerUserId)
             .HasConstraintName("FK_Recipe_ToMenuUser")
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
