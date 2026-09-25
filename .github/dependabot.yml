@@ -13,6 +13,20 @@ updates:
     directory: "/ui/menu-website"
     schedule:
       interval: "weekly"
+    cooldown:
+      # CI enforces a one-day pnpm minimumReleaseAge; leave margin for the
+      # lockfile to age before the validation workflow runs.
+      default-days: 2
+    ignore:
+      # The frontend toolchain is pinned to Node 22 and does not yet support
+      # the Node 25/26 type definitions.
+      - dependency-name: "@types/node"
+        versions:
+          - ">=25.0.0"
+      # openapi-typescript currently requires TypeScript 6.x.
+      - dependency-name: "typescript"
+        versions:
+          - ">=7.0.0"
     groups:
       frontend-dependencies:
         patterns:
