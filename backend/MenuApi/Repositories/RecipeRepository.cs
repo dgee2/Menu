@@ -21,7 +21,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         Id = RecipeId.From(r.Id),
         Title = RecipeTitle.From(r.Title),
         AccessScope = (RecipeAccessScope)r.AccessScopeId,
-        OwnerUserId = r.OwnerUserId == null ? null : MenuUserId.From(r.OwnerUserId.Value),
+        OwnerUserId = MenuUserId.From(r.OwnerUserId),
         Summary = r.Summary,
         Servings = r.Servings,
         YieldText = r.YieldText,
@@ -97,13 +97,19 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
 
     public async Task<RecipeId> CreateRecipeAsync(DBModel.Recipe recipe)
     {
+        ArgumentNullException.ThrowIfNull(recipe);
+        if (recipe.OwnerUserId is null)
+        {
+            throw new ArgumentException("A recipe must have an owner.", nameof(recipe));
+        }
+
         var now = DateTime.UtcNow;
         var entity = new RecipeEntity
         {
             Id = Guid.CreateVersion7(),
             Title = recipe.Title.Value,
             AccessScopeId = (byte)recipe.AccessScope,
-            OwnerUserId = recipe.OwnerUserId?.Value,
+            OwnerUserId = recipe.OwnerUserId.Value.Value,
             Summary = recipe.Summary,
             Servings = recipe.Servings,
             YieldText = recipe.YieldText,

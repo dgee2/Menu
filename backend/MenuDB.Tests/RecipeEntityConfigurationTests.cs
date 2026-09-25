@@ -23,6 +23,12 @@ public class RecipeEntityConfigurationTests
             .Single(index => index.GetDatabaseName() == "UX_Recipe_OwnerUserId_Title");
         index.IsUnique.Should().BeTrue();
         index.GetFilter().Should().Be("[DeletedAtUtc] IS NULL");
+
+        var owner = entityType.FindProperty(nameof(MenuDB.Data.RecipeEntity.OwnerUserId))!;
+        owner.ClrType.Should().Be<Guid>();
+        owner.IsNullable.Should().BeFalse();
+        var ownerForeignKey = entityType.GetForeignKeys().Single(fk => fk.Properties.Contains(owner));
+        ownerForeignKey.DeleteBehavior.Should().Be(DeleteBehavior.Restrict);
     }
 
     [Fact]
