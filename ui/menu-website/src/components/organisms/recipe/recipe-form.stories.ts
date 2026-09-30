@@ -35,6 +35,15 @@ const existingRecipe = {
   steps: [{ sortOrder: 0, instructionText: 'Assemble', title: null, durationMinutes: null }],
 } as unknown as RecipeDetail;
 
+const multiSectionRecipe = {
+  ...existingRecipe,
+  ingredients: [
+    { sortOrder: 0, ingredientText: 'Pasta', measureText: '250g', sectionTitle: null },
+    { sortOrder: 1, ingredientText: 'Tomatoes', measureText: '2 cups', sectionTitle: 'Sauce' },
+    { sortOrder: 2, ingredientText: 'Cheese', measureText: '100g', sectionTitle: 'Topping' },
+  ],
+} as RecipeDetail;
+
 const meta = preview.meta({
   title: 'Organisms/Recipe/RecipeForm',
   component: RecipeForm,
@@ -278,20 +287,46 @@ export const PartlyFilledIngredientRowBlocksSubmit = meta.story({
   },
 });
 
-// Section is free text with suggestions, not a closed list — the first row to use a new section
-// has to be able to invent it. This story covers that entry path; the suggestion list itself
-// (sections already used in this recipe being offered to later rows) is asserted in
-// recipe-form.test.ts and ingredient-row-editor.test.ts, where the props can be inspected directly
-// rather than through a portalled QSelect menu.
-export const SectionAcceptsANewTitle = meta.story({
+export const AddAndRenameSection = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Add section' }));
+    const heading = canvas.getByLabelText('Section heading');
+    await userEvent.type(heading, 'For the sauce');
+    await expect(heading).toHaveValue('For the sauce');
+    await expect(canvas.getAllByRole('button', { name: 'Add ingredient' })).toHaveLength(2);
+  },
+});
 
-    const firstSection = canvas.getAllByLabelText('Section')[0];
-    await userEvent.type(firstSection, 'For the sauce');
-    await userEvent.keyboard('{Enter}');
+export const MultiSectionRecipe = meta.story({
+  args: { initialRecipe: multiSectionRecipe },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getAllByLabelText('Section heading')).toHaveLength(2);
+    await expect(canvas.getAllByLabelText('Ingredient')).toHaveLength(3);
+    await expect(canvas.getAllByLabelText('Section heading')[0]).toHaveValue('Sauce');
+    await expect(canvas.getAllByLabelText('Section heading')[1]).toHaveValue('Topping');
 
-    await expect(firstSection).toHaveValue('For the sauce');
+    await userEvent.click(
+      canvas.getAllByRole('combobox', { name: 'Move ingredient to section' })[0],
+    );
+    await userEvent.click(await within(document.body).findByRole('option', { name: 'Topping' }));
+    const sectionContainers = canvasElement.querySelectorAll<HTMLElement>('.ingredient-section');
+    await waitFor(() =>
+      expect(within(sectionContainers[2]).getAllByLabelText('Ingredient')).toHaveLength(2),
+    );
+  },
+});
+
+export const SectionlessRecipe = meta.story({
+  args: {
+    initialRecipe: { ...multiSectionRecipe, ingredients: [multiSectionRecipe.ingredients[0]] },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByLabelText('Section heading')).not.toBeInTheDocument();
+    await expect(canvas.getAllByLabelText('Ingredient')).toHaveLength(1);
+    await expect(canvas.getByLabelText('Ingredient')).toHaveValue('Pasta');
   },
 });
 
