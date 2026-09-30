@@ -1,7 +1,9 @@
 using MenuDB;
 using MenuApi.Authorization;
 using MenuApi.Exceptions;
+using MenuApi.DomainEvents;
 using MenuApi.MappingProfiles;
+using MenuApi.Outbox;
 using MenuApi.Repositories;
 using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
@@ -13,6 +15,7 @@ public class RecipeService(
     IRecipeRepository recipeRepository,
     IRecipeStepRepository recipeStepRepository,
     MenuDbContext db,
+    OutboxWriter outboxWriter,
     ILogger<RecipeService> logger) : IRecipeService
 {
     public async Task<IEnumerable<RecipeListItem>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take)
@@ -57,13 +60,16 @@ public class RecipeService(
     {
         ArgumentNullException.ThrowIfNull(upsertRecipe);
 
+        var recipeId = RecipeId.From(Guid.CreateVersion7());
         var recipe = ViewModelMapper.Map(upsertRecipe) with { OwnerUserId = callerId };
 
         var strategy = db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
             await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
-            var recipeId = await recipeRepository.CreateRecipeAsync(recipe).ConfigureAwait(false);
+            // The first repository save inserts both the recipe and its outbox event.
+            outboxWriter.Write(new RecipeCreatedEvent(recipeId.Value));
+            await recipeRepository.CreateRecipeAsync(recipe, recipeId).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Ingredients)).ConfigureAwait(false);
             await recipeStepRepository.UpsertStepCollectionAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Steps)).ConfigureAwait(false);
             await tran.CommitAsync().ConfigureAwait(false);
@@ -84,6 +90,7 @@ public class RecipeService(
         await strategy.ExecuteAsync(async () =>
         {
             await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+            outboxWriter.Write(new RecipeUpdatedEvent(recipeId.Value));
             await recipeRepository.UpdateRecipeAsync(recipeId, ViewModelMapper.Map(upsertRecipe) with { OwnerUserId = callerId }).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Ingredients)).ConfigureAwait(false);
             await recipeStepRepository.UpsertStepCollectionAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Steps)).ConfigureAwait(false);

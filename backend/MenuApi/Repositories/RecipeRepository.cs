@@ -95,7 +95,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             .ConfigureAwait(false);
     }
 
-    public async Task<RecipeId> CreateRecipeAsync(DBModel.Recipe recipe)
+    public async Task<RecipeId> CreateRecipeAsync(DBModel.Recipe recipe, RecipeId? recipeId = null)
     {
         ArgumentNullException.ThrowIfNull(recipe);
         if (recipe.OwnerUserId is null)
@@ -106,7 +106,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         var now = DateTime.UtcNow;
         var entity = new RecipeEntity
         {
-            Id = Guid.CreateVersion7(),
+            Id = recipeId?.Value ?? Guid.CreateVersion7(),
             Title = recipe.Title.Value,
             AccessScopeId = (byte)recipe.AccessScope,
             OwnerUserId = recipe.OwnerUserId.Value.Value,
@@ -166,26 +166,22 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
 
     public async Task UpdateRecipeAsync(RecipeId recipeId, DBModel.Recipe recipe)
     {
-        var now = DateTime.UtcNow;
-        var accessScopeId = (byte)recipe.AccessScope;
+        var entity = await db.Recipes.SingleAsync(r => r.Id == recipeId.Value).ConfigureAwait(false);
+        entity.Title = recipe.Title.Value;
+        entity.AccessScopeId = (byte)recipe.AccessScope;
+        entity.Summary = recipe.Summary;
+        entity.Servings = recipe.Servings;
+        entity.YieldText = recipe.YieldText;
+        entity.PrepTimeMinutes = recipe.PrepTimeMinutes;
+        entity.CookTimeMinutes = recipe.CookTimeMinutes;
+        entity.TotalTimeMinutes = recipe.TotalTimeMinutes;
+        entity.UpdatedAtUtc = DateTime.UtcNow;
 
         try
         {
-            await db.Recipes
-                .Where(r => r.Id == recipeId.Value)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(r => r.Title, recipe.Title.Value)
-                    .SetProperty(r => r.AccessScopeId, accessScopeId)
-                    .SetProperty(r => r.Summary, recipe.Summary)
-                    .SetProperty(r => r.Servings, recipe.Servings)
-                    .SetProperty(r => r.YieldText, recipe.YieldText)
-                    .SetProperty(r => r.PrepTimeMinutes, recipe.PrepTimeMinutes)
-                    .SetProperty(r => r.CookTimeMinutes, recipe.CookTimeMinutes)
-                    .SetProperty(r => r.TotalTimeMinutes, recipe.TotalTimeMinutes)
-                    .SetProperty(r => r.UpdatedAtUtc, now))
-                .ConfigureAwait(false);
+            await db.SaveChangesAsync().ConfigureAwait(false);
         }
-        catch (SqlException ex) when (ex.IsUniqueConstraintViolation())
+        catch (DbUpdateException ex) when (ex.IsUniqueConstraintViolation())
         {
             throw new ConflictException($"A recipe titled '{recipe.Title.Value}' already exists.");
         }

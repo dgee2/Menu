@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using MenuApi.Integration.Tests.Factory;
+using MenuApi.DomainEvents;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -44,6 +45,13 @@ public class RecipeCreateUpdateIntegrationTests
         root.GetProperty("ingredients").GetArrayLength().Should().Be(1);
         root.GetProperty("steps").GetArrayLength().Should().Be(1);
         root.GetProperty("steps")[0].GetProperty("instructionText").GetString().Should().Be("Mix well.");
+
+        var recipeId = root.GetProperty("id").GetGuid();
+        var events = await TestDatabaseSeeder.GetOutboxEventsForRecipeAsync(fixture, recipeId, TestContext.Current.CancellationToken);
+        events.Should().ContainSingle();
+        events[0].EventType.Should().Be(nameof(RecipeCreatedEvent));
+        events[0].ProcessedAtUtc.Should().BeNull();
+        JsonSerializer.Deserialize<RecipeCreatedEvent>(events[0].Payload)!.RecipeId.Should().Be(recipeId);
     }
 
     [Theory]
@@ -89,6 +97,13 @@ public class RecipeCreateUpdateIntegrationTests
         root.GetProperty("ingredients").GetArrayLength().Should().Be(1);
         root.GetProperty("ingredients")[0].GetProperty("ingredientText").GetString().Should().Be("Sugar");
         root.GetProperty("steps").GetArrayLength().Should().Be(2);
+
+        var events = await TestDatabaseSeeder.GetOutboxEventsForRecipeAsync(fixture, recipeId, TestContext.Current.CancellationToken);
+        events.Should().HaveCount(2);
+        events.Should().ContainSingle(e => e.EventType == nameof(RecipeCreatedEvent) && e.ProcessedAtUtc == null);
+        var updatedEvent = events.Single(e => e.EventType == nameof(RecipeUpdatedEvent));
+        updatedEvent.ProcessedAtUtc.Should().BeNull();
+        JsonSerializer.Deserialize<RecipeUpdatedEvent>(updatedEvent.Payload)!.RecipeId.Should().Be(recipeId);
     }
 
     [Theory]

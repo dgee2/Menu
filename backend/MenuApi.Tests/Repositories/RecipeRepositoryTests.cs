@@ -2,18 +2,68 @@ using AwesomeAssertions;
 using MenuDB;
 using MenuDB.Data;
 using MenuApi.Repositories;
+using MenuApi.DomainEvents;
+using MenuApi.Outbox;
 using MenuApi.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace MenuApi.Tests.Repositories;
 
-// UpdateRecipeAsync uses ExecuteUpdateAsync, which is not supported by the EF Core
-// InMemory provider (it requires a relational provider). That code path is covered by
-// the RecipeRepository source review rather than a unit test here, to avoid pulling in
-// an additional relational test provider (e.g. SQLite) purely for test infrastructure.
 public class RecipeRepositoryTests
 {
+    [Fact]
+    public async Task CreateRecipeAsync_Persists_Queued_Event_With_Recipe()
+    {
+        await using var db = CreateDbContext();
+        var recipeId = RecipeId.From(Guid.CreateVersion7());
+        new OutboxWriter(db).Write(new RecipeCreatedEvent(recipeId.Value));
+
+        await new RecipeRepository(db).CreateRecipeAsync(new DBModel.Recipe
+        {
+            Title = RecipeTitle.From("Recipe with event"),
+            AccessScope = RecipeAccessScope.Private,
+            OwnerUserId = MenuUserId.From(Guid.CreateVersion7()),
+        }, recipeId);
+
+        (await db.Recipes.CountAsync(TestContext.Current.CancellationToken)).Should().Be(1);
+        var outboxEvent = await db.OutboxEvents.SingleAsync(TestContext.Current.CancellationToken);
+        outboxEvent.EventType.Should().Be(nameof(RecipeCreatedEvent));
+        outboxEvent.ProcessedAtUtc.Should().BeNull();
+        System.Text.Json.JsonSerializer.Deserialize<RecipeCreatedEvent>(outboxEvent.Payload)!.RecipeId.Should().Be(recipeId.Value);
+    }
+
+    [Fact]
+    public async Task UpdateRecipeAsync_Persists_Queued_Event_With_Update()
+    {
+        await using var db = CreateDbContext();
+        var recipeId = RecipeId.From(Guid.CreateVersion7());
+        db.Recipes.Add(new RecipeEntity
+        {
+            Id = recipeId.Value,
+            Title = "Before update",
+            OwnerUserId = Guid.CreateVersion7(),
+            AccessScopeId = (byte)RecipeAccessScope.Private,
+            CreatedAtUtc = DateTime.UtcNow,
+            UpdatedAtUtc = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        new OutboxWriter(db).Write(new RecipeUpdatedEvent(recipeId.Value));
+        await new RecipeRepository(db).UpdateRecipeAsync(recipeId, new DBModel.Recipe
+        {
+            Title = RecipeTitle.From("After update"),
+            AccessScope = RecipeAccessScope.Private,
+        });
+
+        var recipe = await db.Recipes.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken);
+        recipe.Title.Should().Be("After update");
+        var outboxEvent = await db.OutboxEvents.SingleAsync(TestContext.Current.CancellationToken);
+        outboxEvent.EventType.Should().Be(nameof(RecipeUpdatedEvent));
+        outboxEvent.ProcessedAtUtc.Should().BeNull();
+        System.Text.Json.JsonSerializer.Deserialize<RecipeUpdatedEvent>(outboxEvent.Payload)!.RecipeId.Should().Be(recipeId.Value);
+    }
+
     [Fact]
     public async Task CreateRecipeAsync_Generates_UUIDv7_Ids()
     {
