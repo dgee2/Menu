@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using MenuApi.Services;
 using MenuApi.ValueObjects;
+using MenuDB.Data;
 
 namespace MenuApi.Middleware;
 
@@ -17,7 +18,9 @@ public class UserProvisioningMiddleware(RequestDelegate next)
         {
             var authSubject = Truncate(context.User.FindFirstValue(ClaimTypes.NameIdentifier), 256);
 
-            if (authSubject is not null)
+            // This reserved account owns pre-existing orphaned recipes but must never be
+            // provisioned from an external identity claim.
+            if (authSubject is not null && authSubject != LegacyRecipeOwner.AuthSubject)
             {
                 // Pass null when the claim is absent so the repository does not
                 // overwrite existing profile data with a missing claim value.

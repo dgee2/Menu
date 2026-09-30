@@ -84,7 +84,7 @@ public class RecipeService(
         await strategy.ExecuteAsync(async () =>
         {
             await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
-            await recipeRepository.UpdateRecipeAsync(recipeId, ViewModelMapper.Map(upsertRecipe)).ConfigureAwait(false);
+            await recipeRepository.UpdateRecipeAsync(recipeId, ViewModelMapper.Map(upsertRecipe) with { OwnerUserId = callerId }).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Ingredients)).ConfigureAwait(false);
             await recipeStepRepository.UpsertStepCollectionAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Steps)).ConfigureAwait(false);
             await tran.CommitAsync().ConfigureAwait(false);

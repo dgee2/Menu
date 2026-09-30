@@ -4,7 +4,7 @@ public class RecipeEntity
 {
     public Guid Id { get; set; }
     public required string Title { get; set; }
-    public Guid? OwnerUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
     public MenuUserEntity? Owner { get; set; }
     public byte AccessScopeId { get; set; }
     public RecipeAccessScopeEntity? AccessScope { get; set; }

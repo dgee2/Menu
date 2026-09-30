@@ -18,21 +18,39 @@ public class RecipeRepositoryTests
     public async Task CreateRecipeAsync_Generates_UUIDv7_Ids()
     {
         var sut = new RecipeRepository(CreateDbContext());
+        var ownerId = MenuUserId.From(Guid.CreateVersion7());
 
         var firstId = await sut.CreateRecipeAsync(new DBModel.Recipe
         {
             Title = RecipeTitle.From("First UUID recipe"),
             AccessScope = RecipeAccessScope.Private,
+            OwnerUserId = ownerId,
         });
         var secondId = await sut.CreateRecipeAsync(new DBModel.Recipe
         {
             Title = RecipeTitle.From("Second UUID recipe"),
             AccessScope = RecipeAccessScope.Private,
+            OwnerUserId = ownerId,
         });
 
         firstId.Value.Version.Should().Be(7);
         secondId.Value.Version.Should().Be(7);
         secondId.Should().NotBe(firstId);
+    }
+
+    [Fact]
+    public async Task CreateRecipeAsync_Rejects_Missing_Owner()
+    {
+        var sut = new RecipeRepository(CreateDbContext());
+        var recipe = new DBModel.Recipe
+        {
+            Title = RecipeTitle.From("No owner"),
+            AccessScope = RecipeAccessScope.Private,
+        };
+
+        Func<Task> act = () => sut.CreateRecipeAsync(recipe);
+
+        await act.Should().ThrowAsync<ArgumentException>();
     }
 
     [Fact]
@@ -63,6 +81,7 @@ public class RecipeRepositoryTests
         {
             Title = RecipeTitle.From("Created Recipe"),
             AccessScope = RecipeAccessScope.Private,
+            OwnerUserId = MenuUserId.From(Guid.CreateVersion7()),
         });
 
         var entity = await db.Recipes
