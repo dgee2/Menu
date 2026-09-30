@@ -11,7 +11,6 @@ const meta = preview.meta({
     canMoveDown: true,
     'onUpdate:ingredientText': fn(),
     'onUpdate:measureText': fn(),
-    'onUpdate:sectionTitle': fn(),
     'onUpdate:preparationText': fn(),
     'onUpdate:isOptional': fn(),
     onRemove: fn(),
@@ -26,7 +25,6 @@ export const Default = meta.story({
     await expect(canvas.getByLabelText('Measure')).toBeInTheDocument();
     await expect(canvas.getByLabelText('Ingredient')).toBeInTheDocument();
     await expect(canvas.getByLabelText('Preparation')).toBeInTheDocument();
-    await expect(canvas.getByLabelText('Section')).toBeInTheDocument();
     await expect(canvas.getByText('Optional')).toBeInTheDocument();
   },
 });
