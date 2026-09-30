@@ -14,7 +14,7 @@ public class MenuUserRepository(MenuDbContext db) : IMenuUserRepository
         var now = DateTime.UtcNow;
 
         var updated = await db.MenuUsers
-            .Where(u => u.AuthSubject == authSubject)
+            .Where(u => u.AuthSubject == authSubject && u.AuthSubject != LegacyRecipeOwner.AuthSubject)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(u => u.DisplayName, u => displayName ?? u.DisplayName)
                 .SetProperty(u => u.Email, u => email ?? u.Email)
@@ -25,13 +25,15 @@ public class MenuUserRepository(MenuDbContext db) : IMenuUserRepository
         if (updated > 0)
         {
             var existingId = await db.MenuUsers
-                .Where(u => u.AuthSubject == authSubject)
+                .Where(u => u.AuthSubject == authSubject && u.AuthSubject != LegacyRecipeOwner.AuthSubject)
                 .Select(u => u.Id)
                 .FirstAsync()
                 .ConfigureAwait(false);
 
             return MenuUserId.From(existingId);
         }
+
+        await RejectLegacyOwnerAsync(authSubject).ConfigureAwait(false);
 
         var entity = new MenuUserEntity
         {
@@ -55,8 +57,8 @@ public class MenuUserRepository(MenuDbContext db) : IMenuUserRepository
         {
             db.Entry(entity).State = EntityState.Detached;
 
-            await db.MenuUsers
-                .Where(u => u.AuthSubject == authSubject)
+            var concurrentUpdated = await db.MenuUsers
+                .Where(u => u.AuthSubject == authSubject && u.AuthSubject != LegacyRecipeOwner.AuthSubject)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(u => u.DisplayName, u => displayName ?? u.DisplayName)
                     .SetProperty(u => u.Email, u => email ?? u.Email)
@@ -64,8 +66,14 @@ public class MenuUserRepository(MenuDbContext db) : IMenuUserRepository
                     .SetProperty(u => u.LastSeenAtUtc, now))
                 .ConfigureAwait(false);
 
+            if (concurrentUpdated == 0)
+            {
+                await RejectLegacyOwnerAsync(authSubject).ConfigureAwait(false);
+                throw;
+            }
+
             var concurrentId = await db.MenuUsers
-                .Where(u => u.AuthSubject == authSubject)
+                .Where(u => u.AuthSubject == authSubject && u.AuthSubject != LegacyRecipeOwner.AuthSubject)
                 .Select(u => u.Id)
                 .FirstAsync()
                 .ConfigureAwait(false);
@@ -90,5 +98,17 @@ public class MenuUserRepository(MenuDbContext db) : IMenuUserRepository
             })
             .FirstOrDefaultAsync()
             .ConfigureAwait(false);
+    }
+
+    private async Task RejectLegacyOwnerAsync(string authSubject)
+    {
+        var matchesLegacyOwner = await db.MenuUsers
+            .AnyAsync(u => u.AuthSubject == authSubject && u.AuthSubject == LegacyRecipeOwner.AuthSubject)
+            .ConfigureAwait(false);
+
+        if (matchesLegacyOwner)
+        {
+            throw new ForbiddenAccessException("The legacy recipe owner cannot authenticate.");
+        }
     }
 }
