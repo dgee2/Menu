@@ -4,7 +4,7 @@ namespace MenuApi.Repositories;
 
 public interface IRecipeRepository
 {
-    Task<RecipeId> CreateRecipeAsync(DBModel.Recipe recipe);
+    Task<RecipeId> CreateRecipeAsync(DBModel.Recipe recipe, RecipeId? recipeId = null);
 
     /// <summary>
     /// Fetches a recipe without applying any access filter. For the write path, which needs to tell

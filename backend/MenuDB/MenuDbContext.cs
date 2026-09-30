@@ -17,6 +17,8 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
 
     public DbSet<RecipeStepEntity> RecipeSteps { get; set; }
 
+    public DbSet<OutboxEvent> OutboxEvents { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MenuDbContext).Assembly);
