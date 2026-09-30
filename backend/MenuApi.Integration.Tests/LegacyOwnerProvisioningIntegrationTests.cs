@@ -13,7 +13,7 @@ namespace MenuApi.Integration.Tests;
 [Collection("API Host Collection")]
 public class LegacyOwnerProvisioningIntegrationTests(ApiTestFixture fixture)
 {
-    private static readonly Guid LegacyOwnerId = new("01a0da16-bebb-7890-9b45-5d7a9ceebc8a");
+    private static readonly Guid LegacyOwnerId = Guid.Empty;
 
     [Theory]
     [InlineData("MENU:LEGACY-RECIPE-OWNER:1195")]

@@ -8,7 +8,7 @@ namespace MenuDB.Migrations
     /// <inheritdoc />
     public partial class RequireRecipeOwner : Migration
     {
-        private const string LegacyOwnerId = "01a0da16-bebb-7890-9b45-5d7a9ceebc8a";
+        private const string LegacyOwnerId = "00000000-0000-0000-0000-000000000000";
 
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,8 +18,8 @@ namespace MenuDB.Migrations
                 table: "Recipe");
 
             // Older recipes have no caller identity to recover. Keep their content under a
-            // reserved account that the provisioning middleware never authenticates. The
-            // account uses a fixed UUIDv7 identifier so generated scripts are reproducible.
+            // reserved account that user provisioning never authenticates. The
+            // account uses the empty GUID so generated scripts are reproducible.
             migrationBuilder.Sql(
                 $"""
                 IF EXISTS (SELECT 1 FROM [Recipe] WHERE [OwnerUserId] IS NULL)
