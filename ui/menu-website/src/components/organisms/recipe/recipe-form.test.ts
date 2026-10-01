@@ -443,9 +443,10 @@ describe('recipe-form', () => {
             measureText: '200g',
             preparationText: 'sifted',
             isOptional: false,
+            sectionTitle: null,
             sortOrder: 0,
           },
-          { ingredientText: 'Sugar', measureText: '1 cup', sortOrder: 1 },
+          { ingredientText: 'Sugar', measureText: '1 cup', sectionTitle: null, sortOrder: 1 },
         ],
       });
     });
@@ -494,19 +495,151 @@ describe('recipe-form', () => {
       });
     });
 
-    it('offers the sections already used in this recipe as suggestions', async () => {
+    it('derives section titles when a section is added and renamed', async () => {
       const wrapper = await mountForm();
 
-      await clickButton(wrapper, 'Add ingredient');
       await fillFieldAt(wrapper, 'Ingredient', 0, 'Flour');
       await fillFieldAt(wrapper, 'Measure', 0, '200g');
+      await clickButton(wrapper, 'Add section');
+      await fillField(wrapper, 'Section heading', 'For the sponge');
+      const namedSection = wrapper.findAll('.ingredient-section')[1];
+      await namedSection
+        .findAll('button')
+        .find((button) => button.text().endsWith('Add ingredient'))!
+        .trigger('click');
+      await fillFieldAt(wrapper, 'Ingredient', 1, 'Sugar');
+      await fillFieldAt(wrapper, 'Measure', 1, '1 cup');
+      await fillField(wrapper, 'Section heading', 'For the topping');
+      await fillField(wrapper, 'Name', 'Cake');
+      await submit(wrapper);
 
-      const sectionSelect = fields(wrapper, 'Section')[0].findComponent(QSelect);
-      sectionSelect.vm.$emit('update:modelValue', 'For the sponge');
+      expect(
+        (submittedRecipe() as { ingredients: { sectionTitle: string | null }[] }).ingredients,
+      ).toMatchObject([{ sectionTitle: null }, { sectionTitle: 'For the topping' }]);
+    });
+
+    it('moves a row between sections and recomputes its sort order', async () => {
+      const wrapper = await mountForm();
+      await fillField(wrapper, 'Name', 'Cake');
+      await fillFieldAt(wrapper, 'Ingredient', 0, 'Flour');
+      await fillFieldAt(wrapper, 'Measure', 0, '200g');
+      await clickButton(wrapper, 'Add ingredient');
+      await fillFieldAt(wrapper, 'Ingredient', 1, 'Sugar');
+      await fillFieldAt(wrapper, 'Measure', 1, '1 cup');
+      await clickButton(wrapper, 'Add section');
+      await fillField(wrapper, 'Section heading', 'Topping');
+      const namedSection = wrapper.findAll('.ingredient-section')[1];
+      await namedSection
+        .findAll('button')
+        .find((button) => button.text().endsWith('Add ingredient'))!
+        .trigger('click');
+      await fillFieldAt(wrapper, 'Ingredient', 2, 'Cream');
+      await fillFieldAt(wrapper, 'Measure', 2, '100ml');
+
+      const targetId = namedSection.attributes('data-section-id');
+      wrapper
+        .findAll('.ingredient-row')[1]
+        .findComponent(QSelect)
+        .vm.$emit('update:modelValue', targetId);
       await nextTick();
+      await submit(wrapper);
 
-      const rows = wrapper.findAllComponents({ name: 'ingredient-row-editor' });
-      expect(rows[1]?.props('sectionSuggestions')).toEqual(['For the sponge']);
+      expect(
+        (
+          submittedRecipe() as {
+            ingredients: {
+              ingredientText: string;
+              sectionTitle: string | null;
+              sortOrder: number;
+            }[];
+          }
+        ).ingredients,
+      ).toMatchObject([
+        { ingredientText: 'Flour', sectionTitle: null, sortOrder: 0 },
+        { ingredientText: 'Cream', sectionTitle: 'Topping', sortOrder: 1 },
+        { ingredientText: 'Sugar', sectionTitle: 'Topping', sortOrder: 2 },
+      ]);
+    });
+
+    it('reparents rows to the preceding section when a section is removed', async () => {
+      const wrapper = await mountForm();
+      await clickButton(wrapper, 'Add section');
+      await fillField(wrapper, 'Section heading', 'Base');
+      const base = wrapper.findAll('.ingredient-section')[1];
+      await base
+        .findAll('button')
+        .find((button) => button.text().endsWith('Add ingredient'))!
+        .trigger('click');
+      await fillFieldAt(wrapper, 'Ingredient', 1, 'Flour');
+      await fillFieldAt(wrapper, 'Measure', 1, '200g');
+      await clickButton(wrapper, 'Add section');
+      await fillFieldAt(wrapper, 'Section heading', 1, 'Topping');
+      const topping = wrapper.findAll('.ingredient-section')[2];
+      await topping
+        .findAll('button')
+        .find((button) => button.text().endsWith('Add ingredient'))!
+        .trigger('click');
+      await fillFieldAt(wrapper, 'Ingredient', 2, 'Sugar');
+      await fillFieldAt(wrapper, 'Measure', 2, '1 cup');
+      await topping.find('[aria-label="Remove section"]').trigger('click');
+      await fillField(wrapper, 'Name', 'Cake');
+      await submit(wrapper);
+
+      expect(
+        (
+          submittedRecipe() as {
+            ingredients: {
+              ingredientText: string;
+              sectionTitle: string | null;
+              sortOrder: number;
+            }[];
+          }
+        ).ingredients,
+      ).toMatchObject([
+        { ingredientText: 'Flour', sectionTitle: 'Base', sortOrder: 0 },
+        { ingredientText: 'Sugar', sectionTitle: 'Base', sortOrder: 1 },
+      ]);
+    });
+
+    it('reorders whole sections without changing their row membership', async () => {
+      const wrapper = await mountForm();
+      await clickButton(wrapper, 'Add section');
+      await fillField(wrapper, 'Section heading', 'First');
+      await clickButton(wrapper, 'Add section');
+      await fillFieldAt(wrapper, 'Section heading', 1, 'Second');
+      await wrapper
+        .findAll('.ingredient-section')[2]
+        .find('[aria-label="Move section up"]')
+        .trigger('click');
+
+      expect(
+        fields(wrapper, 'Section heading').map((heading) => heading.find('input').element.value),
+      ).toEqual(['Second', 'First']);
+    });
+
+    it('drags a row into a section and reorders the sections', async () => {
+      const wrapper = await mountForm();
+      await fillField(wrapper, 'Name', 'Cake');
+      await fillFieldAt(wrapper, 'Ingredient', 0, 'Flour');
+      await fillFieldAt(wrapper, 'Measure', 0, '200g');
+      await clickButton(wrapper, 'Add section');
+      await fillField(wrapper, 'Section heading', 'Base');
+      await clickButton(wrapper, 'Add section');
+      await fillFieldAt(wrapper, 'Section heading', 1, 'Topping');
+
+      await wrapper.findAll('.ingredient-row')[0].trigger('dragstart');
+      await wrapper.findAll('.ingredient-section')[2].trigger('drop');
+      const sections = wrapper.findAll('.ingredient-section');
+      await sections[2].find('[draggable="true"]').trigger('dragstart');
+      await sections[1].trigger('drop');
+      expect(
+        fields(wrapper, 'Section heading').map((heading) => heading.find('input').element.value),
+      ).toEqual(['Topping', 'Base']);
+      await submit(wrapper);
+      expect(
+        (submittedRecipe() as { ingredients: { sectionTitle: string; sortOrder: number }[] })
+          .ingredients,
+      ).toMatchObject([{ sectionTitle: 'Topping', sortOrder: 0 }]);
     });
 
     it('submits the populated metadata fields as numbers', async () => {
@@ -639,7 +772,9 @@ describe('recipe-form', () => {
     });
 
     it('surfaces a non-conflict problem detail in the banner', async () => {
-      postRecipe.mockRejectedValue(new ApiError('bad request', 400, { detail: 'Servings too big.' }));
+      postRecipe.mockRejectedValue(
+        new ApiError('bad request', 400, { detail: 'Servings too big.' }),
+      );
       const wrapper = await mountForm();
 
       await fillField(wrapper, 'Name', 'Lasagne');
@@ -765,7 +900,10 @@ describe('recipe-form', () => {
     });
 
     it('leaves when the prompt is accepted', async () => {
-      vi.stubGlobal('confirm', vi.fn(() => true));
+      vi.stubGlobal(
+        'confirm',
+        vi.fn(() => true),
+      );
       const wrapper = await mountForm();
 
       await fillField(wrapper, 'Name', 'Lasagne');
