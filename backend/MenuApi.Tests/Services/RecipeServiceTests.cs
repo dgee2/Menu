@@ -2,6 +2,8 @@ using AwesomeAssertions;
 using FakeItEasy;
 using MenuDB;
 using MenuApi.Exceptions;
+using MenuApi.DomainEvents;
+using MenuApi.Outbox;
 using MenuApi.Repositories;
 using MenuApi.Services;
 using MenuApi.ValueObjects;
@@ -30,7 +32,7 @@ public class RecipeServiceTests
             .Options;
         db = new MenuDbContext(options);
 
-        sut = new RecipeService(recipeRepository, recipeStepRepository, db, NullLogger<RecipeService>.Instance);
+        sut = new RecipeService(recipeRepository, recipeStepRepository, db, new OutboxWriter(db), NullLogger<RecipeService>.Instance);
     }
 
     [Theory, CustomAutoData]
@@ -174,17 +176,22 @@ public class RecipeServiceTests
     }
 
     [Theory, CustomAutoData]
-    public async Task CreateRecipeSuccess(RecipeId recipeId, MenuUserId callerId, UpsertRecipe upsertRecipe)
+    public async Task CreateRecipeSuccess(MenuUserId callerId, UpsertRecipe upsertRecipe)
     {
-        A.CallTo(() => recipeRepository.CreateRecipeAsync(A<DBModel.Recipe>._)).Returns(recipeId);
+        A.CallTo(() => recipeRepository.CreateRecipeAsync(A<DBModel.Recipe>._, A<RecipeId>._))
+            .ReturnsLazily((DBModel.Recipe _, RecipeId? id) => id!.Value);
 
-        await sut.CreateRecipeAsync(upsertRecipe, callerId);
+        var recipeId = await sut.CreateRecipeAsync(upsertRecipe, callerId);
 
         A.CallTo(() => recipeRepository.CreateRecipeAsync(A<DBModel.Recipe>.That.Matches(
-            r => r.Title == upsertRecipe.Title && r.AccessScope == upsertRecipe.AccessScope && r.OwnerUserId == callerId)))
+            r => r.Title == upsertRecipe.Title && r.AccessScope == upsertRecipe.AccessScope && r.OwnerUserId == callerId), recipeId))
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeStepRepository.UpsertStepCollectionAsync(recipeId, A<IEnumerable<DBModel.RecipeStep>>._)).MustHaveHappenedOnceExactly();
+        var created = db.OutboxEvents.Local.Single();
+        created.EventType.Should().Be(nameof(RecipeCreatedEvent));
+        System.Text.Json.JsonSerializer.Deserialize<RecipeCreatedEvent>(created.Payload)!.RecipeId.Should().Be(recipeId.Value);
+        created.ProcessedAtUtc.Should().BeNull();
     }
 
     [Theory, CustomAutoData]
@@ -201,6 +208,10 @@ public class RecipeServiceTests
             .MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeRepository.UpsertRecipeIngredientsAsync(recipeId, A<IEnumerable<DBModel.RecipeIngredient>>._)).MustHaveHappenedOnceExactly();
         A.CallTo(() => recipeStepRepository.UpsertStepCollectionAsync(recipeId, A<IEnumerable<DBModel.RecipeStep>>._)).MustHaveHappenedOnceExactly();
+        var updated = db.OutboxEvents.Local.Single();
+        updated.EventType.Should().Be(nameof(RecipeUpdatedEvent));
+        System.Text.Json.JsonSerializer.Deserialize<RecipeUpdatedEvent>(updated.Payload)!.RecipeId.Should().Be(recipeId.Value);
+        updated.ProcessedAtUtc.Should().BeNull();
     }
 
     [Theory, CustomAutoData]
@@ -212,6 +223,7 @@ public class RecipeServiceTests
 
         result.Should().BeFalse();
         A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, A<DBModel.Recipe>._)).MustNotHaveHappened();
+        db.OutboxEvents.Local.Should().BeEmpty();
     }
 
     [Theory, CustomAutoData]
@@ -225,6 +237,7 @@ public class RecipeServiceTests
 
         await fun.Should().ThrowAsync<ForbiddenAccessException>();
         A.CallTo(() => recipeRepository.UpdateRecipeAsync(recipeId, A<DBModel.Recipe>._)).MustNotHaveHappened();
+        db.OutboxEvents.Local.Should().BeEmpty();
     }
 
     [Theory, CustomAutoData]
