@@ -61,11 +61,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v7
 
-    # Add any setup steps before running the `github/codeql-action/init` action.
-    # This includes steps like installing compilers or runtimes (`actions/setup-node`
-    # or others). This is typically only required for manual builds.
-    # - name: Setup runtime (example)
-    #   uses: actions/setup-example@v1
+    # The C# autobuild includes Menu.AppHost, which uses the Aspire CLI bundle.
+    - name: Setup .NET 10
+      if: matrix.language == 'csharp'
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Install Aspire CLI
+      if: matrix.language == 'csharp'
+      run: |
+        dotnet tool install --tool-path "$RUNNER_TEMP/aspire-cli" Aspire.Cli --version 13.6.0
+        echo "$RUNNER_TEMP/aspire-cli" >> "$GITHUB_PATH"
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
