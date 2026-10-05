@@ -118,7 +118,7 @@ export default definePreview({
         serviceWorker: {
           url: '/mockServiceWorker.js',
         },
-        onUnhandledRequest: 'bypass',
+        onUnhandledFrame: 'bypass',
         quiet: true,
       });
       return worker;
