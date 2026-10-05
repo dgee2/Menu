@@ -63,18 +63,16 @@ public class RecipeService(
         var recipeId = RecipeId.From(Guid.CreateVersion7());
         var recipe = ViewModelMapper.Map(upsertRecipe) with { OwnerUserId = callerId };
 
-        var strategy = db.Database.CreateExecutionStrategy();
-        return await strategy.ExecuteAsync(async () =>
+        await ExecuteWriteAsync(async () =>
         {
-            await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
             // The first repository save inserts both the recipe and its outbox event.
-            outboxWriter.Write(new RecipeCreatedEvent(recipeId.Value));
+            outboxWriter.Write(new RecipeCreatedEvent(recipeId));
             await recipeRepository.CreateRecipeAsync(recipe, recipeId).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Ingredients)).ConfigureAwait(false);
             await recipeStepRepository.UpsertStepCollectionAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Steps)).ConfigureAwait(false);
-            await tran.CommitAsync().ConfigureAwait(false);
-            return recipeId;
         }).ConfigureAwait(false);
+
+        return recipeId;
     }
 
     public async Task<bool> UpdateRecipeAsync(RecipeId recipeId, UpsertRecipe upsertRecipe, MenuUserId callerId)
@@ -86,18 +84,36 @@ public class RecipeService(
             return false;
         }
 
-        var strategy = db.Database.CreateExecutionStrategy();
-        await strategy.ExecuteAsync(async () =>
+        await ExecuteWriteAsync(async () =>
         {
-            await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
-            outboxWriter.Write(new RecipeUpdatedEvent(recipeId.Value));
+            outboxWriter.Write(new RecipeUpdatedEvent(recipeId));
             await recipeRepository.UpdateRecipeAsync(recipeId, ViewModelMapper.Map(upsertRecipe) with { OwnerUserId = callerId }).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Ingredients)).ConfigureAwait(false);
             await recipeStepRepository.UpsertStepCollectionAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Steps)).ConfigureAwait(false);
-            await tran.CommitAsync().ConfigureAwait(false);
         }).ConfigureAwait(false);
 
         return true;
+    }
+
+    private async Task ExecuteWriteAsync(Func<Task> writeAsync)
+    {
+        var strategy = db.Database.CreateExecutionStrategy();
+        var attempted = false;
+
+        await strategy.ExecuteAsync(async () =>
+        {
+            if (attempted)
+            {
+                // A rolled-back SaveChanges still leaves entities tracked as saved. Rebuild the
+                // attempt from database state so recipe fields and outbox rows are written again.
+                db.ChangeTracker.Clear();
+            }
+
+            attempted = true;
+            await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+            await writeAsync().ConfigureAwait(false);
+            await tran.CommitAsync().ConfigureAwait(false);
+        }).ConfigureAwait(false);
     }
 
     public async Task<bool> DeleteRecipeAsync(RecipeId recipeId, MenuUserId callerId)

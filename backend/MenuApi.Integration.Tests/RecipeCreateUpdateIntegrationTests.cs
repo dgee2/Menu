@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using MenuApi.Integration.Tests.Factory;
 using MenuApi.DomainEvents;
+using MenuApi.ValueObjects;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -51,7 +52,7 @@ public class RecipeCreateUpdateIntegrationTests
         events.Should().ContainSingle();
         events[0].EventType.Should().Be(nameof(RecipeCreatedEvent));
         events[0].ProcessedAtUtc.Should().BeNull();
-        JsonSerializer.Deserialize<RecipeCreatedEvent>(events[0].Payload)!.RecipeId.Should().Be(recipeId);
+        JsonSerializer.Deserialize<RecipeCreatedEvent>(events[0].Payload)!.RecipeId.Should().Be(RecipeId.From(recipeId));
     }
 
     [Theory]
@@ -103,7 +104,7 @@ public class RecipeCreateUpdateIntegrationTests
         events.Should().ContainSingle(e => e.EventType == nameof(RecipeCreatedEvent) && e.ProcessedAtUtc == null);
         var updatedEvent = events.Single(e => e.EventType == nameof(RecipeUpdatedEvent));
         updatedEvent.ProcessedAtUtc.Should().BeNull();
-        JsonSerializer.Deserialize<RecipeUpdatedEvent>(updatedEvent.Payload)!.RecipeId.Should().Be(recipeId);
+        JsonSerializer.Deserialize<RecipeUpdatedEvent>(updatedEvent.Payload)!.RecipeId.Should().Be(RecipeId.From(recipeId));
     }
 
     [Theory]

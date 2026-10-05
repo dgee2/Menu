@@ -3,6 +3,7 @@ using AwesomeAssertions;
 using MenuDB;
 using MenuApi.DomainEvents;
 using MenuApi.Outbox;
+using MenuApi.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
@@ -18,7 +19,7 @@ public class OutboxWriterTests
             .Options;
         await using var db = new MenuDbContext(options);
         var sut = new OutboxWriter(db);
-        var recipeId = Guid.CreateVersion7();
+        var recipeId = RecipeId.From(Guid.CreateVersion7());
 
         sut.Write(new RecipeCreatedEvent(recipeId));
         sut.Write(new RecipeUpdatedEvent(recipeId));
@@ -35,6 +36,10 @@ public class OutboxWriterTests
 
         var created = events.Single(x => x.EventType == nameof(RecipeCreatedEvent));
         var updated = events.Single(x => x.EventType == nameof(RecipeUpdatedEvent));
+        using var createdPayload = JsonDocument.Parse(created.Payload);
+        createdPayload.RootElement.GetProperty("RecipeId").GetGuid().Should().Be(recipeId.Value);
+        using var updatedPayload = JsonDocument.Parse(updated.Payload);
+        updatedPayload.RootElement.GetProperty("RecipeId").GetGuid().Should().Be(recipeId.Value);
         JsonSerializer.Deserialize<RecipeCreatedEvent>(created.Payload).Should().Be(new RecipeCreatedEvent(recipeId));
         JsonSerializer.Deserialize<RecipeUpdatedEvent>(updated.Payload).Should().Be(new RecipeUpdatedEvent(recipeId));
     }

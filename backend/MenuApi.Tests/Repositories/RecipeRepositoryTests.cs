@@ -17,7 +17,7 @@ public class RecipeRepositoryTests
     {
         await using var db = CreateDbContext();
         var recipeId = RecipeId.From(Guid.CreateVersion7());
-        new OutboxWriter(db).Write(new RecipeCreatedEvent(recipeId.Value));
+        new OutboxWriter(db).Write(new RecipeCreatedEvent(recipeId));
 
         await new RecipeRepository(db).CreateRecipeAsync(new DBModel.Recipe
         {
@@ -30,7 +30,7 @@ public class RecipeRepositoryTests
         var outboxEvent = await db.OutboxEvents.SingleAsync(TestContext.Current.CancellationToken);
         outboxEvent.EventType.Should().Be(nameof(RecipeCreatedEvent));
         outboxEvent.ProcessedAtUtc.Should().BeNull();
-        System.Text.Json.JsonSerializer.Deserialize<RecipeCreatedEvent>(outboxEvent.Payload)!.RecipeId.Should().Be(recipeId.Value);
+        System.Text.Json.JsonSerializer.Deserialize<RecipeCreatedEvent>(outboxEvent.Payload)!.RecipeId.Should().Be(recipeId);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class RecipeRepositoryTests
         });
         await db.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        new OutboxWriter(db).Write(new RecipeUpdatedEvent(recipeId.Value));
+        new OutboxWriter(db).Write(new RecipeUpdatedEvent(recipeId));
         await new RecipeRepository(db).UpdateRecipeAsync(recipeId, new DBModel.Recipe
         {
             Title = RecipeTitle.From("After update"),
@@ -61,7 +61,7 @@ public class RecipeRepositoryTests
         var outboxEvent = await db.OutboxEvents.SingleAsync(TestContext.Current.CancellationToken);
         outboxEvent.EventType.Should().Be(nameof(RecipeUpdatedEvent));
         outboxEvent.ProcessedAtUtc.Should().BeNull();
-        System.Text.Json.JsonSerializer.Deserialize<RecipeUpdatedEvent>(outboxEvent.Payload)!.RecipeId.Should().Be(recipeId.Value);
+        System.Text.Json.JsonSerializer.Deserialize<RecipeUpdatedEvent>(outboxEvent.Payload)!.RecipeId.Should().Be(recipeId);
     }
 
     [Fact]

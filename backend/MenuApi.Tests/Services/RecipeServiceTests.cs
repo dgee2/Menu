@@ -190,7 +190,7 @@ public class RecipeServiceTests
         A.CallTo(() => recipeStepRepository.UpsertStepCollectionAsync(recipeId, A<IEnumerable<DBModel.RecipeStep>>._)).MustHaveHappenedOnceExactly();
         var created = db.OutboxEvents.Local.Single();
         created.EventType.Should().Be(nameof(RecipeCreatedEvent));
-        System.Text.Json.JsonSerializer.Deserialize<RecipeCreatedEvent>(created.Payload)!.RecipeId.Should().Be(recipeId.Value);
+        System.Text.Json.JsonSerializer.Deserialize<RecipeCreatedEvent>(created.Payload)!.RecipeId.Should().Be(recipeId);
         created.ProcessedAtUtc.Should().BeNull();
     }
 
@@ -210,7 +210,7 @@ public class RecipeServiceTests
         A.CallTo(() => recipeStepRepository.UpsertStepCollectionAsync(recipeId, A<IEnumerable<DBModel.RecipeStep>>._)).MustHaveHappenedOnceExactly();
         var updated = db.OutboxEvents.Local.Single();
         updated.EventType.Should().Be(nameof(RecipeUpdatedEvent));
-        System.Text.Json.JsonSerializer.Deserialize<RecipeUpdatedEvent>(updated.Payload)!.RecipeId.Should().Be(recipeId.Value);
+        System.Text.Json.JsonSerializer.Deserialize<RecipeUpdatedEvent>(updated.Payload)!.RecipeId.Should().Be(recipeId);
         updated.ProcessedAtUtc.Should().BeNull();
     }
 
