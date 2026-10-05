@@ -518,6 +518,96 @@ describe('recipe-form', () => {
       ).toMatchObject([{ sectionTitle: null }, { sectionTitle: 'For the topping' }]);
     });
 
+    it('rejects a blank heading instead of saving its ingredients as unsectioned', async () => {
+      const wrapper = await mountForm();
+      await fillField(wrapper, 'Name', 'Cake');
+      await clickButton(wrapper, 'Add section');
+      const section = wrapper.findAll('.ingredient-section')[1];
+      await section
+        .findAll('button')
+        .find((button) => button.text().endsWith('Add ingredient'))!
+        .trigger('click');
+      await fillField(wrapper, 'Ingredient', 'Flour');
+      await fillField(wrapper, 'Measure', '200g');
+      await fillField(wrapper, 'Section heading', '   ');
+      await submit(wrapper);
+
+      expect(wrapper.text()).toContain('Section heading is required');
+      expect(postRecipe).not.toHaveBeenCalled();
+    });
+
+    it('labels repeated section names by position in the move selector', async () => {
+      const wrapper = await mountForm();
+      for (const heading of ['Sauce', 'Filling', 'Sauce']) {
+        await clickButton(wrapper, 'Add section');
+        await fillFieldAt(
+          wrapper,
+          'Section heading',
+          fields(wrapper, 'Section heading').length - 1,
+          heading,
+        );
+      }
+
+      const options = field(wrapper, 'Move ingredient to section')
+        .findComponent(QSelect)
+        .props('options') as { label: string }[];
+      expect(options.map((option) => option.label)).toEqual([
+        'Unsectioned',
+        'Sauce (section 1)',
+        'Filling',
+        'Sauce (section 3)',
+      ]);
+    });
+
+    it('rejects adjacent matching headings after a section reorder', async () => {
+      const wrapper = await mountForm();
+      await fillField(wrapper, 'Name', 'Cake');
+      for (const heading of ['Sauce', 'Filling', 'Sauce']) {
+        await clickButton(wrapper, 'Add section');
+        const sectionIndex = fields(wrapper, 'Section heading').length - 1;
+        await fillFieldAt(wrapper, 'Section heading', sectionIndex, heading);
+        const section = wrapper.findAll('.ingredient-section')[sectionIndex + 1];
+        await section
+          .findAll('button')
+          .find((button) => button.text().endsWith('Add ingredient'))!
+          .trigger('click');
+        const ingredientIndex = fields(wrapper, 'Ingredient').length - 1;
+        await fillFieldAt(wrapper, 'Ingredient', ingredientIndex, heading);
+        await fillFieldAt(wrapper, 'Measure', ingredientIndex, '1 cup');
+      }
+      await wrapper
+        .findAll('.ingredient-section')[3]
+        .find('[aria-label="Move section up"]')
+        .trigger('click');
+      await submit(wrapper);
+
+      expect(wrapper.text()).toContain('Adjacent sections need different headings');
+      expect(postRecipe).not.toHaveBeenCalled();
+    });
+
+    it('rejects matching headings separated only by a section with no saved rows', async () => {
+      const wrapper = await mountForm();
+      await fillField(wrapper, 'Name', 'Cake');
+      for (const heading of ['Sauce', 'Filling', 'Sauce']) {
+        await clickButton(wrapper, 'Add section');
+        const sectionIndex = fields(wrapper, 'Section heading').length - 1;
+        await fillFieldAt(wrapper, 'Section heading', sectionIndex, heading);
+        if (heading === 'Filling') continue;
+        const section = wrapper.findAll('.ingredient-section')[sectionIndex + 1];
+        await section
+          .findAll('button')
+          .find((button) => button.text().endsWith('Add ingredient'))!
+          .trigger('click');
+        const ingredientIndex = fields(wrapper, 'Ingredient').length - 1;
+        await fillFieldAt(wrapper, 'Ingredient', ingredientIndex, heading);
+        await fillFieldAt(wrapper, 'Measure', ingredientIndex, '1 cup');
+      }
+      await submit(wrapper);
+
+      expect(wrapper.text()).toContain('Adjacent sections need different headings');
+      expect(postRecipe).not.toHaveBeenCalled();
+    });
+
     it('moves a row between sections and recomputes its sort order', async () => {
       const wrapper = await mountForm();
       await fillField(wrapper, 'Name', 'Cake');
@@ -627,7 +717,9 @@ describe('recipe-form', () => {
       await clickButton(wrapper, 'Add section');
       await fillFieldAt(wrapper, 'Section heading', 1, 'Topping');
 
-      await wrapper.findAll('.ingredient-row')[0].trigger('dragstart');
+      expect(wrapper.find('.ingredient-row').attributes('draggable')).toBeUndefined();
+      expect(wrapper.find('.ingredient-section .row').attributes('draggable')).toBeUndefined();
+      await wrapper.findAll('.ingredient-row')[0].find('[draggable="true"]').trigger('dragstart');
       await wrapper.findAll('.ingredient-section')[2].trigger('drop');
       const sections = wrapper.findAll('.ingredient-section');
       await sections[2].find('[draggable="true"]').trigger('dragstart');

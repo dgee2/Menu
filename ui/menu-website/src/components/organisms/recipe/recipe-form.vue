@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import type { ValidationRule } from 'quasar';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
 import RecipeNameField from '@/components/molecules/recipe/fields/recipe-name-field.vue';
 import TextField from '@/components/atoms/form/text-field.vue';
@@ -9,7 +10,7 @@ import StepRowEditor from '@/components/molecules/recipe/step-row-editor.vue';
 import RecipeVisibilityField from '@/components/molecules/recipe/fields/recipe-visibility-field.vue';
 import { useRecipeService } from '@/services/recipe-service';
 import { ApiError } from '@/services/api-error';
-import { nonNegativeIntegerRules } from '@/services/form-rules';
+import { nonNegativeIntegerRules, requiredText } from '@/services/form-rules';
 import { isBlankIngredientRow, isBlankStepRow } from '@/services/recipe-rows';
 import { effectiveTotalTimeMinutes } from '@/services/recipe-timing';
 import type {
@@ -132,12 +133,43 @@ const moveSection = (index: number, offset: -1 | 1) => {
   if (index + offset < 1) return;
   moveItem(sections.value, index, offset);
 };
-const sectionOptions = computed(() =>
-  sections.value.map((section, index) => ({
-    label: index === 0 ? 'Unsectioned' : section.title?.trim() || `Section ${index}`,
+const sectionOptions = computed(() => {
+  const labels = sections.value.map((section, index) =>
+    index === 0 ? 'Unsectioned' : section.title?.trim() || `Section ${index}`,
+  );
+  return sections.value.map((section, index) => ({
+    label:
+      labels.filter((label) => label === labels[index]).length > 1
+        ? `${labels[index]} (section ${index})`
+        : labels[index],
     value: section.sectionId,
-  })),
-);
+  }));
+});
+
+const sectionHeadingRules = (index: number): ValidationRule[] => [
+  requiredText('Section heading is required'),
+  (value: string | null) => {
+    const title = value?.trim();
+    const previous = sections.value[index - 1]?.title?.trim();
+    const next = sections.value[index + 1]?.title?.trim();
+    const persistedSections = sections.value.filter((section) =>
+      section.rows.some((row) => !isBlankIngredientRow(row)),
+    );
+    const persistedIndex = persistedSections.indexOf(sections.value[index]);
+    const previousPersisted =
+      persistedIndex > 0 ? persistedSections[persistedIndex - 1]?.title?.trim() : undefined;
+    const nextPersisted =
+      persistedIndex >= 0 ? persistedSections[persistedIndex + 1]?.title?.trim() : undefined;
+    return (
+      !title ||
+      (title !== previous &&
+        title !== next &&
+        title !== previousPersisted &&
+        title !== nextPersisted) ||
+      'Adjacent sections need different headings'
+    );
+  },
+];
 const moveIngredientToSection = (source: IngredientSection, rowIndex: number, targetId: string) => {
   const target = sections.value.find((section) => section.sectionId === targetId);
   if (!target || target === source) return;
@@ -384,15 +416,21 @@ const onTitleInput = () => {
       @dragover.prevent
       @drop.stop.prevent="dropOnSection(section)"
     >
-      <div
-        v-if="sectionIndex > 0"
-        class="row items-center q-gutter-sm q-mb-sm"
-        draggable="true"
-        @dragstart.stop="startSectionDrag(section.sectionId, $event)"
-        @dragend="dragged = null"
-      >
-        <span class="material-icons cursor-grab" aria-hidden="true">drag_indicator</span>
-        <text-field v-model="section.title" class="col" label="Section heading" />
+      <div v-if="sectionIndex > 0" class="row items-center q-gutter-sm q-mb-sm">
+        <span
+          class="material-icons cursor-grab"
+          aria-hidden="true"
+          draggable="true"
+          @dragstart.stop="startSectionDrag(section.sectionId, $event)"
+          @dragend="dragged = null"
+          >drag_indicator</span
+        >
+        <text-field
+          v-model="section.title"
+          class="col"
+          label="Section heading"
+          :rules="sectionHeadingRules(sectionIndex)"
+        />
         <q-btn
           flat
           dense
@@ -431,13 +469,17 @@ const onTitleInput = () => {
         v-for="(ingredient, index) in section.rows"
         :key="ingredient.rowId"
         class="ingredient-row"
-        draggable="true"
-        @dragstart.stop="startIngredientDrag(ingredient.rowId, $event)"
-        @dragend="dragged = null"
         @dragover.prevent
         @drop.prevent="dropOnRow(section, index, $event)"
       >
-        <span class="material-icons cursor-grab" aria-hidden="true">drag_indicator</span>
+        <span
+          class="material-icons cursor-grab"
+          aria-hidden="true"
+          draggable="true"
+          @dragstart.stop="startIngredientDrag(ingredient.rowId, $event)"
+          @dragend="dragged = null"
+          >drag_indicator</span
+        >
         <ingredient-row-editor
           v-model:ingredient-text="ingredient.ingredientText"
           v-model:measure-text="ingredient.measureText"

@@ -292,9 +292,28 @@ export const AddAndRenameSection = meta.story({
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Add section' }));
     const heading = canvas.getByLabelText('Section heading');
+    await userEvent.type(canvas.getByLabelText('Name'), 'Cake');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
+    await expect(await canvas.findByText('Section heading is required')).toBeInTheDocument();
     await userEvent.type(heading, 'For the sauce');
     await expect(heading).toHaveValue('For the sauce');
     await expect(canvas.getAllByRole('button', { name: 'Add ingredient' })).toHaveLength(2);
+  },
+});
+
+export const AdjacentMatchingSectionHeadingsBlockSubmit = meta.story({
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText('Name'), 'Cake');
+    await userEvent.click(canvas.getByRole('button', { name: 'Add section' }));
+    await userEvent.type(canvas.getByLabelText('Section heading'), 'Sauce');
+    await userEvent.click(canvas.getByRole('button', { name: 'Add section' }));
+    await userEvent.type(canvas.getAllByLabelText('Section heading')[1], ' Sauce ');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
+
+    await expect(
+      await canvas.findAllByText('Adjacent sections need different headings'),
+    ).toHaveLength(2);
   },
 });
 
