@@ -13,7 +13,7 @@
     <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.6.0" />
     <PackageReference Include="Aspire.Hosting.Redis" Version="13.6.0" />
     <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.6.0" />
-    <PackageReference Include="CommunityToolkit.Aspire.Hosting.JavaScript.Extensions" Version="13.5.0" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.JavaScript.Extensions" Version="13.6.0" />
   </ItemGroup>
 
   <ItemGroup>
