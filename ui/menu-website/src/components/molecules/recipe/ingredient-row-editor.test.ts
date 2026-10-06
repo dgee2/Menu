@@ -1,14 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { QSelect, Quasar } from 'quasar';
+import { Quasar } from 'quasar';
 import { nextTick } from 'vue';
 import IngredientRowEditor from './ingredient-row-editor.vue';
 
 const mounted: VueWrapper[] = [];
 
-// The section field is a QSelect, whose debounced virtual-scroll timer is only cancelled in
-// onBeforeUnmount. Left mounted it can fire after jsdom has torn `window` down and fail the run
-// as an unhandled error. See combobox-field.test.ts.
 afterEach(() => {
   while (mounted.length) mounted.pop()?.unmount();
 });
@@ -52,7 +49,7 @@ describe('ingredient-row-editor', () => {
     const wrapper = mountRow();
 
     const labels = wrapper.findAll('.q-field__label').map((label) => label.text());
-    expect(labels).toEqual(['Measure', 'Ingredient', 'Preparation', 'Section']);
+    expect(labels).toEqual(['Measure', 'Ingredient', 'Preparation']);
   });
 
   it('emits the edited values through v-model', async () => {
@@ -98,21 +95,13 @@ describe('ingredient-row-editor', () => {
     expect(await validate(wrapper, 'Measure')).toContain('Measure is required');
   });
 
-  it('passes section suggestions through to the section field', () => {
-    const wrapper = mountRow({ sectionSuggestions: ['For the sauce', 'For the topping'] });
-
-    expect(field(wrapper, 'Section').findComponent(QSelect).exists()).toBe(true);
-    expect(wrapper.findComponent({ name: 'combobox-field' }).props('suggestions')).toEqual([
-      'For the sauce',
-      'For the topping',
-    ]);
-  });
-
   it('disables the move buttons at the ends of the list', () => {
     const wrapper = mountRow({ canMoveUp: false, canMoveDown: true });
 
     expect(wrapper.find('[aria-label="Move ingredient up"]').attributes('disabled')).toBeDefined();
-    expect(wrapper.find('[aria-label="Move ingredient down"]').attributes('disabled')).toBeUndefined();
+    expect(
+      wrapper.find('[aria-label="Move ingredient down"]').attributes('disabled'),
+    ).toBeUndefined();
   });
 
   it('emits move and remove events', async () => {

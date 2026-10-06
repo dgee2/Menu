@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import type { ValidationRule } from 'quasar';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
 import RecipeNameField from '@/components/molecules/recipe/fields/recipe-name-field.vue';
 import TextField from '@/components/atoms/form/text-field.vue';
@@ -49,8 +50,16 @@ const prepTimeMinutes = ref<number | null>(props.initialRecipe?.prepTimeMinutes 
 const cookTimeMinutes = ref<number | null>(props.initialRecipe?.cookTimeMinutes ?? null);
 const totalTimeMinutes = ref<number | null>(props.initialRecipe?.totalTimeMinutes ?? null);
 
-interface IngredientRow extends RecipeIngredientItem {
+interface IngredientRow extends Omit<RecipeIngredientItem, 'sectionTitle'> {
   rowId: string;
+}
+
+interface IngredientSection {
+  sectionId: string;
+  title: string | null;
+  originalTitle?: string;
+  isUnsectioned: boolean;
+  rows: IngredientRow[];
 }
 
 interface StepRow extends RecipeStepItem {
@@ -68,7 +77,6 @@ const moveItem = <T,>(array: T[], index: number, offset: -1 | 1) => {
 const blankIngredient = (): IngredientRow => ({
   ingredientText: '',
   measureText: '',
-  sectionTitle: null,
   preparationText: null,
   isOptional: false,
   sortOrder: 0,
@@ -86,14 +94,32 @@ const blankStep = (): StepRow => ({
 // Create mode opens with one blank row of each, so there is somewhere to type without hunting for
 // an "add" button first. Edit mode seeds nothing — the recipe's own rows are the starting point,
 // and a recipe genuinely saved with no steps should not sprout one on every visit.
-const ingredients = ref<IngredientRow[]>(
-  props.initialRecipe
-    ? props.initialRecipe.ingredients.map((ingredient) => ({
-        ...ingredient,
-        rowId: crypto.randomUUID(),
-      }))
-    : [blankIngredient()],
-);
+const seedSections = (): IngredientSection[] => {
+  const result: IngredientSection[] = [
+    { sectionId: crypto.randomUUID(), title: null, isUnsectioned: true, rows: [] },
+  ];
+  for (const ingredient of props.initialRecipe?.ingredients ?? []) {
+    const { sectionTitle, ...row } = ingredient;
+    const title = sectionTitle ?? null;
+    let section = result.at(-1);
+    // Keep contiguous runs separate: a repeated heading later in the recipe is a new container.
+    if (!section || section.title !== title) {
+      section = {
+        sectionId: crypto.randomUUID(),
+        title,
+        originalTitle: title ?? undefined,
+        isUnsectioned: title === null,
+        rows: [],
+      };
+      result.push(section);
+    }
+    section.rows.push({ ...row, rowId: crypto.randomUUID() });
+  }
+  if (!props.initialRecipe) result[0].rows.push(blankIngredient());
+  return result;
+};
+
+const sections = ref<IngredientSection[]>(seedSections());
 
 const steps = ref<StepRow[]>(
   props.initialRecipe
@@ -101,22 +127,144 @@ const steps = ref<StepRow[]>(
     : [blankStep()],
 );
 
-const addIngredient = () => ingredients.value.push(blankIngredient());
-const removeIngredient = (index: number) => ingredients.value.splice(index, 1);
-const moveIngredient = (index: number, offset: -1 | 1) => moveItem(ingredients.value, index, offset);
+const addIngredient = (section: IngredientSection) => section.rows.push(blankIngredient());
+const removeIngredient = (section: IngredientSection, index: number) =>
+  section.rows.splice(index, 1);
+const moveIngredient = (section: IngredientSection, index: number, offset: -1 | 1) =>
+  moveItem(section.rows, index, offset);
+const addSection = () =>
+  sections.value.push({
+    sectionId: crypto.randomUUID(),
+    title: '',
+    isUnsectioned: false,
+    rows: [],
+  });
+const removeSection = (index: number) => {
+  if (index < 1) return;
+  const [removed] = sections.value.splice(index, 1);
+  if (removed) sections.value[index - 1].rows.push(...removed.rows);
+};
+const moveSection = (index: number, offset: -1 | 1) => {
+  if (index + offset < 1) return;
+  moveItem(sections.value, index, offset);
+};
+const sectionOptions = computed(() => {
+  return sections.value.map((section, index) => ({
+    // A leading position is unique even when a literal heading resembles a generated label.
+    label: `${index + 1}. ${section.isUnsectioned ? 'Unsectioned' : section.title?.trim() || `Section ${index}`}`,
+    value: section.sectionId,
+  }));
+});
+
+const sectionTitleForPayload = (section: IngredientSection, value = section.title) => {
+  if (section.isUnsectioned) return null;
+  // Existing titles must retain their exact spelling until edited: RecipeDetail groups contiguous
+  // runs by the raw value, so trimming an untouched title can erase a persisted boundary.
+  if (section.originalTitle !== undefined && value === section.originalTitle) return value;
+  return value?.trim() || null;
+};
+
+const populatedSections = () =>
+  sections.value.filter((section) => section.rows.some((row) => !isBlankIngredientRow(row)));
+
+const sectionHeadingRules = (index: number, section: IngredientSection): ValidationRule[] => [
+  (value: string | null) =>
+    (section.originalTitle !== undefined && value === section.originalTitle) ||
+    !!value?.trim() ||
+    'Section heading is required',
+  () =>
+    section.rows.some((row) => !isBlankIngredientRow(row)) ||
+    'Add an ingredient or remove this section',
+  (value: string | null) => {
+    const title = sectionTitleForPayload(section, value);
+    const previousSection = sections.value[index - 1];
+    const nextSection = sections.value[index + 1];
+    const previous = previousSection && sectionTitleForPayload(previousSection);
+    const next = nextSection && sectionTitleForPayload(nextSection);
+    const persistedSections = populatedSections();
+    const persistedIndex = persistedSections.indexOf(sections.value[index]);
+    const previousPersisted =
+      persistedIndex > 0
+        ? sectionTitleForPayload(persistedSections[persistedIndex - 1])
+        : undefined;
+    const nextPersisted =
+      persistedIndex >= 0 && persistedSections[persistedIndex + 1]
+        ? sectionTitleForPayload(persistedSections[persistedIndex + 1])
+        : undefined;
+    return (
+      title === null ||
+      (title !== previous &&
+        title !== next &&
+        title !== previousPersisted &&
+        title !== nextPersisted) ||
+      'Adjacent sections need different headings'
+    );
+  },
+];
+const moveIngredientToSection = (source: IngredientSection, rowIndex: number, targetId: string) => {
+  const target = sections.value.find((section) => section.sectionId === targetId);
+  if (!target || target === source) return;
+  const [row] = source.rows.splice(rowIndex, 1);
+  if (row) target.rows.push(row);
+};
+
+const dragged = ref<
+  { kind: 'ingredient'; rowId: string } | { kind: 'section'; sectionId: string } | null
+>(null);
+const startIngredientDrag = (rowId: string, event: DragEvent) => {
+  dragged.value = { kind: 'ingredient', rowId };
+  if (event.dataTransfer) {
+    event.dataTransfer.setData('text/plain', rowId);
+    event.dataTransfer.effectAllowed = 'move';
+  }
+};
+const startSectionDrag = (sectionId: string, event: DragEvent) => {
+  dragged.value = { kind: 'section', sectionId };
+  if (event.dataTransfer) {
+    event.dataTransfer.setData('text/plain', sectionId);
+    event.dataTransfer.effectAllowed = 'move';
+  }
+};
+const dropIngredient = (targetSection: IngredientSection, targetIndex: number) => {
+  const draggedItem = dragged.value;
+  if (draggedItem?.kind !== 'ingredient') return;
+  const source = sections.value.find((section) =>
+    section.rows.some((row) => row.rowId === draggedItem.rowId),
+  );
+  if (!source) return;
+  const sourceIndex = source.rows.findIndex((row) => row.rowId === draggedItem.rowId);
+  const [row] = source.rows.splice(sourceIndex, 1);
+  if (!row) return;
+  // After a downward same-section drag, removal shifts the target left. Its original index now
+  // inserts after it; upward and cross-section drops still insert before the target.
+  targetSection.rows.splice(targetIndex, 0, row);
+  dragged.value = null;
+};
+const dropOnRow = (targetSection: IngredientSection, targetIndex: number, event: DragEvent) => {
+  if (dragged.value?.kind !== 'ingredient') return;
+  event.stopPropagation();
+  dropIngredient(targetSection, targetIndex);
+};
+const dropOnSection = (target: IngredientSection) => {
+  const draggedItem = dragged.value;
+  if (draggedItem?.kind === 'ingredient') {
+    dropIngredient(target, target.rows.length);
+  } else if (draggedItem?.kind === 'section') {
+    const sourceIndex = sections.value.findIndex(
+      (section) => section.sectionId === draggedItem.sectionId,
+    );
+    const targetIndex = sections.value.indexOf(target);
+    if (sourceIndex > 0 && targetIndex > 0 && sourceIndex !== targetIndex) {
+      const [section] = sections.value.splice(sourceIndex, 1);
+      if (section) sections.value.splice(targetIndex, 0, section);
+    }
+    dragged.value = null;
+  }
+};
 
 const addStep = () => steps.value.push(blankStep());
 const removeStep = (index: number) => steps.value.splice(index, 1);
 const moveStep = (index: number, offset: -1 | 1) => moveItem(steps.value, index, offset);
-
-/** Section titles already used in this recipe, so the next row can reuse one instead of retyping it. */
-const sectionSuggestions = computed(() => [
-  ...new Set(
-    ingredients.value
-      .map((ingredient) => ingredient.sectionTitle?.trim())
-      .filter((section): section is string => !!section),
-  ),
-]);
 
 // Shown as a placeholder, never written into the field. Populating the input would make a derived
 // total indistinguishable from an explicit one, and clearing it would look like data loss.
@@ -139,12 +287,16 @@ const buildPayload = (): UpsertRecipe => ({
   cookTimeMinutes: cookTimeMinutes.value,
   totalTimeMinutes: totalTimeMinutes.value,
   accessScope: accessScope.value,
-  ingredients: ingredients.value
-    .filter((ingredient) => !isBlankIngredientRow(ingredient))
-    .map((ingredient, index) => ({
+  ingredients: sections.value
+    .flatMap((section) =>
+      section.rows
+        .filter((ingredient) => !isBlankIngredientRow(ingredient))
+        .map((ingredient) => ({ section, ingredient })),
+    )
+    .map(({ section, ingredient }, index) => ({
       ingredientText: ingredient.ingredientText,
       measureText: ingredient.measureText,
-      sectionTitle: ingredient.sectionTitle,
+      sectionTitle: sectionTitleForPayload(section),
       preparationText: ingredient.preparationText,
       isOptional: ingredient.isOptional,
       // Carried through untouched: the form does not expose these, but the API accepts them and
@@ -166,12 +318,20 @@ const buildPayload = (): UpsertRecipe => ({
     })),
 });
 
-// The dirty check compares snapshots of the *payload*, reusing the builder above deliberately: a
-// guard with its own idea of what the form contains drifts from what actually gets saved.
-// The baseline is taken after seeding, so the seeded blank rows do not count as an edit.
-const baseline = ref(JSON.stringify(buildPayload()));
+// The payload captures saved rows; the section structure also captures named sections with no
+// saved rows, so adding or reordering one still triggers the unsaved-changes guard.
+const editorSnapshot = () =>
+  JSON.stringify({
+    payload: buildPayload(),
+    sections: sections.value.map(({ sectionId, title, isUnsectioned }) => ({
+      sectionId,
+      title,
+      isUnsectioned,
+    })),
+  });
+const baseline = ref(editorSnapshot());
 const isArmed = ref(true);
-const isDirty = () => isArmed.value && JSON.stringify(buildPayload()) !== baseline.value;
+const isDirty = () => isArmed.value && editorSnapshot() !== baseline.value;
 
 const warnOnUnload = (event: BeforeUnloadEvent) => {
   if (!isDirty()) return;
@@ -215,6 +375,17 @@ const reportFailure = (error: unknown) => {
 const onSubmit = async () => {
   bannerError.value = null;
   titleConflictError.value = null;
+
+  const savedSections = populatedSections();
+  if (
+    savedSections.some(
+      (section, index) =>
+        index > 0 && section.isUnsectioned && savedSections[index - 1].isUnsectioned,
+    )
+  ) {
+    bannerError.value = 'Move adjacent unsectioned ingredients into one group before saving.';
+    return;
+  }
 
   const recipe = buildPayload();
 
@@ -292,22 +463,108 @@ const onTitleInput = () => {
       :rules="nonNegativeIntegerRules"
     />
     <div class="text-h6">Ingredients</div>
-    <ingredient-row-editor
-      v-for="(ingredient, index) in ingredients"
-      :key="ingredient.rowId"
-      v-model:ingredient-text="ingredient.ingredientText"
-      v-model:measure-text="ingredient.measureText"
-      v-model:section-title="ingredient.sectionTitle"
-      v-model:preparation-text="ingredient.preparationText"
-      v-model:is-optional="ingredient.isOptional"
-      :section-suggestions="sectionSuggestions"
-      :can-move-up="index > 0"
-      :can-move-down="index < ingredients.length - 1"
-      @remove="removeIngredient(index)"
-      @move-up="moveIngredient(index, -1)"
-      @move-down="moveIngredient(index, 1)"
-    />
-    <q-btn label="Add ingredient" icon="add" flat @click="addIngredient" />
+    <div
+      v-for="(section, sectionIndex) in sections"
+      :key="section.sectionId"
+      class="ingredient-section"
+      :class="{ 'ingredient-section--visible q-pa-md': sections.length > 1 }"
+      :data-section-id="section.sectionId"
+      @dragover.prevent
+      @drop.stop.prevent="dropOnSection(section)"
+    >
+      <div v-if="sectionIndex > 0" class="row items-center q-gutter-sm q-mb-sm">
+        <span
+          class="material-icons cursor-grab"
+          aria-hidden="true"
+          draggable="true"
+          @dragstart.stop="startSectionDrag(section.sectionId, $event)"
+          @dragend="dragged = null"
+          >drag_indicator</span
+        >
+        <div v-if="section.isUnsectioned" class="col text-subtitle2">Unsectioned ingredients</div>
+        <text-field
+          v-else
+          v-model="section.title"
+          class="col"
+          label="Section heading"
+          :rules="sectionHeadingRules(sectionIndex, section)"
+        />
+        <q-btn
+          flat
+          dense
+          round
+          icon="arrow_upward"
+          aria-label="Move section up"
+          :disable="sectionIndex === 1"
+          @click="moveSection(sectionIndex, -1)"
+        />
+        <q-btn
+          flat
+          dense
+          round
+          icon="arrow_downward"
+          aria-label="Move section down"
+          :disable="sectionIndex === sections.length - 1"
+          @click="moveSection(sectionIndex, 1)"
+        />
+        <q-btn
+          flat
+          dense
+          round
+          icon="delete"
+          color="negative"
+          aria-label="Remove section"
+          @click="removeSection(sectionIndex)"
+        />
+      </div>
+      <div v-else-if="sections.length > 1" class="text-subtitle2 q-mb-sm">
+        Unsectioned ingredients
+      </div>
+      <div v-if="sectionIndex === 0 && sections.length > 1" class="text-caption q-mb-sm">
+        Drag rows between sections or use Move ingredient to section.
+      </div>
+      <div
+        v-for="(ingredient, index) in section.rows"
+        :key="ingredient.rowId"
+        class="ingredient-row"
+        @dragover.prevent
+        @drop.prevent="dropOnRow(section, index, $event)"
+      >
+        <span
+          class="material-icons cursor-grab"
+          aria-hidden="true"
+          draggable="true"
+          @dragstart.stop="startIngredientDrag(ingredient.rowId, $event)"
+          @dragend="dragged = null"
+          >drag_indicator</span
+        >
+        <ingredient-row-editor
+          v-model:ingredient-text="ingredient.ingredientText"
+          v-model:measure-text="ingredient.measureText"
+          v-model:preparation-text="ingredient.preparationText"
+          v-model:is-optional="ingredient.isOptional"
+          :can-move-up="index > 0"
+          :can-move-down="index < section.rows.length - 1"
+          @remove="removeIngredient(section, index)"
+          @move-up="moveIngredient(section, index, -1)"
+          @move-down="moveIngredient(section, index, 1)"
+        />
+        <q-select
+          v-if="sections.length > 1"
+          :model-value="section.sectionId"
+          :options="sectionOptions"
+          emit-value
+          map-options
+          dense
+          outlined
+          label="Move ingredient to section"
+          class="q-mb-sm"
+          @update:model-value="moveIngredientToSection(section, index, $event)"
+        />
+      </div>
+      <q-btn label="Add ingredient" icon="add" flat @click="addIngredient(section)" />
+    </div>
+    <q-btn label="Add section" icon="add" flat @click="addSection" />
 
     <div class="text-h6">Steps</div>
     <step-row-editor
@@ -331,4 +588,9 @@ const onTitleInput = () => {
   </q-form>
 </template>
 
-<style scoped></style>
+<style scoped>
+.ingredient-section--visible {
+  border: 1px solid var(--q-primary);
+  border-radius: 8px;
+}
+</style>

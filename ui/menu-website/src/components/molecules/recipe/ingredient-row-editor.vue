@@ -1,25 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import TextField from '@/components/atoms/form/text-field.vue';
-import ComboboxField from '@/components/atoms/form/combobox-field.vue';
 import { requiredTextUnlessRowIsBlank } from '@/services/form-rules';
 import { isBlankIngredientRow } from '@/services/recipe-rows';
 
 const ingredientText = defineModel<string | null>('ingredientText');
 const measureText = defineModel<string | null>('measureText');
-const sectionTitle = defineModel<string | null>('sectionTitle');
 const preparationText = defineModel<string | null>('preparationText');
 const isOptional = defineModel<boolean>('isOptional', { default: false });
 
-withDefaults(
-  defineProps<{
-    canMoveUp: boolean;
-    canMoveDown: boolean;
-    /** Section titles already used in this recipe, offered as suggestions. */
-    sectionSuggestions?: string[];
-  }>(),
-  { sectionSuggestions: () => [] },
-);
+defineProps<{
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+}>();
 
 defineEmits<{
   remove: [];
@@ -34,7 +27,6 @@ const rowIsBlank = computed(() =>
     ingredientText: ingredientText.value ?? undefined,
     measureText: measureText.value ?? undefined,
     preparationText: preparationText.value,
-    sectionTitle: sectionTitle.value,
     isOptional: isOptional.value,
   }),
 );
@@ -47,22 +39,14 @@ const measureTextRules = [requiredTextUnlessRowIsBlank('Measure is required', is
 
 <template>
   <div class="row q-col-gutter-sm items-start">
-    <div class="col-12 col-sm-3">
+    <div class="col-12 col-sm-4">
       <text-field v-model="measureText" label="Measure" :rules="measureTextRules" />
     </div>
     <div class="col-12 col-sm-4">
       <text-field v-model="ingredientText" label="Ingredient" :rules="ingredientTextRules" />
     </div>
-    <div class="col-12 col-sm-3">
+    <div class="col-12 col-sm-4">
       <text-field v-model="preparationText" label="Preparation" hint="e.g. diced, sifted" />
-    </div>
-    <div class="col-12 col-sm-2">
-      <combobox-field
-        v-model="sectionTitle"
-        label="Section"
-        hint="e.g. For the sauce"
-        :suggestions="sectionSuggestions"
-      />
     </div>
     <div class="col-12 row items-center q-gutter-sm">
       <q-toggle v-model="isOptional" label="Optional" />
