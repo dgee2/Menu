@@ -71,9 +71,10 @@ let router: Router;
  */
 const RouterHost = defineComponent({ template: '<router-view />' });
 
+let editRecipe = existingRecipe;
 const EditHost = defineComponent({
   components: { RecipeForm },
-  setup: () => ({ recipe: existingRecipe }),
+  setup: () => ({ recipe: editRecipe }),
   template: '<recipe-form :initial-recipe="recipe" />',
 });
 
@@ -195,6 +196,7 @@ const updatedRecipe = (call = 0) => putRecipe.mock.calls[call]?.[1] as unknown;
 
 describe('recipe-form', () => {
   beforeEach(() => {
+    editRecipe = existingRecipe;
     postRecipe.mockReset();
     postRecipe.mockResolvedValue(createdRecipe);
     putRecipe.mockReset();
@@ -536,6 +538,30 @@ describe('recipe-form', () => {
       expect(postRecipe).not.toHaveBeenCalled();
     });
 
+    it('requires a real ingredient in each new named section before saving', async () => {
+      const wrapper = await mountForm();
+      await fillField(wrapper, 'Name', 'Cake');
+      await clickButton(wrapper, 'Add section');
+      await fillField(wrapper, 'Section heading', 'Sauce');
+      await submit(wrapper);
+
+      expect(wrapper.text()).toContain('Add an ingredient or remove this section');
+      expect(postRecipe).not.toHaveBeenCalled();
+
+      await wrapper
+        .findAll('.ingredient-section')[1]
+        .findAll('button')
+        .find((button) => button.text().endsWith('Add ingredient'))!
+        .trigger('click');
+      await fillFieldAt(wrapper, 'Ingredient', 1, 'Tomatoes');
+      await fillFieldAt(wrapper, 'Measure', 1, '2 cups');
+      await submit(wrapper);
+
+      expect(submittedRecipe()).toMatchObject({
+        ingredients: [{ ingredientText: 'Tomatoes', sectionTitle: 'Sauce' }],
+      });
+    });
+
     it('labels repeated section names by position in the move selector', async () => {
       const wrapper = await mountForm();
       for (const heading of ['Sauce', 'Filling', 'Sauce']) {
@@ -714,6 +740,13 @@ describe('recipe-form', () => {
       await fillFieldAt(wrapper, 'Measure', 0, '200g');
       await clickButton(wrapper, 'Add section');
       await fillField(wrapper, 'Section heading', 'Base');
+      const base = wrapper.findAll('.ingredient-section')[1];
+      await base
+        .findAll('button')
+        .find((button) => button.text().endsWith('Add ingredient'))!
+        .trigger('click');
+      await fillFieldAt(wrapper, 'Ingredient', 1, 'Butter');
+      await fillFieldAt(wrapper, 'Measure', 1, '1 tbsp');
       await clickButton(wrapper, 'Add section');
       await fillFieldAt(wrapper, 'Section heading', 1, 'Topping');
 
@@ -731,7 +764,10 @@ describe('recipe-form', () => {
       expect(
         (submittedRecipe() as { ingredients: { sectionTitle: string; sortOrder: number }[] })
           .ingredients,
-      ).toMatchObject([{ sectionTitle: 'Topping', sortOrder: 0 }]);
+      ).toMatchObject([
+        { sectionTitle: 'Topping', sortOrder: 0 },
+        { sectionTitle: 'Base', sortOrder: 1 },
+      ]);
     });
 
     it('submits the populated metadata fields as numbers', async () => {
@@ -877,6 +913,35 @@ describe('recipe-form', () => {
   });
 
   describe('edit mode', () => {
+    it('preserves a later unsectioned ingredient run during an unrelated edit', async () => {
+      editRecipe = {
+        ...existingRecipe,
+        ingredients: [
+          { ...existingRecipe.ingredients[0], sectionTitle: 'Sauce' },
+          {
+            ...existingRecipe.ingredients[0],
+            ingredientText: 'Salt',
+            sortOrder: 1,
+            sectionTitle: null,
+          },
+        ],
+      };
+      const wrapper = await mountEditForm();
+
+      expect(fields(wrapper, 'Section heading')).toHaveLength(1);
+      expect(wrapper.findAll('.ingredient-section')[2].text()).toContain('Unsectioned ingredients');
+      await fillField(wrapper, 'Name', 'Renamed Lasagne');
+      await submit(wrapper);
+
+      expect(putRecipe).toHaveBeenCalledTimes(1);
+      expect(updatedRecipe()).toMatchObject({
+        ingredients: [
+          { ingredientText: 'Pasta', sectionTitle: 'Sauce', sortOrder: 0 },
+          { ingredientText: 'Salt', sectionTitle: null, sortOrder: 1 },
+        ],
+      });
+    });
+
     it('populates every field from the recipe being edited', async () => {
       const wrapper = await mountEditForm();
 
@@ -977,6 +1042,23 @@ describe('recipe-form', () => {
       await router.push('/recipes');
 
       expect(confirm).not.toHaveBeenCalled();
+    });
+
+    it('warns before discarding an empty named section and clears after removing it', async () => {
+      const confirm = vi.fn(() => false);
+      vi.stubGlobal('confirm', confirm);
+      const wrapper = await mountForm();
+
+      await clickButton(wrapper, 'Add section');
+      await fillField(wrapper, 'Section heading', 'Sauce');
+      await router.push('/recipes');
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(router.currentRoute.value.path).toBe('/new-recipe');
+
+      await clickButton(wrapper, 'Remove section');
+      await router.push('/recipes');
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(router.currentRoute.value.path).toBe('/recipes');
     });
 
     it('prompts before leaving with unsaved edits, and stays put when declined', async () => {

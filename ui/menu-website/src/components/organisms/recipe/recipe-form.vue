@@ -57,6 +57,7 @@ interface IngredientRow extends Omit<RecipeIngredientItem, 'sectionTitle'> {
 interface IngredientSection {
   sectionId: string;
   title: string | null;
+  isUnsectioned: boolean;
   rows: IngredientRow[];
 }
 
@@ -93,14 +94,16 @@ const blankStep = (): StepRow => ({
 // an "add" button first. Edit mode seeds nothing — the recipe's own rows are the starting point,
 // and a recipe genuinely saved with no steps should not sprout one on every visit.
 const seedSections = (): IngredientSection[] => {
-  const result: IngredientSection[] = [{ sectionId: crypto.randomUUID(), title: null, rows: [] }];
+  const result: IngredientSection[] = [
+    { sectionId: crypto.randomUUID(), title: null, isUnsectioned: true, rows: [] },
+  ];
   for (const ingredient of props.initialRecipe?.ingredients ?? []) {
     const { sectionTitle, ...row } = ingredient;
     const title = sectionTitle?.trim() || null;
     let section = result.at(-1);
     // Keep contiguous runs separate: a repeated heading later in the recipe is a new container.
     if (!section || section.title !== title) {
-      section = { sectionId: crypto.randomUUID(), title, rows: [] };
+      section = { sectionId: crypto.randomUUID(), title, isUnsectioned: title === null, rows: [] };
       result.push(section);
     }
     section.rows.push({ ...row, rowId: crypto.randomUUID() });
@@ -123,7 +126,12 @@ const removeIngredient = (section: IngredientSection, index: number) =>
 const moveIngredient = (section: IngredientSection, index: number, offset: -1 | 1) =>
   moveItem(section.rows, index, offset);
 const addSection = () =>
-  sections.value.push({ sectionId: crypto.randomUUID(), title: '', rows: [] });
+  sections.value.push({
+    sectionId: crypto.randomUUID(),
+    title: '',
+    isUnsectioned: false,
+    rows: [],
+  });
 const removeSection = (index: number) => {
   if (index < 1) return;
   const [removed] = sections.value.splice(index, 1);
@@ -135,7 +143,7 @@ const moveSection = (index: number, offset: -1 | 1) => {
 };
 const sectionOptions = computed(() => {
   const labels = sections.value.map((section, index) =>
-    index === 0 ? 'Unsectioned' : section.title?.trim() || `Section ${index}`,
+    section.isUnsectioned ? 'Unsectioned' : section.title?.trim() || `Section ${index}`,
   );
   return sections.value.map((section, index) => ({
     label:
@@ -146,8 +154,11 @@ const sectionOptions = computed(() => {
   }));
 });
 
-const sectionHeadingRules = (index: number): ValidationRule[] => [
+const sectionHeadingRules = (index: number, section: IngredientSection): ValidationRule[] => [
   requiredText('Section heading is required'),
+  () =>
+    section.rows.some((row) => !isBlankIngredientRow(row)) ||
+    'Add an ingredient or remove this section',
   (value: string | null) => {
     const title = value?.trim();
     const previous = sections.value[index - 1]?.title?.trim();
@@ -259,7 +270,7 @@ const buildPayload = (): UpsertRecipe => ({
     .map(({ section, ingredient }, index) => ({
       ingredientText: ingredient.ingredientText,
       measureText: ingredient.measureText,
-      sectionTitle: section.title?.trim() || null,
+      sectionTitle: section.isUnsectioned ? null : section.title?.trim() || null,
       preparationText: ingredient.preparationText,
       isOptional: ingredient.isOptional,
       // Carried through untouched: the form does not expose these, but the API accepts them and
@@ -281,12 +292,20 @@ const buildPayload = (): UpsertRecipe => ({
     })),
 });
 
-// The dirty check compares snapshots of the *payload*, reusing the builder above deliberately: a
-// guard with its own idea of what the form contains drifts from what actually gets saved.
-// The baseline is taken after seeding, so the seeded blank rows do not count as an edit.
-const baseline = ref(JSON.stringify(buildPayload()));
+// The payload captures saved rows; the section structure also captures named sections with no
+// saved rows, so adding or reordering one still triggers the unsaved-changes guard.
+const editorSnapshot = () =>
+  JSON.stringify({
+    payload: buildPayload(),
+    sections: sections.value.map(({ sectionId, title, isUnsectioned }) => ({
+      sectionId,
+      title,
+      isUnsectioned,
+    })),
+  });
+const baseline = ref(editorSnapshot());
 const isArmed = ref(true);
-const isDirty = () => isArmed.value && JSON.stringify(buildPayload()) !== baseline.value;
+const isDirty = () => isArmed.value && editorSnapshot() !== baseline.value;
 
 const warnOnUnload = (event: BeforeUnloadEvent) => {
   if (!isDirty()) return;
@@ -425,11 +444,13 @@ const onTitleInput = () => {
           @dragend="dragged = null"
           >drag_indicator</span
         >
+        <div v-if="section.isUnsectioned" class="col text-subtitle2">Unsectioned ingredients</div>
         <text-field
+          v-else
           v-model="section.title"
           class="col"
           label="Section heading"
-          :rules="sectionHeadingRules(sectionIndex)"
+          :rules="sectionHeadingRules(sectionIndex, section)"
         />
         <q-btn
           flat
@@ -534,8 +555,5 @@ const onTitleInput = () => {
 .ingredient-section--visible {
   border: 1px solid var(--q-primary);
   border-radius: 8px;
-}
-.ingredient-row {
-  cursor: grab;
 }
 </style>

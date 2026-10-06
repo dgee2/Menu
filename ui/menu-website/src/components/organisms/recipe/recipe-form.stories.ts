@@ -298,6 +298,10 @@ export const AddAndRenameSection = meta.story({
     await userEvent.type(heading, 'For the sauce');
     await expect(heading).toHaveValue('For the sauce');
     await expect(canvas.getAllByRole('button', { name: 'Add ingredient' })).toHaveLength(2);
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
+    await expect(
+      await canvas.findByText('Add an ingredient or remove this section'),
+    ).toBeInTheDocument();
   },
 });
 
@@ -307,10 +311,19 @@ export const AdjacentMatchingSectionHeadingsBlockSubmit = meta.story({
     await userEvent.type(canvas.getByLabelText('Name'), 'Cake');
     await userEvent.click(canvas.getByRole('button', { name: 'Add section' }));
     await userEvent.type(canvas.getByLabelText('Section heading'), 'Sauce');
+    const firstSection = canvasElement.querySelectorAll<HTMLElement>('.ingredient-section')[1];
+    await userEvent.click(within(firstSection).getByRole('button', { name: 'Add ingredient' }));
+    await userEvent.type(within(firstSection).getByLabelText('Ingredient'), 'Tomatoes');
+    await userEvent.type(within(firstSection).getByLabelText('Measure'), '2 cups');
     await userEvent.click(canvas.getByRole('button', { name: 'Add section' }));
-    await userEvent.type(canvas.getAllByLabelText('Section heading')[1], ' Sauce ');
+    const secondSection = canvasElement.querySelectorAll<HTMLElement>('.ingredient-section')[2];
+    const secondHeading = within(secondSection).getByLabelText('Section heading');
+    await userEvent.click(secondHeading);
+    await userEvent.type(secondHeading, ' Sauce ');
+    await userEvent.click(within(secondSection).getByRole('button', { name: 'Add ingredient' }));
+    await userEvent.type(within(secondSection).getByLabelText('Ingredient'), 'Basil');
+    await userEvent.type(within(secondSection).getByLabelText('Measure'), '1 bunch');
     await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
-
     await expect(
       await canvas.findAllByText('Adjacent sections need different headings'),
     ).toHaveLength(2);
@@ -334,6 +347,25 @@ export const MultiSectionRecipe = meta.story({
     await waitFor(() =>
       expect(within(sectionContainers[2]).getAllByLabelText('Ingredient')).toHaveLength(2),
     );
+  },
+});
+
+export const LaterUnsectionedRun = meta.story({
+  args: {
+    initialRecipe: {
+      ...multiSectionRecipe,
+      ingredients: [
+        { ...multiSectionRecipe.ingredients[1], sortOrder: 0 },
+        { ...multiSectionRecipe.ingredients[0], sortOrder: 1 },
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getAllByLabelText('Section heading')).toHaveLength(1);
+    const sections = canvasElement.querySelectorAll<HTMLElement>('.ingredient-section');
+    await expect(within(sections[2]).getByText('Unsectioned ingredients')).toBeInTheDocument();
+    await expect(within(sections[2]).getByLabelText('Ingredient')).toHaveValue('Pasta');
   },
 });
 
