@@ -19,9 +19,9 @@ globalThis.ResizeObserver = ResizeObserverMock;
 
 // Quasar's Screen plugin reads ScreenOrientation during installation. jsdom does
 // not implement this browser API, so provide it for component tests.
-const orientation = new EventTarget();
-Object.assign(orientation, { type: 'landscape-primary', angle: 0 });
+const screenOrientation = new EventTarget();
+Object.assign(screenOrientation, { type: 'landscape-primary', angle: 0 });
 Object.defineProperty(globalThis.screen, 'orientation', {
   configurable: true,
-  value: orientation,
+  value: screenOrientation,
 });
