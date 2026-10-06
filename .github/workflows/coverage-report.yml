@@ -31,52 +31,28 @@ jobs:
             echo "number=$number" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check for coverage artifacts
+      - name: Download bounded coverage archives
         if: steps.pr.outputs.number != ''
-        id: artifacts
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" > "$RUNNER_TEMP/artifacts.json"
+          mkdir -p "$RUNNER_TEMP/coverage"
           for suite in backend-unit backend-integration frontend; do
-            size=$(jq -r --arg name "coverage-$suite" \
-              '[.artifacts[] | select(.name == $name) | .size_in_bytes] | first // 0' \
+            id=$(jq -r --arg name "coverage-$suite" \
+              '[.artifacts[] | select(.name == $name and .expired == false and
+                .size_in_bytes > 0 and .size_in_bytes <= 10000000) | .id] | first // empty' \
               "$RUNNER_TEMP/artifacts.json")
-            if [ "$size" -gt 0 ] && [ "$size" -le 10000000 ]; then
-              echo "$suite=true" >> "$GITHUB_OUTPUT"
+            if [[ "$id" =~ ^[0-9]+$ ]]; then
+              archive="$RUNNER_TEMP/coverage/coverage-$suite.zip"
+              if ! gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" > "$archive"; then
+                rm -f "$archive"
+              elif [ "$(stat -c %s "$archive")" -gt 10000000 ]; then
+                rm -f "$archive"
+              fi
             fi
           done
-
-      - name: Download backend unit coverage
-        if: steps.artifacts.outputs.backend-unit == 'true'
-        uses: actions/download-artifact@v8
-        continue-on-error: true
-        with:
-          name: coverage-backend-unit
-          path: ${{ runner.temp }}/coverage/coverage-backend-unit
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ github.token }}
-
-      - name: Download backend integration coverage
-        if: steps.artifacts.outputs.backend-integration == 'true'
-        uses: actions/download-artifact@v8
-        continue-on-error: true
-        with:
-          name: coverage-backend-integration
-          path: ${{ runner.temp }}/coverage/coverage-backend-integration
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ github.token }}
-
-      - name: Download frontend coverage
-        if: steps.artifacts.outputs.frontend == 'true'
-        uses: actions/download-artifact@v8
-        continue-on-error: true
-        with:
-          name: coverage-frontend
-          path: ${{ runner.temp }}/coverage/coverage-frontend
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ github.token }}
 
       - name: Build coverage comment
         if: steps.pr.outputs.number != ''
@@ -92,6 +68,7 @@ jobs:
           import sys
           import xml.etree.ElementTree as ET
           from pathlib import Path
+          from zipfile import BadZipFile, ZipFile
 
 
           def percentage(value: object, scale: int = 1) -> str:
@@ -101,10 +78,26 @@ jobs:
               return f"{number:.1f}%"
 
 
-          def cobertura_metrics(path: Path) -> tuple[str, str]:
-              if path.stat().st_size > 20_000_000:
-                  raise ValueError("Cobertura report is too large")
-              document = path.read_bytes()
+          def read_member(archive: Path, member: str, allowed: set[str]) -> bytes:
+              with ZipFile(archive) as zipped:
+                  infos = zipped.infolist()
+                  if len(infos) > len(allowed) or any(
+                      info.filename not in allowed or info.is_dir() for info in infos
+                  ):
+                      raise ValueError("Unexpected coverage archive entries")
+                  if sum(info.file_size for info in infos) > len(allowed) * 10_000_000:
+                      raise ValueError("Coverage archive expands beyond its limit")
+                  matches = [info for info in infos if info.filename == member]
+                  if len(matches) != 1 or matches[0].file_size > 10_000_000:
+                      raise ValueError("Missing, duplicate, or oversized coverage report")
+                  with zipped.open(matches[0]) as source:
+                      document = source.read(10_000_001)
+                  if len(document) != matches[0].file_size:
+                      raise ValueError("Coverage report exceeds its declared size")
+                  return document
+
+
+          def cobertura_metrics(document: bytes) -> tuple[str, str]:
               if b"<!DOCTYPE" in document.upper() or b"<!ENTITY" in document.upper():
                   raise ValueError("XML declarations are not allowed in coverage reports")
               root = ET.fromstring(document)
@@ -115,10 +108,10 @@ jobs:
               )
 
 
-          def vitest_metrics(path: Path) -> tuple[str, str]:
-              if path.stat().st_size > 5_000_000:
+          def vitest_metrics(document: bytes) -> tuple[str, str]:
+              if len(document) > 5_000_000:
                   raise ValueError("Vitest summary is too large")
-              summary = json.loads(path.read_text(encoding="utf-8"))
+              summary = json.loads(document)
               return percentage(summary["total"]["lines"]["pct"]), percentage(
                   summary["total"]["branches"]["pct"]
               )
@@ -131,35 +124,45 @@ jobs:
               reports = (
                   (
                       "MenuApi.Tests",
-                      artifact_dir / "coverage-backend-unit" / "MenuApi.Tests.cobertura.xml",
+                      "backend-unit",
+                      "MenuApi.Tests.cobertura.xml",
                       cobertura_metrics,
                   ),
                   (
                       "MenuDB.Tests",
-                      artifact_dir / "coverage-backend-unit" / "MenuDB.Tests.cobertura.xml",
+                      "backend-unit",
+                      "MenuDB.Tests.cobertura.xml",
                       cobertura_metrics,
                   ),
                   (
                       "MenuApi.Integration.Tests",
-                      artifact_dir
-                      / "coverage-backend-integration"
-                      / "MenuApi.Integration.Tests.cobertura.xml",
+                      "backend-integration",
+                      "MenuApi.Integration.Tests.cobertura.xml",
                       cobertura_metrics,
                   ),
                   (
                       "Frontend",
-                      artifact_dir / "coverage-frontend" / "coverage-summary.json",
+                      "frontend",
+                      "coverage-summary.json",
                       vitest_metrics,
                   ),
               )
+              allowed = {
+                  "backend-unit": {"MenuApi.Tests.cobertura.xml", "MenuDB.Tests.cobertura.xml"},
+                  "backend-integration": {"MenuApi.Integration.Tests.cobertura.xml"},
+                  "frontend": {"coverage-summary.json"},
+              }
 
               rows = []
-              for label, path, read_metrics in reports:
-                  if not path.is_file():
+              for label, suite, member, read_metrics in reports:
+                  archive = artifact_dir / f"coverage-{suite}.zip"
+                  if not archive.is_file():
                       continue
                   try:
-                      lines, branches = read_metrics(path)
-                  except (ET.ParseError, KeyError, OSError, TypeError, ValueError) as error:
+                      document = read_member(archive, member, allowed[suite])
+                      lines, branches = read_metrics(document)
+                  except (BadZipFile, ET.ParseError, KeyError, OSError, RuntimeError,
+                          TypeError, ValueError, NotImplementedError) as error:
                       print(f"Skipping invalid {label} coverage report: {error}", file=sys.stderr)
                       continue
                   rows.append(f"| {label} | {lines} | {branches} |")
