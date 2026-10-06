@@ -132,13 +132,42 @@ jobs:
         run: dotnet build MenuApi.sln --configuration Release --no-restore
         working-directory: ./backend
 
-      - name: Test with the dotnet CLI
+      - name: Test with Cobertura coverage
         run: |
+          $coverageDir = Join-Path $env:GITHUB_WORKSPACE 'coverage'
+          New-Item -ItemType Directory -Path $coverageDir -Force | Out-Null
+          $failed = $false
           Get-ChildItem -Recurse -Filter "*.Tests.csproj" | Where-Object { $_.FullName -notlike "*Integration*" } | ForEach-Object {
-            dotnet test $_.FullName --configuration Release --no-build
+            $report = Join-Path $coverageDir "$($_.BaseName).cobertura.xml"
+            dotnet test --project $_.FullName --configuration Release --no-build --coverage --coverage-output-format cobertura --coverage-output $report
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $report)) { $failed = $true }
           }
+          if ($failed) { exit 1 }
         shell: pwsh
         working-directory: ./backend
+
+      - name: Generate backend unit coverage summary
+        if: ${{ always() && hashFiles('coverage/MenuApi.Tests.cobertura.xml') != '' && hashFiles('coverage/MenuDB.Tests.cobertura.xml') != '' }}
+        uses: danielpalme/ReportGenerator-GitHub-Action@d3ebf1f760f7d8ab92cc44d9bcfee7ad73722a31 # v5
+        continue-on-error: true
+        with:
+          reports: coverage/*.cobertura.xml
+          targetdir: coverage-report/backend-unit
+          reporttypes: MarkdownSummaryGithub
+          title: Backend unit tests
+
+      - name: Add backend unit coverage to step summary
+        if: ${{ always() && hashFiles('coverage-report/backend-unit/SummaryGithub.md') != '' }}
+        run: cat coverage-report/backend-unit/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save backend unit coverage
+        if: ${{ always() && hashFiles('coverage/*.cobertura.xml') != '' }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: coverage-backend-unit
+          path: coverage/*.cobertura.xml
+          retention-days: 7
 
   backend-integration-tests:
     name: Backend integration tests
@@ -176,14 +205,40 @@ jobs:
           dotnet dev-certs https --trust || true
           echo "SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:${SSL_CERT_DIR:-/usr/lib/ssl/certs}" >> "$GITHUB_ENV"
 
-      - name: Test with the dotnet CLI
-        run: dotnet test --project MenuApi.Integration.Tests/MenuApi.Integration.Tests.csproj --configuration Release --no-build
+      - name: Test with Cobertura coverage
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/coverage"
+          dotnet test --project MenuApi.Integration.Tests/MenuApi.Integration.Tests.csproj --configuration Release --no-build --coverage --coverage-output-format cobertura --coverage-output "$GITHUB_WORKSPACE/coverage/MenuApi.Integration.Tests.cobertura.xml"
+          test -s "$GITHUB_WORKSPACE/coverage/MenuApi.Integration.Tests.cobertura.xml"
         working-directory: ./backend
         env:
           parameters__Auth0TestClientId: ${{ vars.AUTH0_CLIENT_ID }}
           parameters__Auth0TestClientSecret: ${{ secrets.AUTH0_CLIENT_SECRET }}
           parameters__Auth0Domain: ${{ vars.AUTH0_DOMAIN }}
           parameters__Auth0Audience: http://localhost:65273
+
+      - name: Generate backend integration coverage summary
+        if: ${{ always() && hashFiles('coverage/MenuApi.Integration.Tests.cobertura.xml') != '' }}
+        uses: danielpalme/ReportGenerator-GitHub-Action@d3ebf1f760f7d8ab92cc44d9bcfee7ad73722a31 # v5
+        continue-on-error: true
+        with:
+          reports: coverage/MenuApi.Integration.Tests.cobertura.xml
+          targetdir: coverage-report/backend-integration
+          reporttypes: MarkdownSummaryGithub
+          title: Backend integration tests
+
+      - name: Add backend integration coverage to step summary
+        if: ${{ always() && hashFiles('coverage-report/backend-integration/SummaryGithub.md') != '' }}
+        run: cat coverage-report/backend-integration/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save backend integration coverage
+        if: ${{ always() && hashFiles('coverage/MenuApi.Integration.Tests.cobertura.xml') != '' }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: coverage-backend-integration
+          path: coverage/MenuApi.Integration.Tests.cobertura.xml
+          retention-days: 7
 
   frontend:
     name: Frontend validation
@@ -273,8 +328,28 @@ jobs:
         working-directory: ./ui/menu-website
 
       - name: Run frontend tests
-        run: pnpm run test
+        run: |
+          pnpm run test:coverage
+          test -s coverage/coverage-summary.json
+          test -s coverage/lcov.info
         working-directory: ./ui/menu-website
+
+      - name: Report frontend coverage
+        if: ${{ always() && hashFiles('ui/menu-website/coverage/coverage-summary.json') != '' }}
+        uses: davelosert/vitest-coverage-report-action@c4bbc33a89b7ace0e63d35f1f7d4bcee31155a73 # v2
+        continue-on-error: true
+        with:
+          working-directory: ui/menu-website
+          comment-on: none
+
+      - name: Save frontend coverage
+        if: ${{ always() && hashFiles('ui/menu-website/coverage/coverage-summary.json') != '' }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: coverage-frontend
+          path: ui/menu-website/coverage/coverage-summary.json
+          retention-days: 7
 
   frontend-e2e:
     name: Frontend E2E (shard ${{ matrix.shard }})

@@ -1,0 +1,206 @@
+name: Coverage report
+
+on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Find the current pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+        run: |
+          number=$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" --paginate |
+            jq -sr --arg sha "$HEAD_SHA" --arg repo "$HEAD_REPOSITORY" \
+              '[.[][] | select(.head.sha == $sha and .head.repo.full_name == $repo) | .number] | first // empty')
+          if [ -n "$number" ]; then
+            echo "number=$number" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download bounded coverage archives
+        if: steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" > "$RUNNER_TEMP/artifacts.json"
+          mkdir -p "$RUNNER_TEMP/coverage"
+          for suite in backend-unit backend-integration frontend; do
+            id=$(jq -r --arg name "coverage-$suite" \
+              '[.artifacts[] | select(.name == $name and .expired == false and
+                .size_in_bytes > 0 and .size_in_bytes <= 10000000) | .id] | first // empty' \
+              "$RUNNER_TEMP/artifacts.json")
+            if [[ "$id" =~ ^[0-9]+$ ]]; then
+              archive="$RUNNER_TEMP/coverage/coverage-$suite.zip"
+              if ! gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" > "$archive"; then
+                rm -f "$archive"
+              elif [ "$(stat -c %s "$archive")" -gt 10000000 ]; then
+                rm -f "$archive"
+              fi
+            fi
+          done
+
+      - name: Build coverage comment
+        if: steps.pr.outputs.number != ''
+        id: summary
+        env:
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          python3 - "$RUNNER_TEMP/coverage" "$RUNNER_TEMP/coverage-comment.md" "$RUN_URL" <<'PY'
+          """Build a PR coverage comment from reports produced by the Build workflow."""
+
+          import json
+          import math
+          import sys
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          from zipfile import BadZipFile, ZipFile
+
+
+          def percentage(value: object, scale: int = 1) -> str:
+              number = float(value) * scale
+              if not math.isfinite(number) or not 0 <= number <= 100:
+                  raise ValueError("Invalid coverage percentage")
+              return f"{number:.1f}%"
+
+
+          def read_member(archive: Path, member: str, allowed: set[str]) -> bytes:
+              with ZipFile(archive) as zipped:
+                  infos = zipped.infolist()
+                  if len(infos) > len(allowed) or any(
+                      info.filename not in allowed or info.is_dir() for info in infos
+                  ):
+                      raise ValueError("Unexpected coverage archive entries")
+                  if sum(info.file_size for info in infos) > len(allowed) * 10_000_000:
+                      raise ValueError("Coverage archive expands beyond its limit")
+                  matches = [info for info in infos if info.filename == member]
+                  if len(matches) != 1 or matches[0].file_size > 10_000_000:
+                      raise ValueError("Missing, duplicate, or oversized coverage report")
+                  with zipped.open(matches[0]) as source:
+                      document = source.read(10_000_001)
+                  if len(document) != matches[0].file_size:
+                      raise ValueError("Coverage report exceeds its declared size")
+                  return document
+
+
+          def cobertura_metrics(document: bytes) -> tuple[str, str]:
+              if b"<!DOCTYPE" in document.upper() or b"<!ENTITY" in document.upper():
+                  raise ValueError("XML declarations are not allowed in coverage reports")
+              root = ET.fromstring(document)
+              if root.tag != "coverage":
+                  raise ValueError("Expected a Cobertura coverage document")
+              return percentage(root.attrib["line-rate"], 100), percentage(
+                  root.attrib["branch-rate"], 100
+              )
+
+
+          def vitest_metrics(document: bytes) -> tuple[str, str]:
+              if len(document) > 5_000_000:
+                  raise ValueError("Vitest summary is too large")
+              summary = json.loads(document)
+              return percentage(summary["total"]["lines"]["pct"]), percentage(
+                  summary["total"]["branches"]["pct"]
+              )
+
+
+          def main() -> None:
+              artifact_dir = Path(sys.argv[1])
+              output_path = Path(sys.argv[2])
+              run_url = sys.argv[3]
+              reports = (
+                  (
+                      "MenuApi.Tests",
+                      "backend-unit",
+                      "MenuApi.Tests.cobertura.xml",
+                      cobertura_metrics,
+                  ),
+                  (
+                      "MenuDB.Tests",
+                      "backend-unit",
+                      "MenuDB.Tests.cobertura.xml",
+                      cobertura_metrics,
+                  ),
+                  (
+                      "MenuApi.Integration.Tests",
+                      "backend-integration",
+                      "MenuApi.Integration.Tests.cobertura.xml",
+                      cobertura_metrics,
+                  ),
+                  (
+                      "Frontend",
+                      "frontend",
+                      "coverage-summary.json",
+                      vitest_metrics,
+                  ),
+              )
+              allowed = {
+                  "backend-unit": {"MenuApi.Tests.cobertura.xml", "MenuDB.Tests.cobertura.xml"},
+                  "backend-integration": {"MenuApi.Integration.Tests.cobertura.xml"},
+                  "frontend": {"coverage-summary.json"},
+              }
+
+              rows = []
+              for label, suite, member, read_metrics in reports:
+                  archive = artifact_dir / f"coverage-{suite}.zip"
+                  if not archive.is_file():
+                      continue
+                  try:
+                      document = read_member(archive, member, allowed[suite])
+                      lines, branches = read_metrics(document)
+                  except (BadZipFile, ET.ParseError, KeyError, OSError, RuntimeError,
+                          TypeError, ValueError, NotImplementedError) as error:
+                      print(f"Skipping invalid {label} coverage report: {error}", file=sys.stderr)
+                      continue
+                  rows.append(f"| {label} | {lines} | {branches} |")
+
+              content = (
+                  ["| Suite | Lines | Branches |", "| --- | ---: | ---: |", *rows]
+                  if rows
+                  else [
+                      "No coverage report was produced for this run. "
+                      "Tests may have been skipped or stopped early."
+                  ]
+              )
+              comment = "\n".join(
+                  [
+                      "<!-- menu-ci-coverage -->",
+                      "### Test coverage",
+                      "",
+                      *content,
+                      "",
+                      f"[View the test run]({run_url})",
+                      "",
+                  ]
+              )
+              output_path.write_text(comment, encoding="utf-8")
+
+
+          if __name__ == "__main__":
+              main()
+          PY
+          if [ -s "$RUNNER_TEMP/coverage-comment.md" ]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Comment coverage on pull request
+        if: steps.summary.outputs.available == 'true'
+        uses: mshick/add-pr-comment@ec328af66588ab8f77cdeb2c264f14aba45bbf59 # v3
+        continue-on-error: true
+        with:
+          issue: ${{ steps.pr.outputs.number }}
+          message-id: menu-ci-coverage
+          message-path: ${{ runner.temp }}/coverage-comment.md
