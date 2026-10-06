@@ -770,6 +770,34 @@ describe('recipe-form', () => {
       ]);
     });
 
+    it('drops ingredients after lower targets and before upper targets in the same section', async () => {
+      const wrapper = await mountForm();
+      await fillField(wrapper, 'Name', 'Cake');
+      for (const [index, ingredient] of ['Flour', 'Sugar', 'Butter'].entries()) {
+        if (index > 0) await clickButton(wrapper, 'Add ingredient');
+        await fillFieldAt(wrapper, 'Ingredient', index, ingredient);
+        await fillFieldAt(wrapper, 'Measure', index, '1 cup');
+      }
+
+      await wrapper.findAll('.ingredient-row')[0].find('[draggable="true"]').trigger('dragstart');
+      await wrapper.findAll('.ingredient-row')[1].trigger('drop');
+      expect(fields(wrapper, 'Ingredient').map((item) => item.find('input').element.value)).toEqual(
+        ['Sugar', 'Flour', 'Butter'],
+      );
+
+      await wrapper.findAll('.ingredient-row')[2].find('[draggable="true"]').trigger('dragstart');
+      await wrapper.findAll('.ingredient-row')[1].trigger('drop');
+      await submit(wrapper);
+      expect(
+        (submittedRecipe() as { ingredients: { ingredientText: string; sortOrder: number }[] })
+          .ingredients,
+      ).toMatchObject([
+        { ingredientText: 'Sugar', sortOrder: 0 },
+        { ingredientText: 'Butter', sortOrder: 1 },
+        { ingredientText: 'Flour', sortOrder: 2 },
+      ]);
+    });
+
     it('submits the populated metadata fields as numbers', async () => {
       const wrapper = await mountForm();
 

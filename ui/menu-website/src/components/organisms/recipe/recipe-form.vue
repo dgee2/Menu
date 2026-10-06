@@ -209,9 +209,9 @@ const dropIngredient = (targetSection: IngredientSection, targetIndex: number) =
   const sourceIndex = source.rows.findIndex((row) => row.rowId === draggedItem.rowId);
   const [row] = source.rows.splice(sourceIndex, 1);
   if (!row) return;
-  const insertIndex =
-    source === targetSection && sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
-  targetSection.rows.splice(insertIndex, 0, row);
+  // After a downward same-section drag, removal shifts the target left. Its original index now
+  // inserts after it; upward and cross-section drops still insert before the target.
+  targetSection.rows.splice(targetIndex, 0, row);
   dragged.value = null;
 };
 const dropOnRow = (targetSection: IngredientSection, targetIndex: number, event: DragEvent) => {
