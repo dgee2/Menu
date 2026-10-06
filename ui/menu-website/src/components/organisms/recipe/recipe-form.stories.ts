@@ -342,11 +342,34 @@ export const MultiSectionRecipe = meta.story({
     await userEvent.click(
       canvas.getAllByRole('combobox', { name: 'Move ingredient to section' })[0],
     );
-    await userEvent.click(await within(document.body).findByRole('option', { name: 'Topping' }));
+    await userEvent.click(await within(document.body).findByRole('option', { name: '3. Topping' }));
     const sectionContainers = canvasElement.querySelectorAll<HTMLElement>('.ingredient-section');
     await waitFor(() =>
       expect(within(sectionContainers[2]).getAllByLabelText('Ingredient')).toHaveLength(2),
     );
+  },
+});
+
+export const UniqueMoveTargetsWithLiteralSuffix = meta.story({
+  args: {
+    initialRecipe: {
+      ...multiSectionRecipe,
+      ingredients: [
+        { ...multiSectionRecipe.ingredients[1], sortOrder: 0 },
+        { ...multiSectionRecipe.ingredients[2], sectionTitle: 'Sauce (section 1)', sortOrder: 1 },
+        { ...multiSectionRecipe.ingredients[1], ingredientText: 'Basil', sortOrder: 2 },
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getAllByRole('combobox', { name: 'Move ingredient to section' })[0],
+    );
+    const menu = within(document.body);
+    for (const label of ['1. Unsectioned', '2. Sauce', '3. Sauce (section 1)', '4. Sauce']) {
+      await expect(await menu.findByRole('option', { name: label })).toBeInTheDocument();
+    }
   },
 });
 

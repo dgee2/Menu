@@ -562,7 +562,7 @@ describe('recipe-form', () => {
       });
     });
 
-    it('labels repeated section names by position in the move selector', async () => {
+    it('labels every move target by position, including repeated headings', async () => {
       const wrapper = await mountForm();
       for (const heading of ['Sauce', 'Filling', 'Sauce']) {
         await clickButton(wrapper, 'Add section');
@@ -578,11 +578,31 @@ describe('recipe-form', () => {
         .findComponent(QSelect)
         .props('options') as { label: string }[];
       expect(options.map((option) => option.label)).toEqual([
-        'Unsectioned',
-        'Sauce (section 1)',
-        'Filling',
-        'Sauce (section 3)',
+        '1. Unsectioned',
+        '2. Sauce',
+        '3. Filling',
+        '4. Sauce',
       ]);
+    });
+
+    it('keeps move target labels unique when a heading resembles a generated label', async () => {
+      const wrapper = await mountForm();
+      for (const heading of ['Sauce', 'Sauce (section 1)', 'Sauce']) {
+        await clickButton(wrapper, 'Add section');
+        await fillFieldAt(
+          wrapper,
+          'Section heading',
+          fields(wrapper, 'Section heading').length - 1,
+          heading,
+        );
+      }
+
+      const options = field(wrapper, 'Move ingredient to section')
+        .findComponent(QSelect)
+        .props('options') as { label: string }[];
+      const labels = options.map((option) => option.label);
+      expect(labels).toEqual(['1. Unsectioned', '2. Sauce', '3. Sauce (section 1)', '4. Sauce']);
+      expect(new Set(labels).size).toBe(labels.length);
     });
 
     it('rejects adjacent matching headings after a section reorder', async () => {

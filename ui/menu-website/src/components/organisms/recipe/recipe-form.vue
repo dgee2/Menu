@@ -149,14 +149,9 @@ const moveSection = (index: number, offset: -1 | 1) => {
   moveItem(sections.value, index, offset);
 };
 const sectionOptions = computed(() => {
-  const labels = sections.value.map((section, index) =>
-    section.isUnsectioned ? 'Unsectioned' : section.title?.trim() || `Section ${index}`,
-  );
   return sections.value.map((section, index) => ({
-    label:
-      labels.filter((label) => label === labels[index]).length > 1
-        ? `${labels[index]} (section ${index})`
-        : labels[index],
+    // A leading position is unique even when a literal heading resembles a generated label.
+    label: `${index + 1}. ${section.isUnsectioned ? 'Unsectioned' : section.title?.trim() || `Section ${index}`}`,
     value: section.sectionId,
   }));
 });
