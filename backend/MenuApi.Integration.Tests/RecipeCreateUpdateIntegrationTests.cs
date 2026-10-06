@@ -1,5 +1,7 @@
 using AwesomeAssertions;
 using MenuApi.Integration.Tests.Factory;
+using MenuApi.DomainEvents;
+using MenuApi.ValueObjects;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -24,10 +26,11 @@ public class RecipeCreateUpdateIntegrationTests
     public async Task Create_Recipe_With_Ingredients_And_Steps_Returns_Both(string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
+        var uniqueTitle = UniqueTitle(recipeTitle);
 
         var body = new
         {
-            Title = recipeTitle,
+            Title = uniqueTitle,
             AccessScope = "Private",
             Ingredients = new[] { new { SortOrder = 0, IngredientText = "Flour", MeasureText = "200g", IsOptional = false } },
             Steps = new[] { new { SortOrder = 0, InstructionText = "Mix well." } },
@@ -44,6 +47,13 @@ public class RecipeCreateUpdateIntegrationTests
         root.GetProperty("ingredients").GetArrayLength().Should().Be(1);
         root.GetProperty("steps").GetArrayLength().Should().Be(1);
         root.GetProperty("steps")[0].GetProperty("instructionText").GetString().Should().Be("Mix well.");
+
+        var recipeId = root.GetProperty("id").GetGuid();
+        var events = await TestDatabaseSeeder.GetOutboxEventsForRecipeAsync(fixture, recipeId, TestContext.Current.CancellationToken);
+        events.Should().ContainSingle();
+        events[0].EventType.Should().Be(nameof(RecipeCreatedEvent));
+        events[0].ProcessedAtUtc.Should().BeNull();
+        JsonSerializer.Deserialize<RecipeCreatedEvent>(events[0].Payload)!.RecipeId.Should().Be(RecipeId.From(recipeId));
     }
 
     [Theory]
@@ -51,10 +61,11 @@ public class RecipeCreateUpdateIntegrationTests
     public async Task Update_Recipe_Replaces_Ingredients_And_Steps(string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
+        var uniqueTitle = UniqueTitle(recipeTitle);
 
         var createBody = new
         {
-            Title = recipeTitle,
+            Title = uniqueTitle,
             AccessScope = "Private",
             Ingredients = new[] { new { SortOrder = 0, IngredientText = "Flour", MeasureText = "200g", IsOptional = false } },
             Steps = new[] { new { SortOrder = 0, InstructionText = "Original step." } },
@@ -69,7 +80,7 @@ public class RecipeCreateUpdateIntegrationTests
 
         var updateBody = new
         {
-            Title = recipeTitle,
+            Title = uniqueTitle,
             AccessScope = "Private",
             Ingredients = new[] { new { SortOrder = 0, IngredientText = "Sugar", MeasureText = "1 cup", IsOptional = false } },
             Steps = new[]
@@ -89,6 +100,13 @@ public class RecipeCreateUpdateIntegrationTests
         root.GetProperty("ingredients").GetArrayLength().Should().Be(1);
         root.GetProperty("ingredients")[0].GetProperty("ingredientText").GetString().Should().Be("Sugar");
         root.GetProperty("steps").GetArrayLength().Should().Be(2);
+
+        var events = await TestDatabaseSeeder.GetOutboxEventsForRecipeAsync(fixture, recipeId, TestContext.Current.CancellationToken);
+        events.Should().HaveCount(2);
+        events.Should().ContainSingle(e => e.EventType == nameof(RecipeCreatedEvent) && e.ProcessedAtUtc == null);
+        var updatedEvent = events.Single(e => e.EventType == nameof(RecipeUpdatedEvent));
+        updatedEvent.ProcessedAtUtc.Should().BeNull();
+        JsonSerializer.Deserialize<RecipeUpdatedEvent>(updatedEvent.Payload)!.RecipeId.Should().Be(RecipeId.From(recipeId));
     }
 
     [Theory]
@@ -99,7 +117,7 @@ public class RecipeCreateUpdateIntegrationTests
 
         var body = new
         {
-            Title = recipeTitle,
+            Title = UniqueTitle(recipeTitle),
             AccessScope = "Private",
             Ingredients = Array.Empty<object>(),
             Steps = Array.Empty<object>(),
@@ -157,4 +175,6 @@ public class RecipeCreateUpdateIntegrationTests
 
         await response.ShouldHaveStatusCode(HttpStatusCode.NotFound);
     }
+
+    private static string UniqueTitle(string prefix) => $"{prefix} {Guid.NewGuid().ToString("N")[..8]}";
 }

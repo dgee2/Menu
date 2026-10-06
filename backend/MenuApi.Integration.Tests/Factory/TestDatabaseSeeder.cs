@@ -75,6 +75,19 @@ internal static class TestDatabaseSeeder
         return await db.RecipeSteps.CountAsync(s => s.RecipeId == recipeId, cancellationToken);
     }
 
+    public static async Task<List<OutboxEvent>> GetOutboxEventsForRecipeAsync(
+        ApiTestFixture fixture,
+        Guid recipeId,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await CreateDbContextAsync(fixture, cancellationToken);
+
+        return await db.OutboxEvents
+            .AsNoTracking()
+            .Where(e => e.Payload.Contains(recipeId.ToString()))
+            .ToListAsync(cancellationToken);
+    }
+
     public static async Task<int> CountIngredientsForRecipeAsync(
         ApiTestFixture fixture,
         Guid recipeId,

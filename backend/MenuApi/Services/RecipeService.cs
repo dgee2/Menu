@@ -1,7 +1,9 @@
 using MenuDB;
 using MenuApi.Authorization;
 using MenuApi.Exceptions;
+using MenuApi.DomainEvents;
 using MenuApi.MappingProfiles;
+using MenuApi.Outbox;
 using MenuApi.Repositories;
 using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
@@ -13,6 +15,7 @@ public class RecipeService(
     IRecipeRepository recipeRepository,
     IRecipeStepRepository recipeStepRepository,
     MenuDbContext db,
+    OutboxWriter outboxWriter,
     ILogger<RecipeService> logger) : IRecipeService
 {
     public async Task<IEnumerable<RecipeListItem>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take)
@@ -57,18 +60,20 @@ public class RecipeService(
     {
         ArgumentNullException.ThrowIfNull(upsertRecipe);
 
+        var recipeId = RecipeId.From(Guid.CreateVersion7());
+        var outboxEventId = Guid.CreateVersion7();
         var recipe = ViewModelMapper.Map(upsertRecipe) with { OwnerUserId = callerId };
 
-        var strategy = db.Database.CreateExecutionStrategy();
-        return await strategy.ExecuteAsync(async () =>
+        await ExecuteWriteAsync(outboxEventId, async () =>
         {
-            await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
-            var recipeId = await recipeRepository.CreateRecipeAsync(recipe).ConfigureAwait(false);
+            // The first repository save inserts both the recipe and its outbox event.
+            outboxWriter.Write(new RecipeCreatedEvent(recipeId), outboxEventId);
+            await recipeRepository.CreateRecipeAsync(recipe, recipeId).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Ingredients)).ConfigureAwait(false);
             await recipeStepRepository.UpsertStepCollectionAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Steps)).ConfigureAwait(false);
-            await tran.CommitAsync().ConfigureAwait(false);
-            return recipeId;
         }).ConfigureAwait(false);
+
+        return recipeId;
     }
 
     public async Task<bool> UpdateRecipeAsync(RecipeId recipeId, UpsertRecipe upsertRecipe, MenuUserId callerId)
@@ -80,17 +85,38 @@ public class RecipeService(
             return false;
         }
 
-        var strategy = db.Database.CreateExecutionStrategy();
-        await strategy.ExecuteAsync(async () =>
+        var outboxEventId = Guid.CreateVersion7();
+        await ExecuteWriteAsync(outboxEventId, async () =>
         {
-            await using var tran = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+            outboxWriter.Write(new RecipeUpdatedEvent(recipeId), outboxEventId);
             await recipeRepository.UpdateRecipeAsync(recipeId, ViewModelMapper.Map(upsertRecipe) with { OwnerUserId = callerId }).ConfigureAwait(false);
             await recipeRepository.UpsertRecipeIngredientsAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Ingredients)).ConfigureAwait(false);
             await recipeStepRepository.UpsertStepCollectionAsync(recipeId, ViewModelMapper.Map(upsertRecipe.Steps)).ConfigureAwait(false);
-            await tran.CommitAsync().ConfigureAwait(false);
         }).ConfigureAwait(false);
 
         return true;
+    }
+
+    private async Task ExecuteWriteAsync(Guid outboxEventId, Func<Task> writeAsync)
+    {
+        var strategy = db.Database.CreateExecutionStrategy();
+        var attempted = false;
+
+        await strategy.ExecuteInTransactionAsync(
+            operation: async () =>
+            {
+                if (attempted)
+                {
+                    // A rolled-back SaveChanges still leaves entities tracked as saved. Rebuild the
+                    // attempt from database state so recipe fields and outbox rows are written again.
+                    db.ChangeTracker.Clear();
+                }
+
+                attempted = true;
+                await writeAsync().ConfigureAwait(false);
+            },
+            verifySucceeded: async () => await db.OutboxEvents.AsNoTracking()
+                .AnyAsync(x => x.Id == outboxEventId).ConfigureAwait(false)).ConfigureAwait(false);
     }
 
     public async Task<bool> DeleteRecipeAsync(RecipeId recipeId, MenuUserId callerId)
