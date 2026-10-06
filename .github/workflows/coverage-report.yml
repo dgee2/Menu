@@ -17,16 +17,6 @@ jobs:
       actions: read
       pull-requests: write
     steps:
-      # The workflow runs from the default branch. Fetch its script at this
-      # workflow's commit so no pull request checkout enters this job.
-      - name: Download trusted reporting script
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api "repos/$GITHUB_REPOSITORY/contents/.github/scripts/coverage-comment.py?ref=$GITHUB_SHA" \
-            -H 'Accept: application/vnd.github.raw+json' \
-            > "$RUNNER_TEMP/coverage-comment.py"
-
       - name: Find the current pull request
         id: pr
         env:
@@ -94,8 +84,111 @@ jobs:
         env:
           RUN_URL: ${{ github.event.workflow_run.html_url }}
         run: |
-          python3 "$RUNNER_TEMP/coverage-comment.py" \
-            "$RUNNER_TEMP/coverage" "$RUNNER_TEMP/coverage-comment.md" "$RUN_URL"
+          python3 - "$RUNNER_TEMP/coverage" "$RUNNER_TEMP/coverage-comment.md" "$RUN_URL" <<'PY'
+          """Build a PR coverage comment from reports produced by the Build workflow."""
+
+          import json
+          import math
+          import sys
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+
+          def percentage(value: object, scale: int = 1) -> str:
+              number = float(value) * scale
+              if not math.isfinite(number) or not 0 <= number <= 100:
+                  raise ValueError("Invalid coverage percentage")
+              return f"{number:.1f}%"
+
+
+          def cobertura_metrics(path: Path) -> tuple[str, str]:
+              if path.stat().st_size > 20_000_000:
+                  raise ValueError("Cobertura report is too large")
+              document = path.read_bytes()
+              if b"<!DOCTYPE" in document.upper() or b"<!ENTITY" in document.upper():
+                  raise ValueError("XML declarations are not allowed in coverage reports")
+              root = ET.fromstring(document)
+              if root.tag != "coverage":
+                  raise ValueError("Expected a Cobertura coverage document")
+              return percentage(root.attrib["line-rate"], 100), percentage(
+                  root.attrib["branch-rate"], 100
+              )
+
+
+          def vitest_metrics(path: Path) -> tuple[str, str]:
+              if path.stat().st_size > 5_000_000:
+                  raise ValueError("Vitest summary is too large")
+              summary = json.loads(path.read_text(encoding="utf-8"))
+              return percentage(summary["total"]["lines"]["pct"]), percentage(
+                  summary["total"]["branches"]["pct"]
+              )
+
+
+          def main() -> None:
+              artifact_dir = Path(sys.argv[1])
+              output_path = Path(sys.argv[2])
+              run_url = sys.argv[3]
+              reports = (
+                  (
+                      "MenuApi.Tests",
+                      artifact_dir / "coverage-backend-unit" / "MenuApi.Tests.cobertura.xml",
+                      cobertura_metrics,
+                  ),
+                  (
+                      "MenuDB.Tests",
+                      artifact_dir / "coverage-backend-unit" / "MenuDB.Tests.cobertura.xml",
+                      cobertura_metrics,
+                  ),
+                  (
+                      "MenuApi.Integration.Tests",
+                      artifact_dir
+                      / "coverage-backend-integration"
+                      / "MenuApi.Integration.Tests.cobertura.xml",
+                      cobertura_metrics,
+                  ),
+                  (
+                      "Frontend",
+                      artifact_dir / "coverage-frontend" / "coverage-summary.json",
+                      vitest_metrics,
+                  ),
+              )
+
+              rows = []
+              for label, path, read_metrics in reports:
+                  if not path.is_file():
+                      continue
+                  try:
+                      lines, branches = read_metrics(path)
+                  except (ET.ParseError, KeyError, OSError, TypeError, ValueError) as error:
+                      print(f"Skipping invalid {label} coverage report: {error}", file=sys.stderr)
+                      continue
+                  rows.append(f"| {label} | {lines} | {branches} |")
+
+              content = (
+                  ["| Suite | Lines | Branches |", "| --- | ---: | ---: |", *rows]
+                  if rows
+                  else [
+                      "No coverage report was produced for this run. "
+                      "Tests may have been skipped or stopped early."
+                  ]
+              )
+              comment = "\n".join(
+                  [
+                      "<!-- menu-ci-coverage -->",
+                      "### Test coverage",
+                      "",
+                      *content,
+                      "",
+                      f"[View the test run]({run_url})",
+                      "",
+                  ]
+              )
+              output_path.write_text(comment, encoding="utf-8")
+
+
+          if __name__ == "__main__":
+              main()
+          PY
           if [ -s "$RUNNER_TEMP/coverage-comment.md" ]; then
             echo 'available=true' >> "$GITHUB_OUTPUT"
           fi
