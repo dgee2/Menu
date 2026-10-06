@@ -109,11 +109,83 @@ public class RecipeServiceRetryTests
         System.Text.Json.JsonSerializer.Deserialize<RecipeUpdatedEvent>(outboxEvent.Payload)!.RecipeId.Should().Be(recipeId);
     }
 
-    private static DbContextOptions<MenuDbContext> CreateOptions() => new DbContextOptionsBuilder<MenuDbContext>()
-        .UseInMemoryDatabase(Guid.NewGuid().ToString())
-        .ReplaceService<IExecutionStrategyFactory, RetryOnceStrategyFactory>()
-        .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
-        .Options;
+    [Fact]
+    public async Task CreateRecipe_Does_Not_Replay_When_Commit_Succeeded_But_Reported_Transient_Failure()
+    {
+        await using var db = new MenuDbContext(CreateOptions(ambiguousCommit: true));
+        var repository = A.Fake<IRecipeRepository>();
+        var steps = A.Fake<IRecipeStepRepository>();
+        var callerId = MenuUserId.From(Guid.CreateVersion7());
+        var attempts = 0;
+
+        A.CallTo(() => repository.CreateRecipeAsync(A<DBModel.Recipe>._, A<RecipeId?>._))
+            .Invokes((DBModel.Recipe recipe, RecipeId? id) =>
+            {
+                attempts++;
+                db.Recipes.Add(NewEntity(id!.Value, recipe.Title.Value, callerId));
+                db.SaveChanges();
+            })
+            .ReturnsLazily((DBModel.Recipe _, RecipeId? id) => id!.Value);
+
+        var recipeId = await NewService(db, repository, steps).CreateRecipeAsync(NewRecipe("Committed create"), callerId);
+
+        attempts.Should().Be(1);
+        ((AmbiguousCommitTransactionManager)db.GetService<IDbContextTransactionManager>()).CommitAttempts.Should().Be(1);
+        (await db.Recipes.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken)).Id.Should().Be(recipeId.Value);
+        (await db.OutboxEvents.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken)).EventType
+            .Should().Be(nameof(RecipeCreatedEvent));
+    }
+
+    [Fact]
+    public async Task UpdateRecipe_Does_Not_Duplicate_Event_When_Commit_Succeeded_But_Reported_Transient_Failure()
+    {
+        await using var db = new MenuDbContext(CreateOptions(ambiguousCommit: true));
+        var repository = A.Fake<IRecipeRepository>();
+        var steps = A.Fake<IRecipeStepRepository>();
+        var callerId = MenuUserId.From(Guid.CreateVersion7());
+        var recipeId = RecipeId.From(Guid.CreateVersion7());
+        db.Recipes.Add(NewEntity(recipeId, "Before commit", callerId));
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        A.CallTo(() => repository.GetRecipeAsync(recipeId)).Returns(new DBModel.Recipe
+        {
+            Id = recipeId,
+            Title = RecipeTitle.From("Before commit"),
+            AccessScope = RecipeAccessScope.Private,
+            OwnerUserId = callerId,
+        });
+        var attempts = 0;
+        A.CallTo(() => repository.UpdateRecipeAsync(recipeId, A<DBModel.Recipe>._))
+            .Invokes((RecipeId _, DBModel.Recipe recipe) =>
+            {
+                attempts++;
+                var entity = db.Recipes.Single(r => r.Id == recipeId.Value);
+                entity.Title = recipe.Title.Value;
+                db.SaveChanges();
+            });
+
+        (await NewService(db, repository, steps).UpdateRecipeAsync(recipeId, NewRecipe("After commit"), callerId)).Should().BeTrue();
+
+        attempts.Should().Be(1);
+        ((AmbiguousCommitTransactionManager)db.GetService<IDbContextTransactionManager>()).CommitAttempts.Should().Be(1);
+        (await db.Recipes.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken)).Title.Should().Be("After commit");
+        (await db.OutboxEvents.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken)).EventType
+            .Should().Be(nameof(RecipeUpdatedEvent));
+    }
+
+    private static DbContextOptions<MenuDbContext> CreateOptions(bool ambiguousCommit = false)
+    {
+        var builder = new DbContextOptionsBuilder<MenuDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .ReplaceService<IExecutionStrategyFactory, RetryOnceStrategyFactory>()
+            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning));
+        if (ambiguousCommit)
+        {
+            builder.ReplaceService<IDbContextTransactionManager, AmbiguousCommitTransactionManager>();
+        }
+
+        return builder.Options;
+    }
 
     private static RecipeService NewService(MenuDbContext db, IRecipeRepository repository, IRecipeStepRepository steps) =>
         new(repository, steps, db, new OutboxWriter(db), NullLogger<RecipeService>.Instance);
@@ -145,6 +217,78 @@ public class RecipeServiceRetryTests
         : ExecutionStrategy(dependencies, 1, TimeSpan.Zero)
     {
         protected override bool ShouldRetryOn(Exception exception) => exception is SimulatedTransientException;
+    }
+
+    public sealed class AmbiguousCommitTransactionManager : IDbContextTransactionManager, ITransactionEnlistmentManager
+    {
+        public IDbContextTransaction? CurrentTransaction { get; private set; }
+
+        public System.Transactions.Transaction? CurrentAmbientTransaction => System.Transactions.Transaction.Current;
+
+        public System.Transactions.Transaction? EnlistedTransaction { get; private set; }
+
+        public int CommitAttempts { get; private set; }
+
+        public void EnlistTransaction(System.Transactions.Transaction? transaction) => EnlistedTransaction = transaction;
+
+        public IDbContextTransaction BeginTransaction() => CurrentTransaction = new AmbiguousCommitTransaction(this);
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(BeginTransaction());
+
+        public void CommitTransaction() => CurrentTransaction!.Commit();
+
+        public Task CommitTransactionAsync(CancellationToken cancellationToken = default) => CurrentTransaction!.CommitAsync(cancellationToken);
+
+        public void RollbackTransaction() => CurrentTransaction!.Rollback();
+
+        public Task RollbackTransactionAsync(CancellationToken cancellationToken = default) => CurrentTransaction!.RollbackAsync(cancellationToken);
+
+        public void ResetState() => CurrentTransaction = null;
+
+        public Task ResetStateAsync(CancellationToken cancellationToken = default)
+        {
+            ResetState();
+            return Task.CompletedTask;
+        }
+
+        private sealed class AmbiguousCommitTransaction(AmbiguousCommitTransactionManager manager) : IDbContextTransaction
+        {
+            public Guid TransactionId { get; } = Guid.NewGuid();
+
+            public void Commit()
+            {
+                manager.CommitAttempts++;
+                manager.CurrentTransaction = null;
+                if (manager.CommitAttempts == 1)
+                {
+                    // InMemory already persisted the writes, just as a successful SQL commit would.
+                    throw new SimulatedTransientException();
+                }
+            }
+
+            public Task CommitAsync(CancellationToken cancellationToken = default)
+            {
+                Commit();
+                return Task.CompletedTask;
+            }
+
+            public void Rollback() => manager.CurrentTransaction = null;
+
+            public Task RollbackAsync(CancellationToken cancellationToken = default)
+            {
+                Rollback();
+                return Task.CompletedTask;
+            }
+
+            public void Dispose() => manager.CurrentTransaction = null;
+
+            public ValueTask DisposeAsync()
+            {
+                Dispose();
+                return ValueTask.CompletedTask;
+            }
+        }
     }
 
     private sealed class SimulatedTransientException : Exception;

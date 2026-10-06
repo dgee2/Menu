@@ -20,8 +20,9 @@ public class OutboxWriterTests
         await using var db = new MenuDbContext(options);
         var sut = new OutboxWriter(db);
         var recipeId = RecipeId.From(Guid.CreateVersion7());
+        var createdEventId = Guid.CreateVersion7();
 
-        sut.Write(new RecipeCreatedEvent(recipeId));
+        sut.Write(new RecipeCreatedEvent(recipeId), createdEventId);
         sut.Write(new RecipeUpdatedEvent(recipeId));
 
         (await db.OutboxEvents.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
@@ -36,6 +37,7 @@ public class OutboxWriterTests
 
         var created = events.Single(x => x.EventType == nameof(RecipeCreatedEvent));
         var updated = events.Single(x => x.EventType == nameof(RecipeUpdatedEvent));
+        created.Id.Should().Be(createdEventId);
         using var createdPayload = JsonDocument.Parse(created.Payload);
         createdPayload.RootElement.GetProperty("RecipeId").GetGuid().Should().Be(recipeId.Value);
         using var updatedPayload = JsonDocument.Parse(updated.Payload);

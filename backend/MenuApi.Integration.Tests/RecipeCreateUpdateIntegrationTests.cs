@@ -26,10 +26,11 @@ public class RecipeCreateUpdateIntegrationTests
     public async Task Create_Recipe_With_Ingredients_And_Steps_Returns_Both(string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
+        var uniqueTitle = UniqueTitle(recipeTitle);
 
         var body = new
         {
-            Title = recipeTitle,
+            Title = uniqueTitle,
             AccessScope = "Private",
             Ingredients = new[] { new { SortOrder = 0, IngredientText = "Flour", MeasureText = "200g", IsOptional = false } },
             Steps = new[] { new { SortOrder = 0, InstructionText = "Mix well." } },
@@ -60,10 +61,11 @@ public class RecipeCreateUpdateIntegrationTests
     public async Task Update_Recipe_Replaces_Ingredients_And_Steps(string recipeTitle)
     {
         using var client = await fixture.GetHttpClient();
+        var uniqueTitle = UniqueTitle(recipeTitle);
 
         var createBody = new
         {
-            Title = recipeTitle,
+            Title = uniqueTitle,
             AccessScope = "Private",
             Ingredients = new[] { new { SortOrder = 0, IngredientText = "Flour", MeasureText = "200g", IsOptional = false } },
             Steps = new[] { new { SortOrder = 0, InstructionText = "Original step." } },
@@ -78,7 +80,7 @@ public class RecipeCreateUpdateIntegrationTests
 
         var updateBody = new
         {
-            Title = recipeTitle,
+            Title = uniqueTitle,
             AccessScope = "Private",
             Ingredients = new[] { new { SortOrder = 0, IngredientText = "Sugar", MeasureText = "1 cup", IsOptional = false } },
             Steps = new[]
@@ -115,7 +117,7 @@ public class RecipeCreateUpdateIntegrationTests
 
         var body = new
         {
-            Title = recipeTitle,
+            Title = UniqueTitle(recipeTitle),
             AccessScope = "Private",
             Ingredients = Array.Empty<object>(),
             Steps = Array.Empty<object>(),
@@ -173,4 +175,6 @@ public class RecipeCreateUpdateIntegrationTests
 
         await response.ShouldHaveStatusCode(HttpStatusCode.NotFound);
     }
+
+    private static string UniqueTitle(string prefix) => $"{prefix} {Guid.NewGuid().ToString("N")[..8]}";
 }
