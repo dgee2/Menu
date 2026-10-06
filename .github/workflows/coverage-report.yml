@@ -1,0 +1,107 @@
+name: Coverage report
+
+on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      # workflow_run checks out the default branch; never execute code from the PR.
+      - name: Checkout reporting script
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Find the current pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+        run: |
+          number=$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" --paginate |
+            jq -sr --arg sha "$HEAD_SHA" --arg repo "$HEAD_REPOSITORY" \
+              '[.[][] | select(.head.sha == $sha and .head.repo.full_name == $repo) | .number] | first // empty')
+          if [ -n "$number" ]; then
+            echo "number=$number" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for coverage artifacts
+        if: steps.pr.outputs.number != ''
+        id: artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" > "$RUNNER_TEMP/artifacts.json"
+          for suite in backend-unit backend-integration frontend; do
+            size=$(jq -r --arg name "coverage-$suite" \
+              '[.artifacts[] | select(.name == $name) | .size_in_bytes] | first // 0' \
+              "$RUNNER_TEMP/artifacts.json")
+            if [ "$size" -gt 0 ] && [ "$size" -le 10000000 ]; then
+              echo "$suite=true" >> "$GITHUB_OUTPUT"
+            fi
+          done
+
+      - name: Download backend unit coverage
+        if: steps.artifacts.outputs.backend-unit == 'true'
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: coverage-backend-unit
+          path: ${{ runner.temp }}/coverage/coverage-backend-unit
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Download backend integration coverage
+        if: steps.artifacts.outputs.backend-integration == 'true'
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: coverage-backend-integration
+          path: ${{ runner.temp }}/coverage/coverage-backend-integration
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Download frontend coverage
+        if: steps.artifacts.outputs.frontend == 'true'
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: coverage-frontend
+          path: ${{ runner.temp }}/coverage/coverage-frontend
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Build coverage comment
+        if: steps.pr.outputs.number != ''
+        id: summary
+        env:
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          python3 .github/scripts/coverage-comment.py \
+            "$RUNNER_TEMP/coverage" "$RUNNER_TEMP/coverage-comment.md" "$RUN_URL"
+          if [ -s "$RUNNER_TEMP/coverage-comment.md" ]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Comment coverage on pull request
+        if: steps.summary.outputs.available == 'true'
+        uses: mshick/add-pr-comment@ec328af66588ab8f77cdeb2c264f14aba45bbf59 # v3
+        continue-on-error: true
+        with:
+          issue: ${{ steps.pr.outputs.number }}
+          message-id: menu-ci-coverage
+          message-path: ${{ runner.temp }}/coverage-comment.md
