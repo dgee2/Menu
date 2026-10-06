@@ -10,7 +10,7 @@ import StepRowEditor from '@/components/molecules/recipe/step-row-editor.vue';
 import RecipeVisibilityField from '@/components/molecules/recipe/fields/recipe-visibility-field.vue';
 import { useRecipeService } from '@/services/recipe-service';
 import { ApiError } from '@/services/api-error';
-import { nonNegativeIntegerRules, requiredText } from '@/services/form-rules';
+import { nonNegativeIntegerRules } from '@/services/form-rules';
 import { isBlankIngredientRow, isBlankStepRow } from '@/services/recipe-rows';
 import { effectiveTotalTimeMinutes } from '@/services/recipe-timing';
 import type {
@@ -57,6 +57,7 @@ interface IngredientRow extends Omit<RecipeIngredientItem, 'sectionTitle'> {
 interface IngredientSection {
   sectionId: string;
   title: string | null;
+  originalTitle?: string;
   isUnsectioned: boolean;
   rows: IngredientRow[];
 }
@@ -99,11 +100,17 @@ const seedSections = (): IngredientSection[] => {
   ];
   for (const ingredient of props.initialRecipe?.ingredients ?? []) {
     const { sectionTitle, ...row } = ingredient;
-    const title = sectionTitle?.trim() || null;
+    const title = sectionTitle ?? null;
     let section = result.at(-1);
     // Keep contiguous runs separate: a repeated heading later in the recipe is a new container.
     if (!section || section.title !== title) {
-      section = { sectionId: crypto.randomUUID(), title, isUnsectioned: title === null, rows: [] };
+      section = {
+        sectionId: crypto.randomUUID(),
+        title,
+        originalTitle: title ?? undefined,
+        isUnsectioned: title === null,
+        rows: [],
+      };
       result.push(section);
     }
     section.rows.push({ ...row, rowId: crypto.randomUUID() });
@@ -154,25 +161,43 @@ const sectionOptions = computed(() => {
   }));
 });
 
+const sectionTitleForPayload = (section: IngredientSection, value = section.title) => {
+  if (section.isUnsectioned) return null;
+  // Existing titles must retain their exact spelling until edited: RecipeDetail groups contiguous
+  // runs by the raw value, so trimming an untouched title can erase a persisted boundary.
+  if (section.originalTitle !== undefined && value === section.originalTitle) return value;
+  return value?.trim() || null;
+};
+
+const populatedSections = () =>
+  sections.value.filter((section) => section.rows.some((row) => !isBlankIngredientRow(row)));
+
 const sectionHeadingRules = (index: number, section: IngredientSection): ValidationRule[] => [
-  requiredText('Section heading is required'),
+  (value: string | null) =>
+    (section.originalTitle !== undefined && value === section.originalTitle) ||
+    !!value?.trim() ||
+    'Section heading is required',
   () =>
     section.rows.some((row) => !isBlankIngredientRow(row)) ||
     'Add an ingredient or remove this section',
   (value: string | null) => {
-    const title = value?.trim();
-    const previous = sections.value[index - 1]?.title?.trim();
-    const next = sections.value[index + 1]?.title?.trim();
-    const persistedSections = sections.value.filter((section) =>
-      section.rows.some((row) => !isBlankIngredientRow(row)),
-    );
+    const title = sectionTitleForPayload(section, value);
+    const previousSection = sections.value[index - 1];
+    const nextSection = sections.value[index + 1];
+    const previous = previousSection && sectionTitleForPayload(previousSection);
+    const next = nextSection && sectionTitleForPayload(nextSection);
+    const persistedSections = populatedSections();
     const persistedIndex = persistedSections.indexOf(sections.value[index]);
     const previousPersisted =
-      persistedIndex > 0 ? persistedSections[persistedIndex - 1]?.title?.trim() : undefined;
+      persistedIndex > 0
+        ? sectionTitleForPayload(persistedSections[persistedIndex - 1])
+        : undefined;
     const nextPersisted =
-      persistedIndex >= 0 ? persistedSections[persistedIndex + 1]?.title?.trim() : undefined;
+      persistedIndex >= 0 && persistedSections[persistedIndex + 1]
+        ? sectionTitleForPayload(persistedSections[persistedIndex + 1])
+        : undefined;
     return (
-      !title ||
+      title === null ||
       (title !== previous &&
         title !== next &&
         title !== previousPersisted &&
@@ -193,11 +218,17 @@ const dragged = ref<
 >(null);
 const startIngredientDrag = (rowId: string, event: DragEvent) => {
   dragged.value = { kind: 'ingredient', rowId };
-  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  if (event.dataTransfer) {
+    event.dataTransfer.setData('text/plain', rowId);
+    event.dataTransfer.effectAllowed = 'move';
+  }
 };
 const startSectionDrag = (sectionId: string, event: DragEvent) => {
   dragged.value = { kind: 'section', sectionId };
-  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  if (event.dataTransfer) {
+    event.dataTransfer.setData('text/plain', sectionId);
+    event.dataTransfer.effectAllowed = 'move';
+  }
 };
 const dropIngredient = (targetSection: IngredientSection, targetIndex: number) => {
   const draggedItem = dragged.value;
@@ -270,7 +301,7 @@ const buildPayload = (): UpsertRecipe => ({
     .map(({ section, ingredient }, index) => ({
       ingredientText: ingredient.ingredientText,
       measureText: ingredient.measureText,
-      sectionTitle: section.isUnsectioned ? null : section.title?.trim() || null,
+      sectionTitle: sectionTitleForPayload(section),
       preparationText: ingredient.preparationText,
       isOptional: ingredient.isOptional,
       // Carried through untouched: the form does not expose these, but the API accepts them and
@@ -349,6 +380,17 @@ const reportFailure = (error: unknown) => {
 const onSubmit = async () => {
   bannerError.value = null;
   titleConflictError.value = null;
+
+  const savedSections = populatedSections();
+  if (
+    savedSections.some(
+      (section, index) =>
+        index > 0 && section.isUnsectioned && savedSections[index - 1].isUnsectioned,
+    )
+  ) {
+    bannerError.value = 'Move adjacent unsectioned ingredients into one group before saving.';
+    return;
+  }
 
   const recipe = buildPayload();
 

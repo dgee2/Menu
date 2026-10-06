@@ -798,6 +798,29 @@ describe('recipe-form', () => {
       ]);
     });
 
+    it('sets drag data for ingredient and section handles', async () => {
+      const wrapper = await mountForm();
+      await clickButton(wrapper, 'Add section');
+      const setData = vi.fn();
+      const transfer = { setData, effectAllowed: 'none' } as unknown as DataTransfer;
+
+      await wrapper
+        .find('.ingredient-row [draggable="true"]')
+        .trigger('dragstart', { dataTransfer: transfer });
+      expect(setData).toHaveBeenCalledWith('text/plain', expect.stringMatching(/.+/));
+      expect(transfer.effectAllowed).toBe('move');
+
+      setData.mockClear();
+      await wrapper
+        .findAll('.ingredient-section')[1]
+        .find('[draggable="true"]')
+        .trigger('dragstart', { dataTransfer: transfer });
+      expect(setData).toHaveBeenCalledWith(
+        'text/plain',
+        wrapper.findAll('.ingredient-section')[1].attributes('data-section-id'),
+      );
+    });
+
     it('submits the populated metadata fields as numbers', async () => {
       const wrapper = await mountForm();
 
@@ -941,6 +964,64 @@ describe('recipe-form', () => {
   });
 
   describe('edit mode', () => {
+    it('preserves distinct raw section titles during an unrelated edit', async () => {
+      editRecipe = {
+        ...existingRecipe,
+        ingredients: [
+          { ...existingRecipe.ingredients[0], sectionTitle: 'Sauce' },
+          {
+            ...existingRecipe.ingredients[0],
+            ingredientText: 'Salt',
+            sortOrder: 1,
+            sectionTitle: ' Sauce ',
+          },
+        ],
+      };
+      const wrapper = await mountEditForm();
+
+      expect(
+        fields(wrapper, 'Section heading').map((field) => field.find('input').element.value),
+      ).toEqual(['Sauce', ' Sauce ']);
+      await fillField(wrapper, 'Name', 'Renamed Lasagne');
+      await submit(wrapper);
+
+      expect(putRecipe).toHaveBeenCalledTimes(1);
+      expect(updatedRecipe()).toMatchObject({
+        ingredients: [{ sectionTitle: 'Sauce' }, { sectionTitle: ' Sauce ' }],
+      });
+    });
+
+    it('blocks adjacent unsectioned containers after a section reorder', async () => {
+      editRecipe = {
+        ...existingRecipe,
+        ingredients: [
+          { ...existingRecipe.ingredients[0], sectionTitle: null },
+          {
+            ...existingRecipe.ingredients[0],
+            ingredientText: 'Tomatoes',
+            sortOrder: 1,
+            sectionTitle: 'Sauce',
+          },
+          {
+            ...existingRecipe.ingredients[0],
+            ingredientText: 'Salt',
+            sortOrder: 2,
+            sectionTitle: null,
+          },
+        ],
+      };
+      const wrapper = await mountEditForm();
+
+      await wrapper
+        .findAll('.ingredient-section')[1]
+        .find('[aria-label="Move section down"]')
+        .trigger('click');
+      await submit(wrapper);
+
+      expect(wrapper.text()).toContain('Move adjacent unsectioned ingredients into one group');
+      expect(putRecipe).not.toHaveBeenCalled();
+    });
+
     it('preserves a later unsectioned ingredient run during an unrelated edit', async () => {
       editRecipe = {
         ...existingRecipe,

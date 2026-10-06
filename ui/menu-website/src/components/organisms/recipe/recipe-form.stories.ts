@@ -369,6 +369,47 @@ export const LaterUnsectionedRun = meta.story({
   },
 });
 
+export const DistinctRawHeadingRuns = meta.story({
+  args: {
+    initialRecipe: {
+      ...multiSectionRecipe,
+      ingredients: [
+        { ...multiSectionRecipe.ingredients[1], sortOrder: 0 },
+        { ...multiSectionRecipe.ingredients[2], sectionTitle: ' Sauce ', sortOrder: 1 },
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const headings = within(canvasElement).getAllByLabelText('Section heading');
+    await expect(headings[0]).toHaveValue('Sauce');
+    await expect(headings[1]).toHaveValue(' Sauce ');
+  },
+});
+
+export const AdjacentUnsectionedRunsBlockSubmit = meta.story({
+  args: {
+    initialRecipe: {
+      ...multiSectionRecipe,
+      ingredients: [
+        multiSectionRecipe.ingredients[0],
+        multiSectionRecipe.ingredients[1],
+        { ...multiSectionRecipe.ingredients[2], sectionTitle: null },
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const sauce = canvasElement.querySelectorAll<HTMLElement>('.ingredient-section')[1];
+    await userEvent.click(within(sauce).getByRole('button', { name: 'Move section down' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Save changes' }));
+    await expect(
+      await canvas.findByText(
+        'Move adjacent unsectioned ingredients into one group before saving.',
+      ),
+    ).toBeInTheDocument();
+  },
+});
+
 export const SectionlessRecipe = meta.story({
   args: {
     initialRecipe: { ...multiSectionRecipe, ingredients: [multiSectionRecipe.ingredients[0]] },
