@@ -33,7 +33,10 @@ jobs:
                 gh api "repos/$GITHUB_REPOSITORY/pulls/$number"
               done | jq -s '.' > "$RUNNER_TEMP/candidate-pulls.json"
           else
-            gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" --paginate |
+            head_owner=${HEAD_REPOSITORY%%/*}
+            head_ref=${HEAD_BRANCH#*:}
+            gh api -X GET "repos/$GITHUB_REPOSITORY/pulls" \
+              -f state=all -f "head=$head_owner:$head_ref" -f per_page=100 --paginate |
               jq -s 'add' > "$RUNNER_TEMP/candidate-pulls.json"
           fi
           python3 - "$RUNNER_TEMP/candidate-pulls.json" <<'PY'
