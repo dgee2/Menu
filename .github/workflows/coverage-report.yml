@@ -26,25 +26,29 @@ jobs:
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
           ASSOCIATED_PULL_REQUESTS: ${{ toJSON(github.event.workflow_run.pull_requests) }}
         run: |
-          gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" --paginate |
-            jq -s 'add' > "$RUNNER_TEMP/open-pulls.json"
-          python3 - "$RUNNER_TEMP/open-pulls.json" <<'PY'
+          if jq -e '(. // []) | length > 0' <<< "$ASSOCIATED_PULL_REQUESTS" > /dev/null; then
+            jq -r '.[].number' <<< "$ASSOCIATED_PULL_REQUESTS" | sort -u |
+              while read -r number; do
+                [[ "$number" =~ ^[0-9]+$ ]] || exit 1
+                gh api "repos/$GITHUB_REPOSITORY/pulls/$number"
+              done | jq -s '.' > "$RUNNER_TEMP/candidate-pulls.json"
+          else
+            gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" --paginate |
+              jq -s 'add' > "$RUNNER_TEMP/candidate-pulls.json"
+          fi
+          python3 - "$RUNNER_TEMP/candidate-pulls.json" <<'PY'
           import json
           import os
           import sys
           from pathlib import Path
 
           pulls = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8")) or []
-          associated = json.loads(os.environ["ASSOCIATED_PULL_REQUESTS"]) or []
           matches = [
               pr for pr in pulls
               if pr["head"]["sha"] == os.environ["HEAD_SHA"]
               and (pr["head"].get("repo") or {}).get("full_name")
               == os.environ["HEAD_REPOSITORY"]
           ]
-          if associated:
-              numbers = {pr["number"] for pr in associated}
-              matches = [pr for pr in matches if pr["number"] in numbers]
           if len(matches) > 1:
               matches = [pr for pr in matches if pr["head"]["ref"] == os.environ["HEAD_BRANCH"]]
 
