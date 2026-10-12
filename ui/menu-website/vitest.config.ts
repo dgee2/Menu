@@ -12,6 +12,18 @@ export default mergeConfig(
   viteConfig,
   defineConfig({
     test: {
+      coverage: {
+        provider: 'v8',
+        include: ['src/**/*.{ts,vue}'],
+        exclude: [
+          'src/generated/**',
+          'src/**/*.stories.ts',
+          'src/**/*.test.ts',
+          'src/test-setup.ts',
+        ],
+        reporter: ['text', 'lcov', 'json-summary', 'json'],
+        reportOnFailure: true,
+      },
       projects: [
         {
           extends: true,

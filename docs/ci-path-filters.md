@@ -37,7 +37,7 @@ The frontend job (`frontend`) runs when any of these files change, or when the C
 
 #### Frontend E2E Job
 
-The frontend E2E job runs for backend, frontend, OpenAPI, or workflow changes:
+The frontend E2E job runs for backend, frontend, OpenAPI, or Build workflow changes:
 
 - `backend/**`
 - `ui/**`
@@ -55,7 +55,7 @@ unavailable to fork workflows.
 - **Changes detected**: Only jobs matching the changed files run
 - **No changes detected**: Backend/frontend build and test jobs are skipped when no relevant files change
 - **E2E**: Documentation-only pull requests skip E2E; matching fork pull requests skip it with a clear non-failing message.
-- **Workflow file changes**: Both frontend and backend jobs run (conservative approach)
+- **Build workflow (`main.yml`) changes**: Both frontend and backend jobs run (conservative approach)
 
 ### Push Events (main/master branches)
 
@@ -104,12 +104,23 @@ protection check yet; promote it only after several days of reliable green runs.
 - ✅ Frontend E2E shards run
 - Normal full validation
 
-### Scenario: Workflow file changes
+### Scenario: Build workflow (`main.yml`) changes
 
 - ✅ Backend jobs run
 - ✅ Frontend job runs
 - ✅ Frontend E2E shards run
-- Conservative approach to ensure workflow changes don't break validation
+- Conservative approach to ensure Build workflow changes don't break validation
+
+## Coverage reporting
+
+The Build workflow collects coverage in backend and frontend test jobs. Those
+jobs write their own Actions step summaries and upload the data needed for PR
+comments. The separate `Coverage report` workflow runs after a PR Build run,
+reads only coverage artifacts, and updates one PR comment. It runs from the
+default branch with `pull-requests: write` so fork and Dependabot PRs can get a
+comment without giving their test jobs a write token. It never checks out PR
+code. If tests stop before producing coverage, the comment lists only the
+available reports or says no coverage was produced for that run.
 
 ## Frontend Job Dependencies
 
@@ -161,7 +172,7 @@ Path filters improve CI throughput by:
 The implementation includes several guardrails to prevent missing validation:
 
 1. **Conservative structure**: Backend projects and backend-only config files live under `backend/`, so one path captures solution, project, and analyzer changes together
-2. **Workflow file triggers both**: Changes to the workflow file trigger all jobs
+2. **Build workflow file triggers both**: Changes to `main.yml` trigger all jobs
 3. **Always run on push**: All jobs run on pushes to main/master branches
 4. **Dependency review still runs**: The dependency-review job always runs on PRs regardless of changed files
 
@@ -195,7 +206,7 @@ To test the path filters work correctly:
 ### Jobs not being skipped
 
 - Ensure the event is a pull_request (not push)
-- Check if the workflow file was changed (triggers all jobs)
+- Check if `main.yml` was changed (triggers all jobs)
 - Verify the paths-filter action is running correctly in the changes job
 
 ### Frontend fails because OpenAPI spec is missing
