@@ -192,8 +192,8 @@ jobs:
                   try:
                       document = read_member(archive, member, allowed[suite])
                       lines, branches = read_metrics(document)
-                  except (BadZipFile, ET.ParseError, KeyError, OSError, RuntimeError,
-                          TypeError, ValueError, NotImplementedError) as error:
+                  except (BadZipFile, ET.ParseError, KeyError, OSError, OverflowError,
+                          RuntimeError, TypeError, ValueError, NotImplementedError) as error:
                       print(f"Skipping invalid {label} coverage report: {error}", file=sys.stderr)
                       continue
                   rows.append(f"| {label} | {lines} | {branches} |")
