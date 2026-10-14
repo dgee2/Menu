@@ -28,7 +28,7 @@ public class SecurityHeadersIntegrationTests
         response.Headers.GetValues("Referrer-Policy").Should().ContainSingle().Which.Should().Be("no-referrer");
         response.Headers.GetValues("Content-Security-Policy").Should().ContainSingle();
         response.Headers.CacheControl.Should().NotBeNull();
-        response.Headers.CacheControl!.NoStore.Should().BeTrue();
+        response.Headers.CacheControl.NoStore.Should().BeTrue();
     }
 
     [Fact]
