@@ -30,7 +30,20 @@ export const Success = meta.story({
     const canvas = within(canvasElement);
     await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
     await expect(await canvas.findByText('A rich, moist chocolate cake.')).toBeInTheDocument();
-    await expect(await canvas.findByText('2 cups Flour')).toBeInTheDocument();
+    const preparedIngredient = await canvas.findByText(/sifted/);
+    await expect(preparedIngredient.closest('.q-item')).toHaveTextContent(
+      /^2 cups Flour, sifted \(optional\)$/,
+    );
+    await expect(preparedIngredient.closest('.q-item__section')?.children).toHaveLength(1);
+    await expect(preparedIngredient.closest('.q-item__label')).toHaveTextContent(
+      /^2 cups Flour, sifted \(optional\)$/,
+    );
+    const plainOptionalIngredient = await canvas.findByText('3/4 cup Cocoa Powder');
+    await expect(plainOptionalIngredient.closest('.q-item')).toHaveTextContent(
+      /^3\/4 cup Cocoa Powder \(optional\)$/,
+    );
+    const whitespaceIngredient = await canvas.findByText('1 pinch Salt');
+    await expect(whitespaceIngredient.closest('.q-item')).toHaveTextContent(/^1 pinch Salt$/);
     await expect(await canvas.findByText('Preheat the oven to 180C.')).toBeInTheDocument();
     await expect(canvas.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
     await expect(canvas.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
