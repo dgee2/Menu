@@ -195,6 +195,16 @@ describe('RecipeDetail', () => {
         '1 Eggs, beaten',
         '1 Salt',
       ]);
+      expect(
+        wrapper.findAll('.q-item').map((row) =>
+          row.findAll('.q-item__section > .q-item__label').map((label) => label.text().trim()),
+        ),
+      ).toEqual([
+        ['1 Flour, sifted (optional)'],
+        ['1 Milk (optional)'],
+        ['1 Eggs, beaten'],
+        ['1 Salt'],
+      ]);
     });
 
     it('groups contiguous runs of the same section', async () => {

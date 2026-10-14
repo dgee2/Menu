@@ -34,6 +34,10 @@ export const Success = meta.story({
     await expect(preparedIngredient.closest('.q-item')).toHaveTextContent(
       /^2 cups Flour, sifted \(optional\)$/,
     );
+    await expect(preparedIngredient.closest('.q-item__section')?.children).toHaveLength(1);
+    await expect(preparedIngredient.closest('.q-item__label')).toHaveTextContent(
+      /^2 cups Flour, sifted \(optional\)$/,
+    );
     const plainOptionalIngredient = await canvas.findByText('3/4 cup Cocoa Powder');
     await expect(plainOptionalIngredient.closest('.q-item')).toHaveTextContent(
       /^3\/4 cup Cocoa Powder \(optional\)$/,

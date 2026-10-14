@@ -155,11 +155,13 @@ const onDelete = async () => {
         <q-list bordered separator>
           <q-item v-for="ingredient in section.ingredients" :key="ingredient.sortOrder">
             <q-item-section>
-              {{ ingredient.measureText }} {{ ingredient.ingredientText
-              }}<span v-if="ingredient.preparationText?.trim()"
-                >, {{ ingredient.preparationText.trim() }}</span
-              >
-              <span v-if="ingredient.isOptional" class="text-grey-6"> (optional)</span>
+              <q-item-label>
+                {{ ingredient.measureText }} {{ ingredient.ingredientText
+                }}<span v-if="ingredient.preparationText?.trim()"
+                  >, {{ ingredient.preparationText.trim() }}</span
+                >
+                <span v-if="ingredient.isOptional" class="text-grey-6"> (optional)</span>
+              </q-item-label>
             </q-item-section>
           </q-item>
         </q-list>
