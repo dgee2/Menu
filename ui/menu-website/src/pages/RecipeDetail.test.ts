@@ -178,6 +178,7 @@ describe('RecipeDetail', () => {
             ingredient(0, 'Flour', 'For the cake', 'sifted'),
             ingredient(1, 'Milk', 'For the cake'),
             ingredient(2, 'Eggs', 'For the filling', 'beaten'),
+            ingredient(3, 'Salt', 'For the filling', '   '),
           ],
         }),
       );
@@ -191,6 +192,7 @@ describe('RecipeDetail', () => {
         '1 Flour, sifted',
         '1 Milk',
         '1 Eggs, beaten',
+        '1 Salt',
       ]);
     });
 

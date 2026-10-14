@@ -33,6 +33,8 @@ export const Success = meta.story({
     const preparedIngredient = await canvas.findByText(/sifted/);
     await expect(preparedIngredient.closest('.q-item')).toHaveTextContent('2 cups Flour, sifted');
     await expect(await canvas.findByText('3/4 cup Cocoa Powder')).toBeInTheDocument();
+    const whitespaceIngredient = await canvas.findByText('1 pinch Salt');
+    await expect(whitespaceIngredient.closest('.q-item')).toHaveTextContent(/^1 pinch Salt$/);
     await expect(await canvas.findByText('Preheat the oven to 180C.')).toBeInTheDocument();
     await expect(canvas.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
     await expect(canvas.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();

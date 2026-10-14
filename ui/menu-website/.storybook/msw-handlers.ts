@@ -32,6 +32,14 @@ const sampleRecipeDetail = {
       preparationText: null,
       isOptional: false,
     },
+    {
+      sortOrder: 2,
+      ingredientText: 'Salt',
+      measureText: '1 pinch',
+      sectionTitle: null,
+      preparationText: '   ',
+      isOptional: false,
+    },
   ],
   steps: [
     {
