@@ -48,13 +48,14 @@ const ingredient = (
   ingredientText: string,
   sectionTitle: string | null,
   preparationText: string | null = null,
+  isOptional = false,
 ) => ({
   sortOrder,
   ingredientText,
   measureText: '1',
   sectionTitle,
   preparationText,
-  isOptional: false,
+  isOptional,
 });
 
 const StubPage = defineComponent({ template: '<div />' });
@@ -175,8 +176,8 @@ describe('RecipeDetail', () => {
       getRecipe.mockResolvedValue(
         recipe({
           ingredients: [
-            ingredient(0, 'Flour', 'For the cake', 'sifted'),
-            ingredient(1, 'Milk', 'For the cake'),
+            ingredient(0, 'Flour', 'For the cake', 'sifted', true),
+            ingredient(1, 'Milk', 'For the cake', null, true),
             ingredient(2, 'Eggs', 'For the filling', 'beaten'),
             ingredient(3, 'Salt', 'For the filling', '   '),
           ],
@@ -189,8 +190,8 @@ describe('RecipeDetail', () => {
         'For the filling',
       ]);
       expect(wrapper.findAll('.q-item').map((row) => row.text().trim())).toEqual([
-        '1 Flour, sifted',
-        '1 Milk',
+        '1 Flour, sifted (optional)',
+        '1 Milk (optional)',
         '1 Eggs, beaten',
         '1 Salt',
       ]);

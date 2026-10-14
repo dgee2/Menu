@@ -22,7 +22,7 @@ const sampleRecipeDetail = {
       measureText: '2 cups',
       sectionTitle: null,
       preparationText: 'sifted',
-      isOptional: false,
+      isOptional: true,
     },
     {
       sortOrder: 1,
@@ -30,7 +30,7 @@ const sampleRecipeDetail = {
       measureText: '3/4 cup',
       sectionTitle: null,
       preparationText: null,
-      isOptional: false,
+      isOptional: true,
     },
     {
       sortOrder: 2,

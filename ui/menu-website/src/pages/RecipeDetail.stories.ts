@@ -31,8 +31,13 @@ export const Success = meta.story({
     await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
     await expect(await canvas.findByText('A rich, moist chocolate cake.')).toBeInTheDocument();
     const preparedIngredient = await canvas.findByText(/sifted/);
-    await expect(preparedIngredient.closest('.q-item')).toHaveTextContent('2 cups Flour, sifted');
-    await expect(await canvas.findByText('3/4 cup Cocoa Powder')).toBeInTheDocument();
+    await expect(preparedIngredient.closest('.q-item')).toHaveTextContent(
+      /^2 cups Flour, sifted \(optional\)$/,
+    );
+    const plainOptionalIngredient = await canvas.findByText('3/4 cup Cocoa Powder');
+    await expect(plainOptionalIngredient.closest('.q-item')).toHaveTextContent(
+      /^3\/4 cup Cocoa Powder \(optional\)$/,
+    );
     const whitespaceIngredient = await canvas.findByText('1 pinch Salt');
     await expect(whitespaceIngredient.closest('.q-item')).toHaveTextContent(/^1 pinch Salt$/);
     await expect(await canvas.findByText('Preheat the oven to 180C.')).toBeInTheDocument();
