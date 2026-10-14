@@ -21,6 +21,7 @@ const sampleRecipeDetail = {
       ingredientText: 'Flour',
       measureText: '2 cups',
       sectionTitle: null,
+      preparationText: 'sifted',
       isOptional: false,
     },
     {
@@ -28,6 +29,7 @@ const sampleRecipeDetail = {
       ingredientText: 'Cocoa Powder',
       measureText: '3/4 cup',
       sectionTitle: null,
+      preparationText: null,
       isOptional: false,
     },
   ],
