@@ -11,5 +11,3 @@ const goToRecipesPage = async () => {
 <template>
   <q-btn flat @click="goToRecipesPage">Recipes</q-btn>
 </template>
-
-<style scoped></style>

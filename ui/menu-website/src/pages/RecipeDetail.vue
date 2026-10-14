@@ -197,5 +197,3 @@ const onDelete = async () => {
     <div v-else>Recipe not found.</div>
   </q-page>
 </template>
-
-<style scoped></style>

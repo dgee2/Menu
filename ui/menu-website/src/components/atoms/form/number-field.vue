@@ -38,5 +38,3 @@ const onUpdate = (val: string | number | null) => {
     @update:model-value="onUpdate"
   />
 </template>
-
-<style scoped></style>

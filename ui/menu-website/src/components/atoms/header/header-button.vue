@@ -10,5 +10,3 @@ defineProps<{
 <template>
   <q-btn flat dense :label="label" @click="emit('click')" />
 </template>
-
-<style scoped></style>

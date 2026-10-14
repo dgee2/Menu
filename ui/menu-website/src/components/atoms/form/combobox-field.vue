@@ -64,5 +64,3 @@ const selected = computed<string | null>({
     </template>
   </q-select>
 </template>
-
-<style scoped></style>

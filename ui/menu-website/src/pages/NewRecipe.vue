@@ -7,5 +7,3 @@ import RecipeForm from '@/components/organisms/recipe/recipe-form.vue';
     <recipe-form />
   </q-page>
 </template>
-
-<style scoped></style>

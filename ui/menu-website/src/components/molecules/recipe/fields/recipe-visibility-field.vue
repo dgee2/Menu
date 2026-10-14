@@ -33,5 +33,3 @@ const selectedOption = computed<VisibilityOption | undefined>({
     hint="Who can see this recipe"
   />
 </template>
-
-<style scoped></style>

@@ -45,5 +45,3 @@ const loadErrorMessage = computed(() =>
     </div>
   </q-page>
 </template>
-
-<style scoped></style>
