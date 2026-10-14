@@ -79,5 +79,3 @@ const instructionTextRules = [
     </div>
   </div>
 </template>
-
-<style scoped></style>

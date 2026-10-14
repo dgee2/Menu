@@ -30,5 +30,3 @@ withDefaults(
     :error-message="errorMessage ?? undefined"
   />
 </template>
-
-<style scoped></style>

@@ -54,6 +54,12 @@ export default defineConfigWithVueTs(
   pluginStorybook.configs['flat/recommended'],
   pluginStorybook.configs['flat/addon-interactions'],
   {
+    files: ['src/**/*.vue'],
+    rules: {
+      'vue/no-empty-component-block': 'error',
+    },
+  },
+  {
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*', 'src/**/*.test.ts'],
   },

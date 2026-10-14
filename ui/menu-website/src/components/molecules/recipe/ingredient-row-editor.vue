@@ -80,5 +80,3 @@ const measureTextRules = [requiredTextUnlessRowIsBlank('Measure is required', is
     </div>
   </div>
 </template>
-
-<style scoped></style>

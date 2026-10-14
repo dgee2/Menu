@@ -21,5 +21,3 @@ const rules = [requiredText('Name is required')];
     :error-message="serverError"
   />
 </template>
-
-<style scoped></style>
