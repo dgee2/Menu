@@ -336,7 +336,7 @@ jobs:
 
       - name: Report frontend coverage
         if: ${{ always() && hashFiles('ui/menu-website/coverage/coverage-summary.json') != '' }}
-        uses: davelosert/vitest-coverage-report-action@c4bbc33a89b7ace0e63d35f1f7d4bcee31155a73 # v2
+        uses: davelosert/vitest-coverage-report-action@8f86cfb56ed6d5613ea8cdc5259f207fbfd51ece # v2
         continue-on-error: true
         with:
           working-directory: ui/menu-website
