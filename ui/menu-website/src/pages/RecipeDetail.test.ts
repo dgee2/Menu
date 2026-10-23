@@ -43,13 +43,19 @@ const recipe = (overrides: Partial<RecipeDetailModel> = {}) =>
     ...overrides,
   }) as unknown as RecipeDetailModel;
 
-const ingredient = (sortOrder: number, ingredientText: string, sectionTitle: string | null) => ({
+const ingredient = (
+  sortOrder: number,
+  ingredientText: string,
+  sectionTitle: string | null,
+  preparationText: string | null = null,
+  isOptional = false,
+) => ({
   sortOrder,
   ingredientText,
   measureText: '1',
   sectionTitle,
-  preparationText: null,
-  isOptional: false,
+  preparationText,
+  isOptional,
 });
 
 const StubPage = defineComponent({ template: '<div />' });
@@ -166,6 +172,41 @@ describe('RecipeDetail', () => {
   });
 
   describe('ingredient sections', () => {
+    it('shows preparation text beside its ingredient without adding punctuation to plain ingredients', async () => {
+      getRecipe.mockResolvedValue(
+        recipe({
+          ingredients: [
+            ingredient(0, 'Flour', 'For the cake', 'sifted', true),
+            ingredient(1, 'Milk', 'For the cake', null, true),
+            ingredient(2, 'Eggs', 'For the filling', 'beaten'),
+            ingredient(3, 'Salt', 'For the filling', '   '),
+          ],
+        }),
+      );
+      const wrapper = await mountPage();
+
+      expect(wrapper.findAll('h3').map((heading) => heading.text())).toEqual([
+        'For the cake',
+        'For the filling',
+      ]);
+      expect(wrapper.findAll('.q-item').map((row) => row.text().trim())).toEqual([
+        '1 Flour, sifted (optional)',
+        '1 Milk (optional)',
+        '1 Eggs, beaten',
+        '1 Salt',
+      ]);
+      expect(
+        wrapper.findAll('.q-item').map((row) =>
+          row.findAll('.q-item__section > .q-item__label').map((label) => label.text().trim()),
+        ),
+      ).toEqual([
+        ['1 Flour, sifted (optional)'],
+        ['1 Milk (optional)'],
+        ['1 Eggs, beaten'],
+        ['1 Salt'],
+      ]);
+    });
+
     it('groups contiguous runs of the same section', async () => {
       getRecipe.mockResolvedValue(
         recipe({
