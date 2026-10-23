@@ -9,8 +9,6 @@ using MenuApi.Repositories;
 using MenuApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using OwaspHeaders.Core.Extensions;
-using OwaspHeaders.Core.Models;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -64,27 +62,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Swagger UI uses inline scripts, so apply the default CSP only to API responses.
-var browserUiHeaders = SecureHeadersMiddlewareBuilder
-    .CreateBuilder()
-    .UseHsts()
-    .UseXFrameOptions()
-    .UseContentTypeOptions()
-    .UsePermittedCrossDomainPolicies()
-    .UseReferrerPolicy()
-    .UseCacheControl()
-    .UseXssProtection()
-    .UseCrossOriginResourcePolicy()
-    .UseCrossOriginOpenerPolicy()
-    .UseCrossOriginEmbedderPolicy()
-    .Build();
-
-app.UseWhen(
-    context => context.Request.Path.StartsWithSegments("/api"),
-    apiApp => apiApp.UseSecureHeadersMiddleware());
-app.UseWhen(
-    context => !context.Request.Path.StartsWithSegments("/api"),
-    uiApp => uiApp.UseSecureHeadersMiddleware(browserUiHeaders));
+app.UseMenuSecurityHeaders();
 
 // Use CORS middleware before authentication/authorization
 app.UseCors("AllowAll");
