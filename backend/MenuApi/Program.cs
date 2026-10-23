@@ -62,6 +62,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseMenuSecurityHeaders();
+
 // Use CORS middleware before authentication/authorization
 app.UseCors("AllowAll");
 
