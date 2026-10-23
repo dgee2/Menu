@@ -72,7 +72,7 @@
     "playwright": "^1.64.0",
     "prettier": "3.9.10",
     "sass-embedded": "^1.105.1",
-    "storybook": "^10.6.1",
+    "storybook": "^10.6.2",
     "typescript": "~6.0.3",
     "vite": "^8.3.4",
     "vite-plugin-vue-devtools": "^8.2.1",
