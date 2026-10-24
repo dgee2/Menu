@@ -77,6 +77,13 @@ public class RecipeServiceTests
         result.Servings.Should().Be(recipe.Servings);
         result.Ingredients.Should().BeEquivalentTo(expectedIngredients);
         result.Steps.Should().BeEquivalentTo(expectedSteps);
+
+        var viewedEvent = db.OutboxEvents.Local.Should().ContainSingle().Subject;
+        viewedEvent.EventType.Should().Be(nameof(RecipeViewedEvent));
+        viewedEvent.ProcessedAtUtc.Should().BeNull();
+        var payload = System.Text.Json.JsonSerializer.Deserialize<RecipeViewedEvent>(viewedEvent.Payload);
+        payload.Should().Be(new RecipeViewedEvent(recipe.Id, callerId, true, payload!.Timestamp));
+        payload.Timestamp.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
 
     [Theory, CustomAutoData]
@@ -90,6 +97,7 @@ public class RecipeServiceTests
 
         result.Should().BeNull();
         A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId, callerId)).MustNotHaveHappened();
+        db.OutboxEvents.Local.Should().BeEmpty();
     }
 
     [Theory, CustomAutoData]

@@ -45,6 +45,11 @@ public class RecipeService(
 
             var steps = await recipeStepRepository.GetStepsByRecipeIdAsync(recipeId).ConfigureAwait(false);
             recipe.Steps = ViewModelMapper.Map(steps);
+
+            // A view is recorded only after the caller has successfully loaded a readable recipe.
+            // Persist it in the request so failed reads never produce an event that metrics cannot justify.
+            outboxWriter.Write(new RecipeViewedEvent(recipeId, callerId, IsAuthenticated: true, DateTime.UtcNow));
+            await db.SaveChangesAsync().ConfigureAwait(false);
         }
 
         return recipe;

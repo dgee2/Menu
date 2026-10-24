@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using MenuApi.DomainEvents;
 using MenuApi.Integration.Tests.Factory;
 using System.Net;
 using System.Text;
@@ -90,6 +91,28 @@ public class RecipeReadAuthorizationIntegrationTests
         using var doc = JsonDocument.Parse(data);
         doc.RootElement.GetProperty("canEdit").GetBoolean().Should().BeTrue();
         doc.RootElement.GetProperty("canDelete").GetBoolean().Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Get_OwnRecipe_WritesAuthenticatedRecipeViewedOutboxEvent()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var client = await fixture.GetHttpClient();
+        var recipeId = await PostRecipeAsync(client, $"Viewed Recipe {Guid.NewGuid()}", "Private");
+
+        using var response = await client.GetAsync($"/api/recipe/{recipeId}", cancellationToken);
+        await response.ShouldHaveStatusCode(HttpStatusCode.OK);
+
+        var events = await TestDatabaseSeeder.GetOutboxEventsForRecipeAsync(fixture, recipeId, cancellationToken);
+        var viewedEvent = events.Should().ContainSingle(e => e.EventType == nameof(RecipeViewedEvent)).Subject;
+        viewedEvent.ProcessedAtUtc.Should().BeNull();
+
+        var payload = JsonSerializer.Deserialize<RecipeViewedEvent>(viewedEvent.Payload);
+        payload.Should().NotBeNull();
+        payload!.RecipeId.Value.Should().Be(recipeId);
+        payload.ViewerUserId.Value.Should().NotBe(Guid.Empty);
+        payload.IsAuthenticated.Should().BeTrue();
+        payload.Timestamp.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(10));
     }
 
     [Fact]
