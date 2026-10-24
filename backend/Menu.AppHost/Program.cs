@@ -6,6 +6,7 @@ var auth0Audience = builder.AddParameter("Auth0Audience");
 builder.AddRedis("cache");
 
 var sql = builder.AddSqlServer("sql")
+                 .WithDockerfile(".", "Dockerfile.sqlserver-fts")
                  .WithLifetime(ContainerLifetime.Persistent);
 
 var menuDb = sql.AddDatabase("menu");
