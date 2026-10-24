@@ -31,7 +31,9 @@ The API identifier configured in Auth0 must match the audience requested by the 
 | Aspire `Auth0Audience` parameter | `http://localhost:65273` |
 | Aspire `Auth0Domain` parameter | The Auth0 tenant domain, without `https://` |
 
-The audience is the registered Auth0 API identifier and is independent of the API's network address. Aspire injects its `Auth0Audience` parameter into `VITE_AUTH0_AUDIENCE`; the checked-in `.env` supplies the same identifier for standalone Vite development. Moving the API to another port only changes `VITE_MENU_API_URL`. Changing the public UI URL requires updating the SPA's allowed callback URLs, logout URLs, and web origins.
+The audience is the registered Auth0 API identifier and is independent of the API's network address. Auth0's [API settings documentation](https://auth0.com/docs/get-started/apis/api-settings#general-settings) explains that the identifier is fixed after API creation. The existing identifier therefore stays `http://localhost:65273` when the API moves to port `5002`; using a new identifier would require registering a new API in Auth0.
+
+Aspire injects its `Auth0Audience` parameter into `VITE_AUTH0_AUDIENCE` and into the backend's JWT validation configuration. The checked-in `.env` supplies the same identifier for standalone Vite development. Moving the API to another port only changes `VITE_MENU_API_URL`. Changing the public UI URL requires updating the SPA's allowed callback URLs, logout URLs, and web origins.
 
 ## Verification
 
