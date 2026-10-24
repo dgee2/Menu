@@ -68,7 +68,7 @@ public class RecipeServiceTests
             DurationMinutes = x.DurationMinutes,
         });
 
-        var result = await sut.GetRecipeAsync(recipe.Id, callerId);
+        var result = await sut.GetRecipeAsync(recipe.Id, callerId, recordView: true);
 
         result!.Title.Should().Be(recipe.Title);
         result.Id.Should().Be(recipe.Id);
@@ -77,6 +77,13 @@ public class RecipeServiceTests
         result.Servings.Should().Be(recipe.Servings);
         result.Ingredients.Should().BeEquivalentTo(expectedIngredients);
         result.Steps.Should().BeEquivalentTo(expectedSteps);
+
+        var viewedEvent = db.OutboxEvents.Local.Should().ContainSingle().Subject;
+        viewedEvent.EventType.Should().Be(nameof(RecipeViewedEvent));
+        viewedEvent.ProcessedAtUtc.Should().BeNull();
+        var payload = System.Text.Json.JsonSerializer.Deserialize<RecipeViewedEvent>(viewedEvent.Payload);
+        payload.Should().Be(new RecipeViewedEvent(recipe.Id, callerId, true, payload!.Timestamp));
+        payload.Timestamp.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
 
     [Theory, CustomAutoData]
@@ -90,6 +97,7 @@ public class RecipeServiceTests
 
         result.Should().BeNull();
         A.CallTo(() => recipeRepository.GetRecipeIngredientsAsync(recipeId, callerId)).MustNotHaveHappened();
+        db.OutboxEvents.Local.Should().BeEmpty();
     }
 
     [Theory, CustomAutoData]
@@ -108,6 +116,7 @@ public class RecipeServiceTests
 
         result!.CanEdit.Should().BeTrue();
         result.CanDelete.Should().BeTrue();
+        db.OutboxEvents.Local.Should().BeEmpty();
     }
 
     [Theory, CustomAutoData]
@@ -150,6 +159,31 @@ public class RecipeServiceTests
 
         var result = await sut.GetRecipesAsync(scope, callerId, 50);
         result.Should().BeEquivalentTo(expected);
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipesWithQuery_UsesSearchRepositoryAndTrimsQuery(
+        RecipeListScope scope, MenuUserId callerId, IEnumerable<DBModel.Recipe> recipes)
+    {
+        const string query = "  lemon cake  ";
+        A.CallTo(() => recipeRepository.SearchRecipesAsync(scope, callerId, 50, "lemon cake"))
+            .Returns(recipes.AsEnumerable());
+
+        var result = await sut.GetRecipesAsync(scope, callerId, 50, query);
+
+        result.Select(recipe => recipe.Id).Should().BeEquivalentTo(recipes.Select(recipe => recipe.Id));
+        A.CallTo(() => recipeRepository.GetRecipesAsync(scope, callerId, 50)).MustNotHaveHappened();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipesWithWhitespaceQuery_UsesListRepository(
+        RecipeListScope scope, MenuUserId callerId, IEnumerable<DBModel.Recipe> recipes)
+    {
+        A.CallTo(() => recipeRepository.GetRecipesAsync(scope, callerId, 50)).Returns(recipes.AsEnumerable());
+
+        await sut.GetRecipesAsync(scope, callerId, 50, "   ");
+
+        A.CallTo(() => recipeRepository.SearchRecipesAsync(scope, callerId, 50, A<string>._)).MustNotHaveHappened();
     }
 
     [Theory, CustomAutoData]

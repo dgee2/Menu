@@ -18,13 +18,15 @@ public class RecipeService(
     OutboxWriter outboxWriter,
     ILogger<RecipeService> logger) : IRecipeService
 {
-    public async Task<IEnumerable<RecipeListItem>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take)
+    public async Task<IEnumerable<RecipeListItem>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take, string? query = null)
     {
-        var recipes = await recipeRepository.GetRecipesAsync(scope, callerId, take).ConfigureAwait(false);
+        var recipes = string.IsNullOrWhiteSpace(query)
+            ? await recipeRepository.GetRecipesAsync(scope, callerId, take).ConfigureAwait(false)
+            : await recipeRepository.SearchRecipesAsync(scope, callerId, take, query.Trim()).ConfigureAwait(false);
         return ViewModelMapper.Map(recipes);
     }
 
-    public async Task<RecipeDetail?> GetRecipeAsync(RecipeId recipeId, MenuUserId callerId)
+    public async Task<RecipeDetail?> GetRecipeAsync(RecipeId recipeId, MenuUserId callerId, bool recordView = false)
     {
         var dbRecipe = await recipeRepository.GetReadableRecipeAsync(recipeId, callerId).ConfigureAwait(false);
 
@@ -45,6 +47,14 @@ public class RecipeService(
 
             var steps = await recipeStepRepository.GetStepsByRecipeIdAsync(recipeId).ConfigureAwait(false);
             recipe.Steps = ViewModelMapper.Map(steps);
+
+            // A view is recorded only after the caller has successfully loaded a readable recipe.
+            // Persist it in the request so failed reads never produce an event that metrics cannot justify.
+            if (recordView)
+            {
+                outboxWriter.Write(new RecipeViewedEvent(recipeId, callerId, IsAuthenticated: true, DateTime.UtcNow));
+                await db.SaveChangesAsync().ConfigureAwait(false);
+            }
         }
 
         return recipe;
