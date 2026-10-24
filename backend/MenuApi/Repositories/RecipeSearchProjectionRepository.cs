@@ -42,6 +42,7 @@ public sealed class RecipeSearchProjectionRepository(MenuDbContext db) : IRecipe
                 .Include(r => r.AccessScope)
                 .Include(r => r.RecipeIngredients)
                 .Include(r => r.RecipeSteps)
+                .AsSplitQuery()
                 .SingleOrDefaultAsync(r => r.Id == recipeId, cancellationToken)
                 .ConfigureAwait(false);
 

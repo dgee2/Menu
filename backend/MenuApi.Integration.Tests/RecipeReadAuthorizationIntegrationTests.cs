@@ -107,9 +107,9 @@ public class RecipeReadAuthorizationIntegrationTests
         var viewedEvent = events.Should().ContainSingle(e => e.EventType == nameof(RecipeViewedEvent)).Subject;
         viewedEvent.ProcessedAtUtc.Should().BeNull();
 
-        var payload = JsonSerializer.Deserialize<RecipeViewedEvent>(viewedEvent.Payload);
-        payload.Should().NotBeNull();
-        payload!.RecipeId.Value.Should().Be(recipeId);
+        var payload = JsonSerializer.Deserialize<RecipeViewedEvent>(viewedEvent.Payload)
+            ?? throw new InvalidOperationException("RecipeViewed payload was null.");
+        payload.RecipeId.Value.Should().Be(recipeId);
         payload.ViewerUserId.Value.Should().NotBe(Guid.Empty);
         payload.IsAuthenticated.Should().BeTrue();
         payload.Timestamp.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(10));

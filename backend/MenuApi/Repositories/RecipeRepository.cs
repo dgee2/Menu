@@ -132,7 +132,7 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
         // condition or make CONTAINSTABLE reject an ordinary search.
         return string.Join(
             " OR ",
-            Regex.Matches(query, @"[\p{L}\p{M}\p{N}]+")
+            Regex.Matches(query, @"[\p{L}\p{M}\p{N}]+", RegexOptions.None, TimeSpan.FromSeconds(1))
                 .Cast<Match>()
                 .Select(match => match.Value)
                 .Distinct(StringComparer.OrdinalIgnoreCase)

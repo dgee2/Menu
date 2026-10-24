@@ -5,6 +5,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MenuApi.Integration.Tests.Factory;
 
+internal sealed record RecipeSearchIndexSeed(
+    Guid RecipeId,
+    Guid OwnerUserId,
+    string Title,
+    string? IngredientsText,
+    string? StepsText,
+    string AccessScopeName);
+
 /// <summary>
 /// Seeds rows directly into the shared integration-test database, bypassing the API.
 /// Used to exercise ownership/scope behavior that can't be produced through the API alone,
@@ -77,26 +85,21 @@ internal static class TestDatabaseSeeder
 
     public static async Task AddRecipeSearchIndexAsync(
         ApiTestFixture fixture,
-        Guid recipeId,
-        Guid ownerUserId,
-        string title,
-        string? ingredientsText,
-        string? stepsText,
-        string accessScopeName,
+        RecipeSearchIndexSeed seed,
         CancellationToken cancellationToken)
     {
         await using var db = await CreateDbContextAsync(fixture, cancellationToken);
-        db.RecipeSearchIndexes.Add(new RecipeSearchIndexEntity
+        await db.RecipeSearchIndexes.AddAsync(new RecipeSearchIndexEntity
         {
-            RecipeId = recipeId,
-            Title = title,
-            IngredientsText = ingredientsText,
-            StepsText = stepsText,
-            OwnerUserId = ownerUserId,
-            AccessScope = accessScopeName,
+            RecipeId = seed.RecipeId,
+            Title = seed.Title,
+            IngredientsText = seed.IngredientsText,
+            StepsText = seed.StepsText,
+            OwnerUserId = seed.OwnerUserId,
+            AccessScope = seed.AccessScopeName,
             IsPublishedExternally = false,
             UpdatedAtUtc = DateTime.UtcNow,
-        });
+        }, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
     }
 

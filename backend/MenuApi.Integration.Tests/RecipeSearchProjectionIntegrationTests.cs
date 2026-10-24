@@ -46,9 +46,10 @@ public sealed class RecipeSearchProjectionIntegrationTests(ApiTestFixture fixtur
             x.IngredientsText == "plain flour lemon zest" &&
             x.StepsText == "Whisk the batter. Bake until golden.");
 
-        projection.Should().NotBeNull();
-        projection!.AccessScope.Should().Be("Private");
-        projection.IsPublishedExternally.Should().BeFalse();
+        var projectedRecipe = projection
+            ?? throw new InvalidOperationException("Recipe search projection was not created.");
+        projectedRecipe.AccessScope.Should().Be("Private");
+        projectedRecipe.IsPublishedExternally.Should().BeFalse();
 
         var updatedBody = new
         {

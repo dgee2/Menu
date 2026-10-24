@@ -9,24 +9,31 @@ namespace MenuApi.Integration.Tests;
 [Collection("API Host Collection")]
 public sealed class RecipeSearchIntegrationTests(ApiTestFixture fixture)
 {
+    private const string Saffron = "saffron";
+    private const string AuthenticatedAccessScope = "AuthenticatedUsers";
+
     [Fact]
     public async Task Search_ReturnsTitleMatchesAheadOfIngredientMatches()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         using var client = await fixture.GetHttpClient();
-        const string term = "saffron cake";
+        var term = $"{Saffron} cake";
         var titleOwner = await TestDatabaseSeeder.AddMenuUserAsync(fixture, $"search-title-{Guid.NewGuid():N}", cancellationToken);
         var ingredientOwner = await TestDatabaseSeeder.AddMenuUserAsync(fixture, $"search-ingredient-{Guid.NewGuid():N}", cancellationToken);
         var title = $"Saffron recipe {Guid.NewGuid():N}";
         var ingredientOnlyTitle = $"Other recipe {Guid.NewGuid():N}";
-        var titleRecipeId = await TestDatabaseSeeder.AddRecipeAsync(fixture, title, titleOwner, "AuthenticatedUsers", cancellationToken);
-        var ingredientRecipeId = await TestDatabaseSeeder.AddRecipeAsync(fixture, ingredientOnlyTitle, ingredientOwner, "AuthenticatedUsers", cancellationToken);
+        var titleRecipeId = await TestDatabaseSeeder.AddRecipeAsync(fixture, title, titleOwner, AuthenticatedAccessScope, cancellationToken);
+        var ingredientRecipeId = await TestDatabaseSeeder.AddRecipeAsync(fixture, ingredientOnlyTitle, ingredientOwner, AuthenticatedAccessScope, cancellationToken);
         await TestDatabaseSeeder.AddRecipeSearchIndexAsync(
-            fixture, titleRecipeId, titleOwner, title, "rice", null, "AuthenticatedUsers", cancellationToken);
+            fixture,
+            new RecipeSearchIndexSeed(titleRecipeId, titleOwner, title, "rice", null, AuthenticatedAccessScope),
+            cancellationToken);
         await TestDatabaseSeeder.AddRecipeSearchIndexAsync(
-            fixture, ingredientRecipeId, ingredientOwner, ingredientOnlyTitle, $"{term} threads", null, "AuthenticatedUsers", cancellationToken);
-        await TestDatabaseSeeder.WaitForFullTextIndexingAsync(fixture, titleRecipeId, "saffron", cancellationToken);
-        await TestDatabaseSeeder.WaitForFullTextIndexingAsync(fixture, ingredientRecipeId, "saffron", cancellationToken);
+            fixture,
+            new RecipeSearchIndexSeed(ingredientRecipeId, ingredientOwner, ingredientOnlyTitle, $"{term} threads", null, AuthenticatedAccessScope),
+            cancellationToken);
+        await TestDatabaseSeeder.WaitForFullTextIndexingAsync(fixture, titleRecipeId, Saffron, cancellationToken);
+        await TestDatabaseSeeder.WaitForFullTextIndexingAsync(fixture, ingredientRecipeId, Saffron, cancellationToken);
 
         using var response = await client.GetAsync(
             $"/api/recipe?scope=authenticated&query={Uri.EscapeDataString(term)}&take=20",
@@ -48,19 +55,19 @@ public sealed class RecipeSearchIntegrationTests(ApiTestFixture fixture)
         var cancellationToken = TestContext.Current.CancellationToken;
         using var client = await fixture.GetHttpClient();
         var owner = await TestDatabaseSeeder.AddMenuUserAsync(fixture, $"search-private-{Guid.NewGuid():N}", cancellationToken);
-        var privateTitle = $"Secret saffron {Guid.NewGuid():N}";
-        var sharedTitle = $"Shared saffron {Guid.NewGuid():N}";
+        var privateTitle = $"Secret {Saffron} {Guid.NewGuid():N}";
+        var sharedTitle = $"Shared {Saffron} {Guid.NewGuid():N}";
         var privateRecipe = await TestDatabaseSeeder.AddRecipeAsync(fixture, privateTitle, owner, "Private", cancellationToken);
-        var sharedRecipe = await TestDatabaseSeeder.AddRecipeAsync(fixture, sharedTitle, owner, "AuthenticatedUsers", cancellationToken);
+        var sharedRecipe = await TestDatabaseSeeder.AddRecipeAsync(fixture, sharedTitle, owner, AuthenticatedAccessScope, cancellationToken);
         await TestDatabaseSeeder.AddRecipeSearchIndexAsync(
-            fixture, privateRecipe, owner, privateTitle, "saffron", null, "Private", cancellationToken);
+            fixture, new RecipeSearchIndexSeed(privateRecipe, owner, privateTitle, Saffron, null, "Private"), cancellationToken);
         await TestDatabaseSeeder.AddRecipeSearchIndexAsync(
-            fixture, sharedRecipe, owner, sharedTitle, "saffron", null, "AuthenticatedUsers", cancellationToken);
-        await TestDatabaseSeeder.WaitForFullTextIndexingAsync(fixture, privateRecipe, "saffron", cancellationToken);
-        await TestDatabaseSeeder.WaitForFullTextIndexingAsync(fixture, sharedRecipe, "saffron", cancellationToken);
+            fixture, new RecipeSearchIndexSeed(sharedRecipe, owner, sharedTitle, Saffron, null, AuthenticatedAccessScope), cancellationToken);
+        await TestDatabaseSeeder.WaitForFullTextIndexingAsync(fixture, privateRecipe, Saffron, cancellationToken);
+        await TestDatabaseSeeder.WaitForFullTextIndexingAsync(fixture, sharedRecipe, Saffron, cancellationToken);
 
         using var response = await client.GetAsync(
-            $"/api/recipe?scope=authenticated&query={Uri.EscapeDataString("saffron OR (*)")}&take=20",
+            $"/api/recipe?scope=authenticated&query={Uri.EscapeDataString($"{Saffron} OR (*)")}&take=20",
             cancellationToken);
         await response.ShouldHaveStatusCode(HttpStatusCode.OK);
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
