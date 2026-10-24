@@ -52,8 +52,8 @@ public class RecipeService(
             // Persist it in the request so failed reads never produce an event that metrics cannot justify.
             if (recordView)
             {
-                outboxWriter.Write(new RecipeViewedEvent(recipeId, callerId, IsAuthenticated: true, DateTime.UtcNow));
-                await db.SaveChangesAsync().ConfigureAwait(false);
+                await outboxWriter.WriteAndSaveAsync(
+                    new RecipeViewedEvent(recipeId, callerId, IsAuthenticated: true, DateTime.UtcNow)).ConfigureAwait(false);
             }
         }
 

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 using MenuDB;
 using MenuDB.Data;
 using MenuApi.Authorization;
@@ -54,6 +55,12 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(query);
 
+        var searchCondition = BuildContainsSearchCondition(query);
+        if (searchCondition.Length == 0)
+        {
+            return [];
+        }
+
         var mine = scope switch
         {
             RecipeListScope.Mine => true,
@@ -81,10 +88,10 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
                 SELECT matched.RecipeId, SUM(matched.Score) AS RankScore
                 FROM (
                     SELECT [KEY] AS RecipeId, CAST([RANK] AS int) * 3 AS Score
-                    FROM CONTAINSTABLE(dbo.RecipeSearchIndex, Title, {query})
+                    FROM CONTAINSTABLE(dbo.RecipeSearchIndex, Title, {searchCondition})
                     UNION ALL
                     SELECT [KEY] AS RecipeId, CAST([RANK] AS int) AS Score
-                    FROM CONTAINSTABLE(dbo.RecipeSearchIndex, (SummaryText, IngredientsText, StepsText), {query})
+                    FROM CONTAINSTABLE(dbo.RecipeSearchIndex, (SummaryText, IngredientsText, StepsText), {searchCondition})
                 ) AS matched
                 GROUP BY matched.RecipeId
             ) AS matches ON matches.RecipeId = searchIndex.RecipeId
@@ -116,6 +123,20 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             CreatedAtUtc = row.CreatedAtUtc,
             UpdatedAtUtc = row.UpdatedAtUtc,
         }).ToList();
+    }
+
+    private static string BuildContainsSearchCondition(string query)
+    {
+        // User text is not SQL Server full-text syntax. Treat each word as a literal search term
+        // and combine the terms ourselves so quotes, parentheses, and operators cannot change the
+        // condition or make CONTAINSTABLE reject an ordinary search.
+        return string.Join(
+            " OR ",
+            Regex.Matches(query, @"[\p{L}\p{M}\p{N}]+")
+                .Cast<Match>()
+                .Select(match => match.Value)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Select(term => $"\"{term}\""));
     }
 
     public async Task<DBModel.Recipe?> GetRecipeAsync(RecipeId recipeId)

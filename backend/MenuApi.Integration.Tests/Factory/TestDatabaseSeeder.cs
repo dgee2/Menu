@@ -112,6 +112,35 @@ internal static class TestDatabaseSeeder
             .SingleOrDefaultAsync(index => index.RecipeId == recipeId, cancellationToken);
     }
 
+    public static async Task WaitForFullTextIndexingAsync(
+        ApiTestFixture fixture,
+        Guid recipeId,
+        string term,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await CreateDbContextAsync(fixture, cancellationToken);
+        var timeoutAtUtc = DateTime.UtcNow.AddSeconds(30);
+
+        while (DateTime.UtcNow < timeoutAtUtc)
+        {
+            var matchCount = await db.Database.SqlQuery<int>($"""
+                SELECT COUNT(*) AS [Value]
+                FROM CONTAINSTABLE(dbo.RecipeSearchIndex, (Title, SummaryText, IngredientsText, StepsText), {term})
+                WHERE [KEY] = {recipeId}
+                """)
+                .SingleAsync(cancellationToken);
+
+            if (matchCount > 0)
+            {
+                return;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+        }
+
+        throw new TimeoutException($"Recipe {recipeId} was not searchable after SQL Server full-text indexing.");
+    }
+
     public static async Task<List<OutboxEvent>> GetOutboxEventsForRecipeAsync(
         ApiTestFixture fixture,
         Guid recipeId,
