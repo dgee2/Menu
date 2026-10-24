@@ -1,4 +1,4 @@
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 import preview, { withPageLayout } from '@storybook-config/preview';
 import RecipeList from './RecipeList.vue';
 import {
@@ -21,9 +21,11 @@ export const Success = meta.story({
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { name: 'My recipes' })).toBeInTheDocument();
+    await expect(canvas.getByRole('heading', { name: 'Recipe search' })).toBeInTheDocument();
     await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
     await expect(await canvas.findByText('Tomato Soup')).toBeInTheDocument();
+    await expect(canvas.getByText('Shared')).toBeInTheDocument();
+    await expect(canvas.getByText('Private')).toBeInTheDocument();
   },
 });
 
@@ -35,8 +37,23 @@ export const ScopeToggle = meta.story({
     const canvas = within(canvasElement);
 
     // `scope=authenticated` has been supported by the API all along; only `mine` was reachable.
-    await expect(canvas.getByRole('button', { name: 'My recipes' })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: 'Shared with everyone' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Mine' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'All Menu users' })).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'All Menu users' }));
+    await expect(canvas.getByRole('textbox', { name: 'Search recipes' })).toBeInTheDocument();
+  },
+});
+
+export const Search = meta.story({
+  beforeEach({ msw }) {
+    msw.use(recipesSuccessHandler);
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole('textbox', { name: 'Search recipes' });
+    await userEvent.type(input, 'cake');
+    await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
+    await expect(canvas.getByText('Shared')).toBeInTheDocument();
   },
 });
 
