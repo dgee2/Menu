@@ -75,6 +75,31 @@ internal static class TestDatabaseSeeder
         return await db.RecipeSteps.CountAsync(s => s.RecipeId == recipeId, cancellationToken);
     }
 
+    public static async Task AddRecipeSearchIndexAsync(
+        ApiTestFixture fixture,
+        Guid recipeId,
+        Guid ownerUserId,
+        string title,
+        string? ingredientsText,
+        string? stepsText,
+        string accessScopeName,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await CreateDbContextAsync(fixture, cancellationToken);
+        db.RecipeSearchIndexes.Add(new RecipeSearchIndexEntity
+        {
+            RecipeId = recipeId,
+            Title = title,
+            IngredientsText = ingredientsText,
+            StepsText = stepsText,
+            OwnerUserId = ownerUserId,
+            AccessScope = accessScopeName,
+            IsPublishedExternally = false,
+            UpdatedAtUtc = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
     public static async Task<RecipeSearchIndexEntity?> GetRecipeSearchIndexAsync(
         ApiTestFixture fixture,
         Guid recipeId,

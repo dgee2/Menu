@@ -50,6 +50,74 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             .ConfigureAwait(false);
     }
 
+    public async Task<IEnumerable<DBModel.Recipe>> SearchRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take, string query)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(query);
+
+        var mine = scope switch
+        {
+            RecipeListScope.Mine => true,
+            RecipeListScope.Authenticated => false,
+            _ => throw new ArgumentOutOfRangeException(nameof(scope), scope, "Unsupported recipe list scope."),
+        };
+        var rows = await db.Database.SqlQuery<RecipeSearchRow>($"""
+            SELECT TOP ({take})
+                recipe.Id,
+                recipe.Title,
+                recipe.AccessScopeId,
+                recipe.OwnerUserId,
+                recipe.Summary,
+                recipe.Servings,
+                recipe.YieldText,
+                recipe.PrepTimeMinutes,
+                recipe.CookTimeMinutes,
+                recipe.TotalTimeMinutes,
+                recipe.CreatedAtUtc,
+                recipe.UpdatedAtUtc,
+                matches.RankScore
+            FROM dbo.Recipe AS recipe
+            INNER JOIN dbo.RecipeSearchIndex AS searchIndex ON searchIndex.RecipeId = recipe.Id
+            INNER JOIN (
+                SELECT matched.RecipeId, SUM(matched.Score) AS RankScore
+                FROM (
+                    SELECT [KEY] AS RecipeId, CAST([RANK] AS int) * 3 AS Score
+                    FROM CONTAINSTABLE(dbo.RecipeSearchIndex, Title, {query})
+                    UNION ALL
+                    SELECT [KEY] AS RecipeId, CAST([RANK] AS int) AS Score
+                    FROM CONTAINSTABLE(dbo.RecipeSearchIndex, (SummaryText, IngredientsText, StepsText), {query})
+                ) AS matched
+                GROUP BY matched.RecipeId
+            ) AS matches ON matches.RecipeId = searchIndex.RecipeId
+            WHERE recipe.DeletedAtUtc IS NULL
+                AND (({mine} = 1 AND searchIndex.OwnerUserId = {callerId.Value})
+                    OR ({!mine} = 1 AND searchIndex.AccessScope = 'AuthenticatedUsers'))
+            ORDER BY matches.RankScore DESC, recipe.UpdatedAtUtc DESC, recipe.Id
+            """)
+            .ToListAsync()
+            .ConfigureAwait(false);
+
+        return rows.Select(row => new DBModel.Recipe
+        {
+            Id = RecipeId.From(row.Id),
+            Title = RecipeTitle.From(row.Title),
+            AccessScope = row.AccessScopeId switch
+            {
+                (byte)RecipeAccessScope.Private => RecipeAccessScope.Private,
+                (byte)RecipeAccessScope.AuthenticatedUsers => RecipeAccessScope.AuthenticatedUsers,
+                _ => throw new InvalidOperationException($"Recipe {row.Id} has an unknown access scope."),
+            },
+            OwnerUserId = MenuUserId.From(row.OwnerUserId),
+            Summary = row.Summary,
+            Servings = row.Servings,
+            YieldText = row.YieldText,
+            PrepTimeMinutes = row.PrepTimeMinutes,
+            CookTimeMinutes = row.CookTimeMinutes,
+            TotalTimeMinutes = row.TotalTimeMinutes,
+            CreatedAtUtc = row.CreatedAtUtc,
+            UpdatedAtUtc = row.UpdatedAtUtc,
+        }).ToList();
+    }
+
     public async Task<DBModel.Recipe?> GetRecipeAsync(RecipeId recipeId)
     {
         return await db.Recipes
@@ -221,4 +289,22 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
             .FirstOrDefaultAsync()
             .ConfigureAwait(false);
     }
+}
+
+/// <summary>Unmapped SQL result row used to preserve the full-text rank ordering.</summary>
+internal sealed class RecipeSearchRow
+{
+    public Guid Id { get; set; }
+    public required string Title { get; set; }
+    public byte AccessScopeId { get; set; }
+    public Guid OwnerUserId { get; set; }
+    public string? Summary { get; set; }
+    public int? Servings { get; set; }
+    public string? YieldText { get; set; }
+    public int? PrepTimeMinutes { get; set; }
+    public int? CookTimeMinutes { get; set; }
+    public int? TotalTimeMinutes { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+    public DateTime UpdatedAtUtc { get; set; }
+    public int RankScore { get; set; }
 }

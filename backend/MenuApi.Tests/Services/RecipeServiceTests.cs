@@ -162,6 +162,31 @@ public class RecipeServiceTests
     }
 
     [Theory, CustomAutoData]
+    public async Task GetRecipesWithQuery_UsesSearchRepositoryAndTrimsQuery(
+        RecipeListScope scope, MenuUserId callerId, IEnumerable<DBModel.Recipe> recipes)
+    {
+        const string query = "  lemon cake  ";
+        A.CallTo(() => recipeRepository.SearchRecipesAsync(scope, callerId, 50, "lemon cake"))
+            .Returns(recipes.AsEnumerable());
+
+        var result = await sut.GetRecipesAsync(scope, callerId, 50, query);
+
+        result.Select(recipe => recipe.Id).Should().BeEquivalentTo(recipes.Select(recipe => recipe.Id));
+        A.CallTo(() => recipeRepository.GetRecipesAsync(scope, callerId, 50)).MustNotHaveHappened();
+    }
+
+    [Theory, CustomAutoData]
+    public async Task GetRecipesWithWhitespaceQuery_UsesListRepository(
+        RecipeListScope scope, MenuUserId callerId, IEnumerable<DBModel.Recipe> recipes)
+    {
+        A.CallTo(() => recipeRepository.GetRecipesAsync(scope, callerId, 50)).Returns(recipes.AsEnumerable());
+
+        await sut.GetRecipesAsync(scope, callerId, 50, "   ");
+
+        A.CallTo(() => recipeRepository.SearchRecipesAsync(scope, callerId, 50, A<string>._)).MustNotHaveHappened();
+    }
+
+    [Theory, CustomAutoData]
     public async Task GetRecipeIngredientsSuccess(RecipeId recipeId, MenuUserId callerId, IEnumerable<DBModel.RecipeIngredient> ingredients)
     {
         var expected = ingredients.Select(x => new RecipeIngredientItem

@@ -18,9 +18,11 @@ public class RecipeService(
     OutboxWriter outboxWriter,
     ILogger<RecipeService> logger) : IRecipeService
 {
-    public async Task<IEnumerable<RecipeListItem>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take)
+    public async Task<IEnumerable<RecipeListItem>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take, string? query = null)
     {
-        var recipes = await recipeRepository.GetRecipesAsync(scope, callerId, take).ConfigureAwait(false);
+        var recipes = string.IsNullOrWhiteSpace(query)
+            ? await recipeRepository.GetRecipesAsync(scope, callerId, take).ConfigureAwait(false)
+            : await recipeRepository.SearchRecipesAsync(scope, callerId, take, query.Trim()).ConfigureAwait(false);
         return ViewModelMapper.Map(recipes);
     }
 
