@@ -6,7 +6,7 @@ export const createAuth0 = () =>
     clientId: 'XkygJHG4uxZ2g4vF0LMYmRWsWxeIXqQa',
     authorizationParams: {
       redirect_uri: window.location.origin,
-      audience: import.meta.env.VITE_MENU_API_URL,
+      audience: import.meta.env.VITE_AUTH0_AUDIENCE,
     },
     useRefreshTokens: true,
     cacheLocation: 'localstorage',

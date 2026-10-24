@@ -10,7 +10,7 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "build-only": "vite build",
     "dev": "vite",
-    "aspire": "vite --port 5173",
+    "aspire": "vite --strictPort",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "lint": "eslint . \"./src/**/*.{ts,js,cjs,mjs,vue}\"",
     "lint-fix": "eslint . \"./src/**/*.{ts,js,cjs,mjs,vue}\" --fix",

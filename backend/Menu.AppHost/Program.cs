@@ -15,7 +15,7 @@ var migrations = builder.AddProject<Projects.Menu_MigrationService>("migrations"
     .WaitFor(menuDb);
 
 var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
-       .WithHttpEndpoint(name: "menuApiHttp", port: 65273)
+       .WithHttpEndpoint(name: "menuApiHttp", port: 5002)
        .WithReference(menuDb)
        .WaitForCompletion(migrations)
        .WithEnvironment("Auth0Domain", auth0Domain)
@@ -27,12 +27,16 @@ var menuApi = builder.AddProject<Projects.MenuApi>("apiservice")
 var isTestMode = Environment.GetEnvironmentVariable("ASPIRE_TEST_MODE") == "true";
 if (!isTestMode)
 {
-    builder.AddJavaScriptApp("menu-ui", "../../ui/menu-website", "aspire")
+    builder.AddViteApp("menu-ui", "../../ui/menu-website", "aspire")
         .WithPnpm()
         .WithReference(menuApi)
         .WithEnvironment("VITE_MENU_API_URL", menuApi.GetEndpoint("menuApiHttp"))
+        .WithEnvironment("VITE_AUTH0_AUDIENCE", auth0Audience)
         .WaitFor(menuApi)
-        .WithHttpEndpoint(name: "menuUI", env: "PORT", port: 65276, targetPort: 5173)
+        // Keep the public callback URL stable and below Windows' dynamic port exclusion range.
+        // AddViteApp passes Aspire's separate allocated target port to Vite.
+        .WithEndpoint("http", endpoint => endpoint.Port = 5173)
+        .WithHttpHealthCheck("/", endpointName: "http")
         .PublishAsDockerFile();
 }
 

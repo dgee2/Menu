@@ -182,7 +182,7 @@ pnpm storybook            # Storybook dev server (port 6006)
 ```
 
 `pnpm test:e2e` requires Docker. It waits up to five minutes for the UI at
-`http://localhost:65276` (API `http://localhost:65273`) and reuses an existing stack on
+`http://localhost:5173` (API `http://localhost:5002`) and reuses an existing stack on
 that UI address. The command is long-running on Windows, so agents must use the
 `Start-Job` timeout pattern above. The HTML report is written to
 `ui/menu-website/playwright-report/`; failure artifacts and traces are written to

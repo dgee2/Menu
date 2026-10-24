@@ -46,7 +46,9 @@ pnpm test
 
 The end-to-end command starts the complete Aspire stack: the SQL Server container,
 database migrations, API, and UI. Docker must be running. Playwright waits for the UI at
-`http://localhost:65276` and reuses an already-running stack on that address.
+`http://localhost:5173` and reuses an already-running stack on that address.
+This is Aspire's public UI endpoint; Vite listens on a separate port allocated by
+`AddViteApp`. Both Playwright's base URL and readiness check use the public endpoint.
 
 ```sh
 # Install browsers for the first run
@@ -62,7 +64,7 @@ pnpm test:e2e e2e/public.spec.ts
 pnpm test:e2e --debug
 ```
 
-The API is available at `http://localhost:65273`. Playwright writes its HTML report to
+The API is available at `http://localhost:5002`. Playwright writes its HTML report to
 `playwright-report/` and failure artifacts, including traces captured on retry, to
 `test-results/`.
 
@@ -78,6 +80,11 @@ Copy-Item .env.e2e.example .env.e2e
 
 The `.env.e2e` file contains non-secret connection parameters and may be committed;
 keep credentials exclusively in the Windows environment.
+
+Register `http://localhost:5173` in the Auth0 SPA's allowed callback URLs, logout URLs,
+and web origins. The Auth0 API audience remains `http://localhost:65273`; it is an
+identifier, independent of the API's listening port. See
+[`docs/auth0-configuration.md`](../../docs/auth0-configuration.md) for the settings.
 
 The Auth0 setup project must handle the localhost API consent screen both when it is
 shown on first login and when consent has already been granted. This account is for
