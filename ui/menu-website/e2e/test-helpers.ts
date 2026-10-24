@@ -1,6 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
 
-const apiHost = 'http://localhost:65273';
+const apiHost = 'http://localhost:5002';
 export const apiBaseUrl = `${apiHost}/api/recipe`;
 const e2eCleanupBaseUrl = `${apiHost}/api/e2e-test/recipe`;
 

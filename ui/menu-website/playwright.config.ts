@@ -13,6 +13,9 @@ for (const [name, value] of Object.entries(env)) {
 // E2E teardown. Normal AppHost/API runs never receive this marker and retain soft-delete behavior.
 process.env.MENU_E2E_TEST_MODE = 'true';
 
+// Test the stable public Aspire endpoint; Vite's internal target port is allocated per run.
+const uiPublicUrl = 'http://localhost:5173';
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -47,7 +50,7 @@ export default defineConfig({
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:65276',
+    baseURL: uiPublicUrl,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -138,7 +141,7 @@ export default defineConfig({
   /* Run the complete Aspire application before starting the tests. */
   webServer: {
     command: 'aspire run --apphost ../../backend/Menu.AppHost --non-interactive',
-    url: 'http://localhost:65276',
+    url: uiPublicUrl,
     timeout: 5 * 60 * 1000,
     reuseExistingServer: !process.env.CI,
   },

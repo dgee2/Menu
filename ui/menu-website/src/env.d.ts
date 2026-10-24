@@ -4,5 +4,6 @@ declare namespace NodeJS {
     VUE_ROUTER_MODE: 'hash' | 'history' | 'abstract' | undefined;
     VUE_ROUTER_BASE: string | undefined;
     VITE_MENU_API_URL: string;
+    VITE_AUTH0_AUDIENCE: string;
   }
 }
