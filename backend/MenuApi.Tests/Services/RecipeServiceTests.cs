@@ -68,7 +68,7 @@ public class RecipeServiceTests
             DurationMinutes = x.DurationMinutes,
         });
 
-        var result = await sut.GetRecipeAsync(recipe.Id, callerId);
+        var result = await sut.GetRecipeAsync(recipe.Id, callerId, recordView: true);
 
         result!.Title.Should().Be(recipe.Title);
         result.Id.Should().Be(recipe.Id);
@@ -116,6 +116,7 @@ public class RecipeServiceTests
 
         result!.CanEdit.Should().BeTrue();
         result.CanDelete.Should().BeTrue();
+        db.OutboxEvents.Local.Should().BeEmpty();
     }
 
     [Theory, CustomAutoData]

@@ -24,7 +24,7 @@ public class RecipeService(
         return ViewModelMapper.Map(recipes);
     }
 
-    public async Task<RecipeDetail?> GetRecipeAsync(RecipeId recipeId, MenuUserId callerId)
+    public async Task<RecipeDetail?> GetRecipeAsync(RecipeId recipeId, MenuUserId callerId, bool recordView = false)
     {
         var dbRecipe = await recipeRepository.GetReadableRecipeAsync(recipeId, callerId).ConfigureAwait(false);
 
@@ -48,8 +48,11 @@ public class RecipeService(
 
             // A view is recorded only after the caller has successfully loaded a readable recipe.
             // Persist it in the request so failed reads never produce an event that metrics cannot justify.
-            outboxWriter.Write(new RecipeViewedEvent(recipeId, callerId, IsAuthenticated: true, DateTime.UtcNow));
-            await db.SaveChangesAsync().ConfigureAwait(false);
+            if (recordView)
+            {
+                outboxWriter.Write(new RecipeViewedEvent(recipeId, callerId, IsAuthenticated: true, DateTime.UtcNow));
+                await db.SaveChangesAsync().ConfigureAwait(false);
+            }
         }
 
         return recipe;

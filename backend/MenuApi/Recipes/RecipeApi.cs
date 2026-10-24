@@ -95,7 +95,7 @@ public static class RecipeApi
 
     public static async Task<IResult> GetRecipeAsync(IRecipeService recipeService, CallerId caller, RecipeId recipeId)
     {
-        var recipe = await recipeService.GetRecipeAsync(recipeId, caller.Value);
+        var recipe = await recipeService.GetRecipeAsync(recipeId, caller.Value, recordView: true);
         return recipe is not null
             ? Results.Ok(recipe)
             : RecipeNotFound(recipeId);
