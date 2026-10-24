@@ -51,7 +51,8 @@ namespace MenuDB.Migrations
             migrationBuilder.Sql(
                 "CREATE FULLTEXT CATALOG RecipeCatalog AS DEFAULT;" +
                 "CREATE FULLTEXT INDEX ON dbo.RecipeSearchIndex (Title, SummaryText, IngredientsText, StepsText) " +
-                "KEY INDEX PK_RecipeSearchIndex ON RecipeCatalog;");
+                "KEY INDEX PK_RecipeSearchIndex ON RecipeCatalog;",
+                suppressTransaction: true);
         }
 
         /// <inheritdoc />
@@ -59,7 +60,8 @@ namespace MenuDB.Migrations
         {
             migrationBuilder.Sql(
                 "DROP FULLTEXT INDEX ON dbo.RecipeSearchIndex;" +
-                "DROP FULLTEXT CATALOG RecipeCatalog;");
+                "DROP FULLTEXT CATALOG RecipeCatalog;",
+                suppressTransaction: true);
 
             migrationBuilder.DropTable(
                 name: "RecipeSearchIndex");
