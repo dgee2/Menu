@@ -19,4 +19,11 @@ public class OutboxWriter(MenuDbContext db)
             CreatedAtUtc = DateTime.UtcNow,
         });
     }
+
+    public async Task WriteAndSaveAsync<TEvent>(TEvent domainEvent)
+        where TEvent : notnull
+    {
+        Write(domainEvent);
+        await db.SaveChangesAsync().ConfigureAwait(false);
+    }
 }

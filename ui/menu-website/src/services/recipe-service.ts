@@ -1,9 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import {
-  type RecipeListScope,
-  type UpsertRecipe,
-  useRecipeApi,
-} from '@/services/recipe-api';
+import { type RecipeListScope, type UpsertRecipe, useRecipeApi } from '@/services/recipe-api';
 import { toValue, type MaybeRef } from 'vue';
 
 const RECIPE_QUERY_KEY = 'recipe' as const;
@@ -33,11 +29,16 @@ export const useRecipeService = () => {
 
   // Scope is part of the key so the two scopes cache separately; the list key stays a prefix of
   // it, which keeps invalidateQueries({ queryKey: recipeListQueryKey }) covering both.
-  const useRecipes = (scope: MaybeRef<RecipeListScope> = 'mine') =>
+  const useRecipeSearch = (
+    scope: MaybeRef<RecipeListScope> = 'mine',
+    query: MaybeRef<string | undefined> = undefined,
+  ) =>
     useQuery({
-      queryKey: [...recipeListQueryKey, scope] as const,
-      queryFn: () => getRecipes(toValue(scope)),
+      queryKey: [...recipeListQueryKey, scope, query] as const,
+      queryFn: () => getRecipes(toValue(scope), toValue(query)?.trim() || undefined),
     });
+
+  const useRecipes = (scope: MaybeRef<RecipeListScope> = 'mine') => useRecipeSearch(scope);
 
   const useRecipe = (recipeId: MaybeRef<string>) =>
     useQuery({
@@ -85,6 +86,7 @@ export const useRecipeService = () => {
 
   return {
     useRecipes,
+    useRecipeSearch,
     useRecipe,
     useCreateRecipe,
     useUpdateRecipe,

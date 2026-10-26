@@ -5,6 +5,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MenuApi.Integration.Tests.Factory;
 
+internal sealed record RecipeSearchIndexSeed(
+    Guid RecipeId,
+    Guid OwnerUserId,
+    string Title,
+    string? IngredientsText,
+    string? StepsText,
+    string AccessScopeName);
+
 /// <summary>
 /// Seeds rows directly into the shared integration-test database, bypassing the API.
 /// Used to exercise ownership/scope behavior that can't be produced through the API alone,
@@ -73,6 +81,67 @@ internal static class TestDatabaseSeeder
         await using var db = await CreateDbContextAsync(fixture, cancellationToken);
 
         return await db.RecipeSteps.CountAsync(s => s.RecipeId == recipeId, cancellationToken);
+    }
+
+    public static async Task AddRecipeSearchIndexAsync(
+        ApiTestFixture fixture,
+        RecipeSearchIndexSeed seed,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await CreateDbContextAsync(fixture, cancellationToken);
+        await db.RecipeSearchIndexes.AddAsync(new RecipeSearchIndexEntity
+        {
+            RecipeId = seed.RecipeId,
+            Title = seed.Title,
+            IngredientsText = seed.IngredientsText,
+            StepsText = seed.StepsText,
+            OwnerUserId = seed.OwnerUserId,
+            AccessScope = seed.AccessScopeName,
+            IsPublishedExternally = false,
+            UpdatedAtUtc = DateTime.UtcNow,
+        }, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public static async Task<RecipeSearchIndexEntity?> GetRecipeSearchIndexAsync(
+        ApiTestFixture fixture,
+        Guid recipeId,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await CreateDbContextAsync(fixture, cancellationToken);
+
+        return await db.RecipeSearchIndexes
+            .AsNoTracking()
+            .SingleOrDefaultAsync(index => index.RecipeId == recipeId, cancellationToken);
+    }
+
+    public static async Task WaitForFullTextIndexingAsync(
+        ApiTestFixture fixture,
+        Guid recipeId,
+        string term,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await CreateDbContextAsync(fixture, cancellationToken);
+        var timeoutAtUtc = DateTime.UtcNow.AddSeconds(30);
+
+        while (DateTime.UtcNow < timeoutAtUtc)
+        {
+            var matchCount = await db.Database.SqlQuery<int>($"""
+                SELECT COUNT(*) AS [Value]
+                FROM CONTAINSTABLE(dbo.RecipeSearchIndex, (Title, SummaryText, IngredientsText, StepsText), {term})
+                WHERE [KEY] = {recipeId}
+                """)
+                .SingleAsync(cancellationToken);
+
+            if (matchCount > 0)
+            {
+                return;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+        }
+
+        throw new TimeoutException($"Recipe {recipeId} was not searchable after SQL Server full-text indexing.");
     }
 
     public static async Task<List<OutboxEvent>> GetOutboxEventsForRecipeAsync(

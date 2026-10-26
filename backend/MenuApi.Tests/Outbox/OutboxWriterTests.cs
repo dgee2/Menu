@@ -12,6 +12,24 @@ namespace MenuApi.Tests.Outbox;
 public class OutboxWriterTests
 {
     [Fact]
+    public async Task WriteAndSave_Persists_Event_Unprocessed()
+    {
+        var options = new DbContextOptionsBuilder<MenuDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        await using var db = new MenuDbContext(options);
+        var sut = new OutboxWriter(db);
+        var recipeId = RecipeId.From(Guid.CreateVersion7());
+
+        await sut.WriteAndSaveAsync(new RecipeViewedEvent(recipeId, MenuUserId.From(Guid.CreateVersion7()), true, DateTime.UtcNow));
+
+        var outboxEvent = await db.OutboxEvents.SingleAsync(TestContext.Current.CancellationToken);
+        outboxEvent.EventType.Should().Be(nameof(RecipeViewedEvent));
+        outboxEvent.ProcessedAtUtc.Should().BeNull();
+        JsonSerializer.Deserialize<RecipeViewedEvent>(outboxEvent.Payload)!.RecipeId.Should().Be(recipeId);
+    }
+
+    [Fact]
     public async Task Write_Queues_Serializable_Events_Without_Marking_Them_Processed()
     {
         var options = new DbContextOptionsBuilder<MenuDbContext>()

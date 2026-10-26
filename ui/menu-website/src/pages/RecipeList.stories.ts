@@ -1,4 +1,5 @@
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { http, HttpResponse } from 'msw';
 import preview, { withPageLayout } from '@storybook-config/preview';
 import RecipeList from './RecipeList.vue';
 import {
@@ -21,9 +22,11 @@ export const Success = meta.story({
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { name: 'My recipes' })).toBeInTheDocument();
+    await expect(canvas.getByRole('heading', { name: 'Recipe search' })).toBeInTheDocument();
     await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
     await expect(await canvas.findByText('Tomato Soup')).toBeInTheDocument();
+    await expect(canvas.getByText('Shared')).toBeInTheDocument();
+    await expect(canvas.getByText('Private')).toBeInTheDocument();
   },
 });
 
@@ -35,8 +38,45 @@ export const ScopeToggle = meta.story({
     const canvas = within(canvasElement);
 
     // `scope=authenticated` has been supported by the API all along; only `mine` was reachable.
-    await expect(canvas.getByRole('button', { name: 'My recipes' })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: 'Shared with everyone' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Mine' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'All Menu users' })).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'All Menu users' }));
+    await expect(canvas.getByRole('textbox', { name: 'Search recipes' })).toBeInTheDocument();
+  },
+});
+
+export const Search = meta.story({
+  beforeEach({ msw }) {
+    msw.use(
+      http.get('*/api/recipe', ({ request }) => {
+        const recipes = [
+          {
+            id: '00000000-0000-0000-0000-000000000001',
+            title: 'Chocolate Cake',
+            accessScope: 'AuthenticatedUsers',
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000002',
+            title: 'Tomato Soup',
+            accessScope: 'Private',
+          },
+        ];
+        const query = new URL(request.url).searchParams.get('query');
+        return HttpResponse.json(query ? recipes.slice(0, 1) : recipes);
+      }),
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole('textbox', { name: 'Search recipes' });
+    await expect(await canvas.findByText('Tomato Soup')).toBeInTheDocument();
+    await userEvent.type(input, 'cake');
+    await waitFor(() => expect(canvas.queryByText('Tomato Soup')).not.toBeInTheDocument());
+    await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
+    await expect(canvas.getByText('Shared')).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Clear' }));
+    await expect(input).toHaveValue('');
+    await expect(await canvas.findByText('Tomato Soup')).toBeInTheDocument();
   },
 });
 

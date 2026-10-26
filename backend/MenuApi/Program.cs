@@ -22,7 +22,9 @@ builder.Services.AddTransient<IIngredientRepository, IngredientRepository>();
 builder.Services.AddTransient<IIngredientService, IngredientService>();
 
 builder.Services.AddTransient<IRecipeRepository, RecipeRepository>();
+builder.Services.AddTransient<IRecipeSearchProjectionRepository, RecipeSearchProjectionRepository>();
 builder.Services.AddTransient<MenuApi.Outbox.OutboxWriter>();
+builder.Services.AddHostedService<MenuApi.Outbox.RecipeSearchProjectionConsumer>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
 builder.Services.AddTransient<IRecipeStepRepository, RecipeStepRepository>();
 

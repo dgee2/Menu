@@ -94,10 +94,16 @@ export const useRecipeApi = () => {
     return data;
   };
 
-  const getRecipes = async (scope: RecipeListScope = 'mine'): Promise<RecipeListItem[]> => {
+  const getRecipes = async (
+    scope: RecipeListScope = 'mine',
+    query?: string,
+  ): Promise<RecipeListItem[]> => {
     const { data, error, response } = await client.GET('/api/recipe', {
       params: {
-        query: { scope },
+        query: {
+          scope,
+          ...(query?.trim() ? { query: query.trim() } : {}),
+        },
       },
     });
 
