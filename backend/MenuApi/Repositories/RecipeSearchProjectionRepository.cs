@@ -1,7 +1,9 @@
+using System.Data;
 using System.Text.Json;
 using MenuApi.DomainEvents;
 using MenuDB;
 using MenuDB.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace MenuApi.Repositories;
@@ -12,6 +14,55 @@ public sealed class RecipeSearchProjectionRepository(MenuDbContext db) : IRecipe
     private static readonly string[] RecipeEventTypes = [nameof(RecipeCreatedEvent), nameof(RecipeUpdatedEvent)];
 
     public async Task<int> ProcessPendingEventsAsync(CancellationToken cancellationToken)
+    {
+        // Nonrelational providers do not have competing database connections or SQL locks.
+        if (!db.Database.IsRelational())
+        {
+            return await ProcessPendingBatchAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            // Re-read the batch after a rolled-back attempt; do not reuse tracked acknowledgements.
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+            var lockResultParameter = new SqlParameter("@lockResult", SqlDbType.Int)
+            {
+                Direction = ParameterDirection.Output,
+            };
+            await db.Database.ExecuteSqlRawAsync(
+                """
+                EXEC @lockResult = sys.sp_getapplock
+                    @Resource = N'Menu.RecipeSearchProjection',
+                    @LockMode = N'Exclusive',
+                    @LockOwner = N'Transaction',
+                    @LockTimeout = 0;
+                """,
+                [lockResultParameter],
+                cancellationToken).ConfigureAwait(false);
+
+            var lockResult = (int)lockResultParameter.Value;
+            if (lockResult == -1)
+            {
+                // Another API instance owns the batch. Leave its events untouched until a later tick.
+                return 0;
+            }
+
+            if (lockResult < 0)
+            {
+                throw new InvalidOperationException($"Unable to acquire the recipe projection lock: {lockResult}.");
+            }
+
+            // The database-wide transaction lock covers reads, rebuilds, and acknowledgements.
+            // A second consumer cannot overwrite a newer projection using an older loaded aggregate.
+            var processedCount = await ProcessPendingBatchAsync(cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return processedCount;
+        }).ConfigureAwait(false);
+    }
+
+    private async Task<int> ProcessPendingBatchAsync(CancellationToken cancellationToken)
     {
         var events = await db.OutboxEvents
             .Where(e => e.ProcessedAtUtc == null && RecipeEventTypes.Contains(e.EventType))
