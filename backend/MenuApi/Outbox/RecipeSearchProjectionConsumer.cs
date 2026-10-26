@@ -38,6 +38,8 @@ public sealed class RecipeSearchProjectionConsumer(
             }
             catch (Exception exception)
             {
+                // This is the batch retry boundary: log unexpected failures and leave the events
+                // pending. The next tick creates a fresh scope instead of stopping the API host.
                 logger.LogError(exception, "Failed to update recipe search projection from outbox events.");
             }
         }

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
-import { QLayout, QPageContainer, Quasar } from 'quasar';
+import { QInput, QLayout, QPageContainer, Quasar } from 'quasar';
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query';
 import { createMemoryHistory, createRouter, type Router } from 'vue-router';
 import { defineComponent } from 'vue';
@@ -80,6 +80,7 @@ describe('RecipeList', () => {
 
   afterEach(() => {
     while (mounted.length) mounted.pop()?.unmount();
+    vi.useRealTimers();
   });
 
   it('requests the caller-owned scope by default', async () => {
@@ -147,6 +148,23 @@ describe('RecipeList', () => {
     await flushPromises();
     expect(getRecipes).toHaveBeenCalledWith('mine', 'lemon cake');
     vi.useRealTimers();
+  });
+
+  it('restores the unfiltered request when Quasar clears the search to null', async () => {
+    vi.useFakeTimers();
+    const wrapper = await mountPage();
+    await wrapper.find('input[aria-label="Search recipes"]').setValue('lemon');
+    await vi.advanceTimersByTimeAsync(300);
+    await flushPromises();
+    expect(getRecipes).toHaveBeenLastCalledWith('mine', 'lemon');
+    getRecipes.mockClear();
+
+    wrapper.findComponent(QInput).vm.$emit('update:modelValue', null);
+    await flushPromises();
+    await vi.advanceTimersByTimeAsync(300);
+    await flushPromises();
+
+    expect(getRecipes).toHaveBeenLastCalledWith('mine', undefined);
   });
 
   it('shows an empty-search message when no recipe matches a nonempty query', async () => {

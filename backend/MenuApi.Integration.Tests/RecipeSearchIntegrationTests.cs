@@ -50,7 +50,7 @@ public sealed class RecipeSearchIntegrationTests(ApiTestFixture fixture)
     }
 
     [Fact]
-    public async Task Search_AuthenticatedScopeDoesNotExposeAnotherUsersPrivateRecipe()
+    public async Task Search_AuthenticatedScopeUsesCurrentVisibilityWhenProjectionIsStale()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         using var client = await fixture.GetHttpClient();
@@ -60,9 +60,9 @@ public sealed class RecipeSearchIntegrationTests(ApiTestFixture fixture)
         var privateRecipe = await TestDatabaseSeeder.AddRecipeAsync(fixture, privateTitle, owner, "Private", cancellationToken);
         var sharedRecipe = await TestDatabaseSeeder.AddRecipeAsync(fixture, sharedTitle, owner, AuthenticatedAccessScope, cancellationToken);
         await TestDatabaseSeeder.AddRecipeSearchIndexAsync(
-            fixture, new RecipeSearchIndexSeed(privateRecipe, owner, privateTitle, Saffron, null, "Private"), cancellationToken);
+            fixture, new RecipeSearchIndexSeed(privateRecipe, owner, privateTitle, Saffron, null, AuthenticatedAccessScope), cancellationToken);
         await TestDatabaseSeeder.AddRecipeSearchIndexAsync(
-            fixture, new RecipeSearchIndexSeed(sharedRecipe, owner, sharedTitle, Saffron, null, AuthenticatedAccessScope), cancellationToken);
+            fixture, new RecipeSearchIndexSeed(sharedRecipe, owner, sharedTitle, Saffron, null, "Private"), cancellationToken);
         await TestDatabaseSeeder.WaitForFullTextIndexingAsync(fixture, privateRecipe, Saffron, cancellationToken);
         await TestDatabaseSeeder.WaitForFullTextIndexingAsync(fixture, sharedRecipe, Saffron, cancellationToken);
 

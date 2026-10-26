@@ -96,8 +96,8 @@ public class RecipeRepository(MenuDbContext db) : IRecipeRepository
                 GROUP BY matched.RecipeId
             ) AS matches ON matches.RecipeId = searchIndex.RecipeId
             WHERE recipe.DeletedAtUtc IS NULL
-                AND (({mine} = 1 AND searchIndex.OwnerUserId = {callerId.Value})
-                    OR ({!mine} = 1 AND searchIndex.AccessScope = 'AuthenticatedUsers'))
+                AND (({mine} = 1 AND recipe.OwnerUserId = {callerId.Value})
+                    OR ({!mine} = 1 AND recipe.AccessScopeId = {(byte)RecipeAccessScope.AuthenticatedUsers}))
             ORDER BY matches.RankScore DESC, recipe.UpdatedAtUtc DESC, recipe.Id
             """)
             .ToListAsync()

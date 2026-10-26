@@ -54,12 +54,13 @@ const timings = (recipe: { effectiveTotalTimeMinutes?: number | null; servings?:
   <q-page class="q-pa-md">
     <h1>Recipe search</h1>
     <q-input
-      v-model="searchText"
+      :model-value="searchText"
       class="search-input q-mb-md"
       outlined
       clearable
       label="Search recipes"
       aria-label="Search recipes"
+      @update:model-value="searchText = String($event ?? '')"
     >
       <template #prepend>
         <q-icon name="search" />

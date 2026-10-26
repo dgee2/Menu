@@ -39,6 +39,9 @@ public sealed class RecipeSearchProjectionRepository(MenuDbContext db) : IRecipe
             }
 
             var recipe = await db.Recipes
+                // Keep projections for soft-deleted recipes so restoration needs no new event.
+                // Search checks DeletedAtUtc on the authoritative recipe before returning rows.
+                .IgnoreQueryFilters()
                 .Include(r => r.AccessScope)
                 .Include(r => r.RecipeIngredients)
                 .Include(r => r.RecipeSteps)

@@ -1,4 +1,5 @@
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { http, HttpResponse } from 'msw';
 import preview, { withPageLayout } from '@storybook-config/preview';
 import RecipeList from './RecipeList.vue';
 import {
@@ -46,14 +47,36 @@ export const ScopeToggle = meta.story({
 
 export const Search = meta.story({
   beforeEach({ msw }) {
-    msw.use(recipesSuccessHandler);
+    msw.use(
+      http.get('*/api/recipe', ({ request }) => {
+        const recipes = [
+          {
+            id: '00000000-0000-0000-0000-000000000001',
+            title: 'Chocolate Cake',
+            accessScope: 'AuthenticatedUsers',
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000002',
+            title: 'Tomato Soup',
+            accessScope: 'Private',
+          },
+        ];
+        const query = new URL(request.url).searchParams.get('query');
+        return HttpResponse.json(query ? recipes.slice(0, 1) : recipes);
+      }),
+    );
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = canvas.getByRole('textbox', { name: 'Search recipes' });
+    await expect(await canvas.findByText('Tomato Soup')).toBeInTheDocument();
     await userEvent.type(input, 'cake');
+    await waitFor(() => expect(canvas.queryByText('Tomato Soup')).not.toBeInTheDocument());
     await expect(await canvas.findByText('Chocolate Cake')).toBeInTheDocument();
     await expect(canvas.getByText('Shared')).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Clear' }));
+    await expect(input).toHaveValue('');
+    await expect(await canvas.findByText('Tomato Soup')).toBeInTheDocument();
   },
 });
 
