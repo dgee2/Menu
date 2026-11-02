@@ -120,7 +120,7 @@ public class RecipeApiTests
     [Theory, CustomAutoData]
     public async Task GetRecipeAsync_Success(MenuUserId callerId, RecipeId recipeId, RecipeDetail recipe)
     {
-        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId)).Returns(recipe);
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId, recordView: true)).Returns(recipe);
 
         var result = await RecipeApi.GetRecipeAsync(recipeService, Caller(callerId), recipeId);
 
@@ -132,7 +132,7 @@ public class RecipeApiTests
     public async Task GetRecipeAsync_NotReadable_Returns404(MenuUserId callerId, RecipeId recipeId)
     {
         RecipeDetail? recipe = null;
-        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId)).Returns(recipe);
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId, recordView: true)).Returns(recipe);
 
         var result = await RecipeApi.GetRecipeAsync(recipeService, Caller(callerId), recipeId);
 
@@ -143,11 +143,11 @@ public class RecipeApiTests
     [Theory, CustomAutoData]
     public async Task GetRecipeAsync_PassesCallerToService(MenuUserId callerId, RecipeId recipeId, RecipeDetail recipe)
     {
-        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId)).Returns(recipe);
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId, recordView: true)).Returns(recipe);
 
         await RecipeApi.GetRecipeAsync(recipeService, Caller(callerId), recipeId);
 
-        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => recipeService.GetRecipeAsync(recipeId, callerId, recordView: true)).MustHaveHappenedOnceExactly();
     }
 
     [Theory, CustomAutoData]

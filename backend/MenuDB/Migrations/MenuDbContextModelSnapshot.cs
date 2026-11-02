@@ -17,7 +17,7 @@ namespace MenuDB.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -257,6 +257,47 @@ namespace MenuDB.Migrations
                     b.ToTable("RecipeIngredient", (string)null);
                 });
 
+            modelBuilder.Entity("MenuDB.Data.RecipeSearchIndexEntity", b =>
+                {
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccessScope")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("IngredientsText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPublishedExternally")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StepsText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SummaryText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("RecipeId")
+                        .HasName("PK_RecipeSearchIndex");
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.ToTable("RecipeSearchIndex", (string)null);
+                });
+
             modelBuilder.Entity("MenuDB.Data.RecipeStepEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -451,6 +492,27 @@ namespace MenuDB.Migrations
                     b.Navigation("CanonicalIngredient");
 
                     b.Navigation("CanonicalUnit");
+
+                    b.Navigation("Recipe");
+                });
+
+            modelBuilder.Entity("MenuDB.Data.RecipeSearchIndexEntity", b =>
+                {
+                    b.HasOne("MenuDB.Data.MenuUserEntity", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_RecipeSearchIndex_ToMenuUser");
+
+                    b.HasOne("MenuDB.Data.RecipeEntity", "Recipe")
+                        .WithOne()
+                        .HasForeignKey("MenuDB.Data.RecipeSearchIndexEntity", "RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_RecipeSearchIndex_ToRecipe");
+
+                    b.Navigation("Owner");
 
                     b.Navigation("Recipe");
                 });

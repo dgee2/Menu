@@ -99,8 +99,22 @@ export const recipeDeleteErrorHandler = http.delete(recipeDetailPath, async () =
 export const recipesSuccessHandler = http.get(recipePath, async () => {
   await delay(150);
   return HttpResponse.json([
-    { id: 1, title: 'Chocolate Cake' },
-    { id: 2, title: 'Tomato Soup' },
+    {
+      id: '00000000-0000-0000-0000-000000000001',
+      title: 'Chocolate Cake',
+      summary: 'A rich chocolate cake for celebrations.',
+      accessScope: 'AuthenticatedUsers',
+      servings: 8,
+      effectiveTotalTimeMinutes: 55,
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000002',
+      title: 'Tomato Soup',
+      summary: 'A smooth tomato soup.',
+      accessScope: 'Private',
+      servings: 4,
+      effectiveTotalTimeMinutes: 35,
+    },
   ]);
 });
 

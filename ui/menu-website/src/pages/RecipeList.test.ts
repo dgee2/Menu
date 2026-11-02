@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
-import { QLayout, QPageContainer, Quasar } from 'quasar';
+import { QInput, QLayout, QPageContainer, Quasar } from 'quasar';
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query';
 import { createMemoryHistory, createRouter, type Router } from 'vue-router';
 import { defineComponent } from 'vue';
@@ -80,12 +80,13 @@ describe('RecipeList', () => {
 
   afterEach(() => {
     while (mounted.length) mounted.pop()?.unmount();
+    vi.useRealTimers();
   });
 
   it('requests the caller-owned scope by default', async () => {
     await mountPage();
 
-    expect(getRecipes).toHaveBeenCalledWith('mine');
+    expect(getRecipes).toHaveBeenCalledWith('mine', undefined);
   });
 
   it('renders the summary and timings the list endpoint already returns', async () => {
@@ -97,6 +98,7 @@ describe('RecipeList', () => {
     expect(wrapper.text()).toContain('Layers of pasta.');
     expect(wrapper.text()).toContain('50 min');
     expect(wrapper.text()).toContain('Serves 4');
+    expect(wrapper.text()).toContain('Private');
   });
 
   it('renders the server-computed total rather than deriving one', async () => {
@@ -123,12 +125,57 @@ describe('RecipeList', () => {
 
     const sharedButton = wrapper
       .findAll('button')
-      .find((button) => button.text() === 'Shared with everyone');
+      .find((button) => button.text() === 'All Menu users');
     await sharedButton?.trigger('click');
     await flushPromises();
 
-    expect(getRecipes).toHaveBeenLastCalledWith('authenticated');
-    expect(wrapper.find('h1').text()).toBe('Shared with everyone');
+    expect(getRecipes).toHaveBeenLastCalledWith('authenticated', undefined);
+  });
+
+  it('debounces search input before requesting matching recipes', async () => {
+    vi.useFakeTimers();
+    const wrapper = await mountPage();
+    getRecipes.mockClear();
+
+    await wrapper.find('input[aria-label="Search recipes"]').setValue(' lemon cake ');
+    await flushPromises();
+    expect(getRecipes).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(299);
+    expect(getRecipes).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(1);
+    await flushPromises();
+    expect(getRecipes).toHaveBeenCalledWith('mine', 'lemon cake');
+    vi.useRealTimers();
+  });
+
+  it('restores the unfiltered request when Quasar clears the search to null', async () => {
+    vi.useFakeTimers();
+    const wrapper = await mountPage();
+    await wrapper.find('input[aria-label="Search recipes"]').setValue('lemon');
+    await vi.advanceTimersByTimeAsync(300);
+    await flushPromises();
+    expect(getRecipes).toHaveBeenLastCalledWith('mine', 'lemon');
+    getRecipes.mockClear();
+
+    wrapper.findComponent(QInput).vm.$emit('update:modelValue', null);
+    await flushPromises();
+    await vi.advanceTimersByTimeAsync(300);
+    await flushPromises();
+
+    expect(getRecipes).toHaveBeenLastCalledWith('mine', undefined);
+  });
+
+  it('shows an empty-search message when no recipe matches a nonempty query', async () => {
+    getRecipes.mockResolvedValue([]);
+    const wrapper = await mountPage();
+
+    await wrapper.find('input[aria-label="Search recipes"]').setValue('missing dish');
+    await new Promise((resolve) => setTimeout(resolve, 310));
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('No recipes match your search.');
   });
 
   it('explains an empty list in terms of the current scope', async () => {
