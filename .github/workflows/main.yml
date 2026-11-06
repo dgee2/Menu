@@ -148,7 +148,7 @@ jobs:
 
       - name: Generate backend unit coverage summary
         if: ${{ always() && hashFiles('coverage/MenuApi.Tests.cobertura.xml') != '' && hashFiles('coverage/MenuDB.Tests.cobertura.xml') != '' }}
-        uses: danielpalme/ReportGenerator-GitHub-Action@d3ebf1f760f7d8ab92cc44d9bcfee7ad73722a31 # v5
+        uses: danielpalme/ReportGenerator-GitHub-Action@861674232075b2c6bd1405a04c4bb9b150653e81 # v5
         continue-on-error: true
         with:
           reports: coverage/*.cobertura.xml
@@ -219,7 +219,7 @@ jobs:
 
       - name: Generate backend integration coverage summary
         if: ${{ always() && hashFiles('coverage/MenuApi.Integration.Tests.cobertura.xml') != '' }}
-        uses: danielpalme/ReportGenerator-GitHub-Action@d3ebf1f760f7d8ab92cc44d9bcfee7ad73722a31 # v5
+        uses: danielpalme/ReportGenerator-GitHub-Action@861674232075b2c6bd1405a04c4bb9b150653e81 # v5
         continue-on-error: true
         with:
           reports: coverage/MenuApi.Integration.Tests.cobertura.xml
@@ -336,7 +336,7 @@ jobs:
 
       - name: Report frontend coverage
         if: ${{ always() && hashFiles('ui/menu-website/coverage/coverage-summary.json') != '' }}
-        uses: davelosert/vitest-coverage-report-action@c4bbc33a89b7ace0e63d35f1f7d4bcee31155a73 # v2
+        uses: davelosert/vitest-coverage-report-action@74c2d9210b4fc44c84d8213f61d7ec99837b7aa0 # v2
         continue-on-error: true
         with:
           working-directory: ui/menu-website

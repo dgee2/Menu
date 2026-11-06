@@ -3,7 +3,7 @@ import path from 'node:path';
 import { expect, test as setup } from '@playwright/test';
 
 const authFile = path.join('.playwright', '.auth', 'user.json');
-const apiUrl = 'http://localhost:65273/api/recipe?scope=mine';
+const apiUrl = 'http://localhost:5002/api/recipe?scope=mine';
 const isAuth0Page = (page: { url(): string }) => {
   const hostname = new URL(page.url()).hostname;
   return hostname === 'auth0.com' || hostname.endsWith('.auth0.com');

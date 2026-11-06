@@ -15,7 +15,7 @@ From `ui/menu-website/`, run:
 pnpm test:e2e
 ```
 
-Playwright's `webServer` starts the Aspire AppHost (`backend/Menu.AppHost`) when the configured UI URL is not already serving. Aspire brings up the SQL Server container, migration service, API, and UI. The UI is `http://localhost:65276`; the API is `http://localhost:65273`. Allow up to five minutes for a cold start (Docker image pull, SQL initialization, migrations, and frontend startup); a warm run is shorter. Docker Desktop must be running.
+Playwright's `webServer` starts the Aspire AppHost (`backend/Menu.AppHost`) when the configured UI URL is not already serving. Aspire brings up the SQL Server container, migration service, API, and UI. The public UI endpoint is `http://localhost:5173`; the API is `http://localhost:5002`. Playwright targets the public UI endpoint; `AddViteApp` assigns a separate internal Vite port. Allow up to five minutes for a cold start (Docker image pull, SQL initialization, migrations, and frontend startup); a warm run is shorter. Docker Desktop must be running.
 
 If a healthy stack is already running on the configured UI URL, Playwright reuses it because `reuseExistingServer: true`. Inspect the existing Aspire dashboard and logs before stopping anything. A reused stack must be the same checkout/configuration under test; otherwise stop it through the normal Aspire workflow and start a clean stack.
 
@@ -26,7 +26,7 @@ On Windows, use the `Start-Job` timeout pattern in the root [`AGENTS.md`](../../
 Before authenticated tests, confirm:
 
 - Docker is available and the AppHost can run.
-- AppHost user secrets contain `Parameters:Auth0Domain` and `Parameters:Auth0Audience` (environment form: `Parameters__Auth0Domain` and `Parameters__Auth0Audience`); the audience normally matches `http://localhost:65273`.
+- AppHost user secrets contain `Parameters:Auth0Domain` and `Parameters:Auth0Audience` (environment form: `Parameters__Auth0Domain` and `Parameters__Auth0Audience`); the registered audience remains `http://localhost:65273`, independent of the API transport URL. Aspire supplies it to the UI as `VITE_AUTH0_AUDIENCE`.
 - `ui/menu-website/.env.e2e` contains `Parameters__Auth0Domain` and `Parameters__Auth0Audience`, and `E2E_AUTH0_USERNAME` plus `E2E_AUTH0_PASSWORD` are set in the Windows environment of the shell running Playwright. Obtain missing credentials from the repository owner; never substitute mocks or an injected token.
 
 The setup project performs the real Auth0 login and saves temporary state at `.playwright/.auth/user.json`. Auth0 consent may appear on a fresh browser profile: complete it deliberately and treat `consent_required`, missing bearer authorization, or a failed authenticated API response as a product/authentication failure. Never print credentials, cookies, tokens, or storage state; never commit `.env.e2e.local` or any `storageState` file. CI uses a separate user and secrets.

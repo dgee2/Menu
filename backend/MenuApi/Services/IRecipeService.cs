@@ -11,11 +11,11 @@ public interface IRecipeService
     /// Returns the recipe if <paramref name="callerId"/> may read it, otherwise <see langword="null"/>
     /// - callers turn that into a 404 rather than a 403, so a private recipe's existence does not leak.
     /// </summary>
-    Task<RecipeDetail?> GetRecipeAsync(RecipeId recipeId, MenuUserId callerId);
+    Task<RecipeDetail?> GetRecipeAsync(RecipeId recipeId, MenuUserId callerId, bool recordView = false);
 
     Task<IEnumerable<RecipeIngredientItem>> GetRecipeIngredientsAsync(RecipeId recipeId, MenuUserId callerId);
 
-    Task<IEnumerable<RecipeListItem>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take);
+    Task<IEnumerable<RecipeListItem>> GetRecipesAsync(RecipeListScope scope, MenuUserId callerId, int take, string? query = null);
 
     Task<bool> UpdateRecipeAsync(RecipeId recipeId, UpsertRecipe upsertRecipe, MenuUserId callerId);
 

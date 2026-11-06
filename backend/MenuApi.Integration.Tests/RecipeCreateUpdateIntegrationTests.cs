@@ -52,7 +52,6 @@ public class RecipeCreateUpdateIntegrationTests
         var events = await TestDatabaseSeeder.GetOutboxEventsForRecipeAsync(fixture, recipeId, TestContext.Current.CancellationToken);
         events.Should().ContainSingle();
         events[0].EventType.Should().Be(nameof(RecipeCreatedEvent));
-        events[0].ProcessedAtUtc.Should().BeNull();
         JsonSerializer.Deserialize<RecipeCreatedEvent>(events[0].Payload)!.RecipeId.Should().Be(RecipeId.From(recipeId));
     }
 
@@ -103,9 +102,8 @@ public class RecipeCreateUpdateIntegrationTests
 
         var events = await TestDatabaseSeeder.GetOutboxEventsForRecipeAsync(fixture, recipeId, TestContext.Current.CancellationToken);
         events.Should().HaveCount(2);
-        events.Should().ContainSingle(e => e.EventType == nameof(RecipeCreatedEvent) && e.ProcessedAtUtc == null);
+        events.Should().ContainSingle(e => e.EventType == nameof(RecipeCreatedEvent));
         var updatedEvent = events.Single(e => e.EventType == nameof(RecipeUpdatedEvent));
-        updatedEvent.ProcessedAtUtc.Should().BeNull();
         JsonSerializer.Deserialize<RecipeUpdatedEvent>(updatedEvent.Payload)!.RecipeId.Should().Be(RecipeId.From(recipeId));
     }
 

@@ -71,7 +71,8 @@ public static class RecipeApi
         IRecipeService recipeService,
         CallerId caller,
         string? scope,
-        int? take)
+        int? take,
+        string? query = null)
     {
         if (!RecipeListScopeParser.TryParse(scope, out var recipeListScope))
         {
@@ -89,13 +90,13 @@ public static class RecipeApi
 
         var boundedTake = Math.Clamp(take ?? DefaultTake, 1, MaxTake);
 
-        var recipes = await recipeService.GetRecipesAsync(recipeListScope, caller.Value, boundedTake);
+        var recipes = await recipeService.GetRecipesAsync(recipeListScope, caller.Value, boundedTake, query);
         return Results.Ok(recipes);
     }
 
     public static async Task<IResult> GetRecipeAsync(IRecipeService recipeService, CallerId caller, RecipeId recipeId)
     {
-        var recipe = await recipeService.GetRecipeAsync(recipeId, caller.Value);
+        var recipe = await recipeService.GetRecipeAsync(recipeId, caller.Value, recordView: true);
         return recipe is not null
             ? Results.Ok(recipe)
             : RecipeNotFound(recipeId);

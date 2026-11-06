@@ -15,8 +15,9 @@ describe('createAuth0', () => {
     vi.unstubAllEnvs();
   });
 
-  it('configures the API audience and persistent refresh-token cache', async () => {
-    vi.stubEnv('VITE_MENU_API_URL', 'http://localhost:65273');
+  it('configures the registered API audience independently of its URL and keeps the refresh-token cache', async () => {
+    vi.stubEnv('VITE_MENU_API_URL', 'http://localhost:5002');
+    vi.stubEnv('VITE_AUTH0_AUDIENCE', 'http://localhost:65273');
     const { createAuth0 } = await import('./auth0');
 
     createAuth0();

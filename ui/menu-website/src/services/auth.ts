@@ -18,7 +18,7 @@ export const useAuth = () => {
   const auth0Login = () =>
     loginWithRedirect({
       authorizationParams: {
-        audience: import.meta.env.VITE_MENU_API_URL,
+        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
       },
     });
   const auth0Logout = async () => {
@@ -41,7 +41,7 @@ export const useAuth = () => {
   const getAccessToken = async () => {
     return await getAccessTokenSilently({
       authorizationParams: {
-        audience: import.meta.env.VITE_MENU_API_URL,
+        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
       },
     });
   };

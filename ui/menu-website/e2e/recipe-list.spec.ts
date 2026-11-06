@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-const apiBaseUrl = 'http://localhost:65273/api/recipe';
+const apiBaseUrl = 'http://localhost:5002/api/recipe';
 const errorMessage = 'Something went wrong loading recipes.';
 
 // Regression guard for #1243: a consent failure must not silently skip the API request.
-test('loads owned and shared recipe lists with authenticated requests', async ({ page }) => {
+test('loads Mine and All Menu users results with authenticated requests', async ({ page }) => {
   const mineResponsePromise = page.waitForResponse(
     (response) => response.url() === `${apiBaseUrl}?scope=mine`,
   );
@@ -18,14 +18,16 @@ test('loads owned and shared recipe lists with authenticated requests', async ({
   await expect(page.getByText('Loading recipes...', { exact: true })).toBeHidden();
   await expect(page.getByText(errorMessage, { exact: true })).toBeHidden();
   await expect(
-    page.locator('.q-list').or(page.getByText('You have not created any recipes yet.', { exact: true })),
+    page
+      .locator('.q-list')
+      .or(page.getByText('You have not created any recipes yet.', { exact: true })),
   ).toBeVisible();
 
   const sharedResponsePromise = page.waitForResponse(
     (response) => response.url() === `${apiBaseUrl}?scope=authenticated`,
   );
 
-  await page.getByRole('button', { name: 'Shared with everyone' }).click();
+  await page.getByRole('button', { name: 'All Menu users' }).click();
 
   const sharedResponse = await sharedResponsePromise;
   expect(sharedResponse.status()).toBe(200);
