@@ -24,3 +24,5 @@ overrides:
   # installs means two structurally-incompatible `App`/`Plugin` types, which
   # breaks `app.use(createAuth0())` under vue-tsc. Force a single instance.
   vue: ^3.5.41
+  # GHSA-g3hv-75wg-m249: versions 7 through 10 have no patched release.
+  minimatch@>=7 <11: ^11.0.1
