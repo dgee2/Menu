@@ -26,7 +26,7 @@ export const useAuth = () => {
   };
   const auth0User = computed(() => {
     const userValue = user.value;
-    if (!isAuthenticated || userValue?.sub === undefined) return undefined;
+    if (!isAuthenticated.value || userValue?.sub === undefined) return undefined;
 
     return {
       name: userValue.name ?? '',
