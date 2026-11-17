@@ -2,13 +2,19 @@ import { operationContracts, type OperationContract } from '@/generated/open-api
 import { ApiContractError, ApiError } from '@/services/api-error';
 
 type Operation = keyof typeof operationContracts;
-type RequestInput = Partial<Record<'body' | 'path' | 'query', unknown>>;
+interface RequestInput {
+  body?: unknown;
+  path?: Record<string, string>;
+  query?: Record<string, string | number | boolean | null | undefined>;
+}
 const contractContext = Symbol('API contract context');
 
 interface ApiFetchOptions extends RequestInit {
   [contractContext]?: {
     operation: Operation;
     getAccessToken: () => Promise<string | undefined>;
+    url: string;
+    body: string | undefined;
   };
 }
 
@@ -19,14 +25,39 @@ export const contractRequest = (
   getAccessToken: () => Promise<string | undefined>,
   input: RequestInput = {},
 ): ApiFetchOptions => {
-  const { request } = contracts[operation];
+  const contract = contracts[operation];
+  const { request } = contract;
   for (const part of ['body', 'path', 'query'] as const) {
     const schema = request[part];
     if (schema && !schema.safeParse(input[part]).success) {
       throw new ApiContractError(operation, `request ${part}`);
     }
   }
-  return { [contractContext]: { operation, getAccessToken } };
+  const path = contract.path.replace(
+    /\{([^}]+)\}/g,
+    (_match, name: string) => input.path?.[name] ?? '',
+  );
+  const search = new URLSearchParams();
+  for (const [name, value] of Object.entries(input.query ?? {})) {
+    if (value !== undefined) search.append(name, String(value));
+  }
+
+  let body: string | undefined;
+  if (request.body) {
+    try {
+      body = JSON.stringify(input.body);
+    } catch {
+      throw new ApiContractError(operation, 'request body');
+    }
+    // Validate the wire representation as JSON serialization can change values.
+    if (body === undefined || !request.body.safeParse(JSON.parse(body)).success) {
+      throw new ApiContractError(operation, 'request body');
+    }
+  }
+
+  const query = search.toString();
+  const url = query ? `${path}?${query}` : path;
+  return { [contractContext]: { operation, getAccessToken, url, body } };
 };
 
 export const apiFetch = async <T>(path: string, options: ApiFetchOptions): Promise<T> => {
@@ -37,17 +68,11 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions): Promi
 
   const { operation, getAccessToken } = context;
   const contract = contracts[operation];
-  const requestPath = path.split('?', 1)[0];
-  const expectedSegments = contract.path.split('/');
-  const requestSegments = requestPath?.split('/');
-  if (
-    init.method !== contract.method.toUpperCase() ||
-    requestSegments?.length !== expectedSegments.length ||
-    expectedSegments.some(
-      (segment, index) => !segment.startsWith('{') && segment !== requestSegments[index],
-    )
-  ) {
+  if (init.method !== contract.method || path !== context.url) {
     throw new ApiContractError(operation, 'request');
+  }
+  if (init.body !== context.body) {
+    throw new ApiContractError(operation, 'request body');
   }
 
   const accessToken = await getAccessToken();

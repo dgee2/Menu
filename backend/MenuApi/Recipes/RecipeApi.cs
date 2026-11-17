@@ -10,6 +10,7 @@ namespace MenuApi.Recipes;
 public static class RecipeApi
 {
     internal const int DefaultTake = 50;
+    internal const string GetRecipesOperationId = "getRecipes";
     private const int MaxTake = 200;
 
     public static RouteGroupBuilder MapRecipes(this IEndpointRouteBuilder routes)
@@ -23,7 +24,7 @@ public static class RecipeApi
         group.AddEndpointFilter<RequireCallerFilter>();
 
         group.MapGet("/", GetRecipesAsync)
-            .WithName("getRecipes")
+            .WithName(GetRecipesOperationId)
             .Produces<IEnumerable<RecipeListItem>>(StatusCodes.Status200OK)
             .ProducesValidationProblem();
 

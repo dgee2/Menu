@@ -4,7 +4,7 @@ import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
-import { getRecipe } from '@/generated/open-api/menu-api';
+import { createRecipe, getRecipe, getRecipes } from '@/generated/open-api/menu-api';
 import { getGetIngredientUnitsMockHandler } from '@/generated/open-api/menu-api.msw';
 import {
   ApiContractError,
@@ -12,6 +12,7 @@ import {
   shouldRetryQuery,
   userFacingMessage,
 } from '@/services/api-error';
+import { contractRequest } from '@/services/api-fetch';
 import { useRecipeApi, type RecipeListScope, type UpsertRecipe } from '@/services/recipe-api';
 import { useRecipeService } from '@/services/recipe-service';
 
@@ -144,6 +145,31 @@ describe('recipe API contract', () => {
     }
   });
 
+  it('rejects generated requests with different path, query or body values from validated options', async () => {
+    const network = vi.spyOn(globalThis, 'fetch');
+    const pathOptions = contractRequest('getRecipe', auth.getAccessToken, { path: { recipeId } });
+    const queryOptions = contractRequest('getRecipes', auth.getAccessToken, {
+      query: { scope: 'mine' },
+    });
+    const bodyOptions = contractRequest('createRecipe', auth.getAccessToken, { body: recipe });
+
+    try {
+      await expect(getRecipe('not-a-recipe-id', pathOptions)).rejects.toBeInstanceOf(
+        ApiContractError,
+      );
+      await expect(getRecipes({ scope: 'wrong' }, queryOptions)).rejects.toBeInstanceOf(
+        ApiContractError,
+      );
+      await expect(
+        createRecipe({ ...recipe, title: 'A different recipe' }, bodyOptions),
+      ).rejects.toBeInstanceOf(ApiContractError);
+      expect(auth.getAccessToken).not.toHaveBeenCalled();
+      expect(network).not.toHaveBeenCalled();
+    } finally {
+      network.mockRestore();
+    }
+  });
+
   it('sends search text as a query value and loads units with the generated MSW handler', async () => {
     const requested = vi.fn<(params: URLSearchParams) => void>();
     const units = [{ name: 'gram', abbreviation: 'g', type: 'Mass' }];
@@ -238,6 +264,19 @@ describe('recipe API contract', () => {
 });
 
 describe('recipe service through Vue Query', () => {
+  it('loads migrated recipes with empty ingredient and instruction text', async () => {
+    const legacyDetail = {
+      ...detail,
+      ingredients: [{ ...detail.ingredients[0], ingredientText: '', measureText: '' }],
+      steps: [{ ...detail.steps[0], instructionText: '' }],
+    };
+    server.use(http.get(`${recipeUrl}/${recipeId}`, () => HttpResponse.json(legacyDetail)));
+
+    const details = mountService((api) => api.useRecipe(recipeId));
+
+    await vi.waitFor(() => expect(details.data.value).toEqual(legacyDetail));
+  });
+
   it('caches reactive scopes separately and refreshes mutations without retaining deleted details', async () => {
     const scopes: string[] = [];
     const listItem = { id: recipeId, title: detail.title, accessScope: detail.accessScope };

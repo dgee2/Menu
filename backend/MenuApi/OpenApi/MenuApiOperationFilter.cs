@@ -56,12 +56,12 @@ internal sealed class MenuApiOperationFilter : IOperationFilter
                     schema.Pattern = MenuApiSchemaFilter.CanonicalGuidPattern;
                     canFailBinding = true;
                     break;
-                case (ParameterLocation.Query, "scope"):
+                case (ParameterLocation.Query, "scope") when operation.OperationId == RecipeApi.GetRecipesOperationId:
                     parameter.Required = true;
                     parameter.Description = $"One of {string.Join(", ", RecipeListScopeParser.AllValues)}, matched case-insensitively.";
                     schema.Pattern = CaseInsensitivePattern(RecipeListScopeParser.AllValues);
                     break;
-                case (ParameterLocation.Query, "take"):
+                case (ParameterLocation.Query, "take") when operation.OperationId == RecipeApi.GetRecipesOperationId:
                     schema.Default = JsonValue.Create(RecipeApi.DefaultTake);
                     canFailBinding = true;
                     break;
