@@ -12,8 +12,8 @@ Use this skill after changes to `MenuApi` routes, inputs, or responses. The back
 ## How it works
 
 1. The .NET build writes `open-api/menu-api.json` at the repository root.
-2. `pnpm generate-openapi` (from `ui/menu-website/`) generates Vue Query clients, models, Zod Mini validators, and MSW handlers in `src/generated/open-api/`.
-3. `src/services/recipe-api.ts` calls the generated operations through a validating fetch mutator.
+2. `pnpm generate-openapi` (from `ui/menu-website/`) generates request functions, models, Zod Mini validators, and MSW handlers in `src/generated/open-api/`.
+3. `src/services/recipe-api.ts` calls the generated operations through an authenticated factory and a validating request function.
 
 Update the backend contract or generator configuration to change generated output.
 

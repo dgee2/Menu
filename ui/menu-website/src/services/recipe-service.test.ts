@@ -4,7 +4,7 @@ import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
-import { createRecipe, getRecipe, getRecipes } from '@/generated/open-api/menu-api';
+import { createMenuApi } from '@/generated/open-api/menu-api';
 import { getGetIngredientUnitsMockHandler } from '@/generated/open-api/menu-api.msw';
 import {
   ApiContractError,
@@ -12,7 +12,7 @@ import {
   shouldRetryQuery,
   userFacingMessage,
 } from '@/services/api-error';
-import { contractRequest } from '@/services/api-fetch';
+
 import { useRecipeApi, type RecipeListScope, type UpsertRecipe } from '@/services/recipe-api';
 import { useRecipeService } from '@/services/recipe-service';
 
@@ -135,33 +135,14 @@ describe('recipe API contract', () => {
     }
   });
 
-  it('requires validated request options before the generated client can dispatch', async () => {
+  it('validates actual arguments for every generated request before authentication or dispatch', async () => {
+    const api = createMenuApi(auth.getAccessToken);
     const network = vi.spyOn(globalThis, 'fetch');
     try {
-      await expect(getRecipe(recipeId)).rejects.toBeInstanceOf(ApiContractError);
-      expect(network).not.toHaveBeenCalled();
-    } finally {
-      network.mockRestore();
-    }
-  });
-
-  it('rejects generated requests with different path, query or body values from validated options', async () => {
-    const network = vi.spyOn(globalThis, 'fetch');
-    const pathOptions = contractRequest('getRecipe', auth.getAccessToken, { path: { recipeId } });
-    const queryOptions = contractRequest('getRecipes', auth.getAccessToken, {
-      query: { scope: 'mine' },
-    });
-    const bodyOptions = contractRequest('createRecipe', auth.getAccessToken, { body: recipe });
-
-    try {
-      await expect(getRecipe('not-a-recipe-id', pathOptions)).rejects.toBeInstanceOf(
-        ApiContractError,
-      );
-      await expect(getRecipes({ scope: 'wrong' }, queryOptions)).rejects.toBeInstanceOf(
-        ApiContractError,
-      );
+      await expect(api.getRecipe('not-a-recipe-id')).rejects.toBeInstanceOf(ApiContractError);
+      await expect(api.getRecipes({ scope: 'wrong' })).rejects.toBeInstanceOf(ApiContractError);
       await expect(
-        createRecipe({ ...recipe, title: 'A different recipe' }, bodyOptions),
+        api.createRecipe({ ...recipe, title: null } as unknown as UpsertRecipe),
       ).rejects.toBeInstanceOf(ApiContractError);
       expect(auth.getAccessToken).not.toHaveBeenCalled();
       expect(network).not.toHaveBeenCalled();
@@ -169,7 +150,6 @@ describe('recipe API contract', () => {
       network.mockRestore();
     }
   });
-
   it('sends search text as a query value and loads units with the generated MSW handler', async () => {
     const requested = vi.fn<(params: URLSearchParams) => void>();
     const units = [{ name: 'gram', abbreviation: 'g', type: 'Mass' }];

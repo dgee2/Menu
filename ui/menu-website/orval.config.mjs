@@ -26,22 +26,48 @@ export default defineConfig({
       mode: 'single',
       target: `${outputDirectory}/menu-api.ts`,
       schemas: `${outputDirectory}/model`,
-      client: 'vue-query',
+      client: (clients) => ({
+        ...clients.fetch,
+        client: async (operation, options) => {
+          const native = await clients.fetch.client(operation, options);
+          const { operationName, operationId, props, response } = operation;
+          const inputs = [];
+          for (const prop of props) {
+            if (prop.type === 'body') inputs.push('body: ' + prop.name);
+            else if (prop.type === 'queryParam') inputs.push('query: ' + prop.name);
+            else if (prop.type !== 'param')
+              throw new Error('Unsupported request input: ' + prop.type);
+          }
+          const pathParams = props.filter((prop) => prop.type === 'param').map((prop) => prop.name);
+          if (pathParams.length) inputs.push('path: { ' + pathParams.join(', ') + ' }');
+          const args = [...props.map((prop) => prop.definition), 'options?: RequestOptions'].join(
+            ', ',
+          );
+          const result = response.definition.success;
+          const implementation = `const ${operationName} = (${args}): Promise<${result}> =>
+            request<${result}>(operationContracts.${operationId}, { ${inputs.join(', ')} }, options);`;
+          const identifiers = new Set(implementation.match(/\b\w+\b/g));
+          return {
+            implementation,
+            imports: native.imports.filter((entry) => identifiers.has(entry.name)),
+          };
+        },
+        header:
+          () => `import { createApiRequest, type RequestOptions } from '../../services/api-fetch';
+          import { operationContracts } from './menu-api.contract';
+          export const createMenuApi = (getAccessToken: () => Promise<string | undefined>) => {
+            const request = createApiRequest(getAccessToken);`,
+        footer: ({ operationNames }) => 'return { ' + operationNames.join(', ') + ' }; };',
+        dependencies: () => [],
+        extraFiles: () => [],
+      }),
       httpClient: 'fetch',
       mock: {
         generators: [{ type: 'msw', delay: false }],
       },
       override: {
-        mutator: {
-          path: './src/services/api-fetch.ts',
-          name: 'apiFetch',
-        },
         fetch: {
           includeHttpResponseReturnType: false,
-        },
-        query: {
-          signal: true,
-          useInfinite: false,
         },
       },
     },

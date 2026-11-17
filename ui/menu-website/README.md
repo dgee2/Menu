@@ -33,7 +33,7 @@ to produce `open-api/menu-api.json`. From `ui/menu-website`, run:
 pnpm generate-openapi
 ```
 
-Orval writes the Vue Query clients, Zod Mini validators, and MSW mocks to
+Orval writes the request functions, Zod Mini validators, and MSW mocks to
 `src/generated/open-api/`. CI builds the same backend document and regenerates
 these files before frontend validation and the Playwright shards.
 

@@ -1,31 +1,15 @@
-import { operationContracts, type OperationContract } from '@/generated/open-api/menu-api.contract';
+import type { OperationContract } from '@/generated/open-api/menu-api.contract';
 import { ApiContractError, ApiError } from '@/services/api-error';
 
-type Operation = keyof typeof operationContracts;
 interface RequestInput {
   body?: unknown;
   path?: Record<string, string>;
   query?: Record<string, string | number | boolean | null | undefined>;
 }
-const contractContext = Symbol('API contract context');
+export type RequestOptions = Pick<RequestInit, 'signal'>;
 
-interface ApiFetchOptions extends RequestInit {
-  [contractContext]?: {
-    operation: Operation;
-    getAccessToken: () => Promise<string | undefined>;
-    url: string;
-    body: string | undefined;
-  };
-}
-
-const contracts: Record<Operation, OperationContract> = operationContracts;
-
-export const contractRequest = (
-  operation: Operation,
-  getAccessToken: () => Promise<string | undefined>,
-  input: RequestInput = {},
-): ApiFetchOptions => {
-  const contract = contracts[operation];
+const prepareRequest = (contract: OperationContract, input: RequestInput) => {
+  const operation = contract.name;
   const { request } = contract;
   for (const part of ['body', 'path', 'query'] as const) {
     const schema = request[part];
@@ -57,11 +41,36 @@ export const contractRequest = (
 
   const query = search.toString();
   const url = query ? `${path}?${query}` : path;
-  return { [contractContext]: { operation, getAccessToken, url, body } };
+  return { url, body };
 };
 
-const validateResponse = async (operation: Operation, response: Response): Promise<unknown> => {
-  const contract = contracts[operation];
+export const createApiRequest =
+  (getAccessToken: () => Promise<string | undefined>) =>
+  async <T>(
+    contract: OperationContract,
+    input: RequestInput,
+    options?: RequestOptions,
+  ): Promise<T> => {
+    const { url, body } = prepareRequest(contract, input);
+    const accessToken = await getAccessToken();
+    if (!accessToken) throw new Error('API authentication did not return an access token.');
+    const headers = new Headers({ Authorization: `Bearer ${accessToken}` });
+    if (contract.request.body) headers.set('Content-Type', 'application/json');
+    const baseUrl = (import.meta.env.VITE_MENU_API_URL ?? '').replace(/\/$/, '');
+    const response = await fetch(`${baseUrl}${url}`, {
+      signal: options?.signal,
+      method: contract.method,
+      headers,
+      body,
+      redirect: 'manual',
+    });
+    return (await validateResponse(contract, response)) as T;
+  };
+const validateResponse = async (
+  contract: OperationContract,
+  response: Response,
+): Promise<unknown> => {
+  const operation = contract.name;
   const { status } = response;
   const expected = contract.responses[status];
   if (!expected) {
@@ -97,31 +106,4 @@ const validateResponse = async (operation: Operation, response: Response): Promi
   }
 
   return data;
-};
-
-export const apiFetch = async <T>(path: string, options: ApiFetchOptions): Promise<T> => {
-  const { [contractContext]: context, ...init } = options;
-  if (!context) {
-    throw new ApiContractError('Fetch API', 'request');
-  }
-
-  const { operation, getAccessToken } = context;
-  const contract = contracts[operation];
-  if (init.method !== contract.method || path !== context.url) {
-    throw new ApiContractError(operation, 'request');
-  }
-  if (init.body !== context.body) {
-    throw new ApiContractError(operation, 'request body');
-  }
-
-  const accessToken = await getAccessToken();
-  if (!accessToken) {
-    throw new Error('API authentication did not return an access token.');
-  }
-
-  const headers = new Headers(init.headers);
-  headers.set('Authorization', `Bearer ${accessToken}`);
-  const baseUrl = (import.meta.env.VITE_MENU_API_URL ?? '').replace(/\/$/, '');
-  const response = await fetch(`${baseUrl}${path}`, { ...init, headers, redirect: 'manual' });
-  return (await validateResponse(operation, response)) as T;
 };

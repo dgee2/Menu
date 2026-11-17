@@ -110,6 +110,7 @@ function describeOperation(operationId, { method, path, operation, parameters })
 
   return `
     ${JSON.stringify(operationId)}: {
+      name: ${JSON.stringify(operationId)},
       method: ${JSON.stringify(method)},
       path: ${JSON.stringify(path)},
       request: { ${request.join(', ')} },
@@ -124,6 +125,7 @@ import type { ZodMiniType } from 'zod/mini';
 import * as schemas from './menu-api.zod';
 
 export interface OperationContract {
+  readonly name: string;
   readonly method: string;
   readonly path: string;
   readonly request: {
@@ -145,3 +147,9 @@ export const operationContracts = {
 const contractFile = new URL('menu-api.contract.ts', output);
 const prettierConfig = await resolveConfig(contractFile);
 await writeFile(contractFile, await format(contract, { ...prettierConfig, parser: 'typescript' }));
+
+const clientFile = new URL('menu-api.ts', output);
+await writeFile(
+  clientFile,
+  await format(await readFile(clientFile, 'utf8'), { ...prettierConfig, parser: 'typescript' }),
+);

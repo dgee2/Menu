@@ -1,15 +1,6 @@
-import {
-  createRecipe,
-  deleteRecipe,
-  getIngredientUnits,
-  getRecipe,
-  getRecipes,
-  restoreRecipe,
-  updateRecipe,
-} from '@/generated/open-api/menu-api';
-import type { UpsertRecipe } from '@/generated/open-api/model';
-import { contractRequest } from '@/services/api-fetch';
+import { createMenuApi } from '@/generated/open-api/menu-api';
 import { useAuth } from '@/services/auth';
+import type { UpsertRecipe } from '@/generated/open-api/model';
 
 export type {
   IngredientUnit,
@@ -24,48 +15,15 @@ export type {
 export type RecipeListScope = 'mine' | 'authenticated';
 
 export const useRecipeApi = () => {
-  const { getAccessToken } = useAuth();
-
+  const api = createMenuApi(useAuth().getAccessToken);
   return {
-    postRecipe: async (recipe: UpsertRecipe) =>
-      await createRecipe(recipe, contractRequest('createRecipe', getAccessToken, { body: recipe })),
-
-    putRecipe: async (recipeId: string, recipe: UpsertRecipe) =>
-      await updateRecipe(
-        recipeId,
-        recipe,
-        contractRequest('updateRecipe', getAccessToken, {
-          body: recipe,
-          path: { recipeId },
-        }),
-      ),
-
-    deleteRecipe: async (recipeId: string): Promise<void> => {
-      await deleteRecipe(
-        recipeId,
-        contractRequest('deleteRecipe', getAccessToken, { path: { recipeId } }),
-      );
-    },
-
-    restoreRecipe: async (recipeId: string) =>
-      await restoreRecipe(
-        recipeId,
-        contractRequest('restoreRecipe', getAccessToken, { path: { recipeId } }),
-      ),
-
-    getRecipes: async (scope: RecipeListScope = 'mine', query?: string) => {
-      const params = { scope, ...(query === undefined ? {} : { query }) };
-      const options = contractRequest('getRecipes', getAccessToken, { query: params });
-      return await getRecipes(params, options);
-    },
-
-    getRecipe: async (recipeId: string) =>
-      await getRecipe(
-        recipeId,
-        contractRequest('getRecipe', getAccessToken, { path: { recipeId } }),
-      ),
-
-    getIngredientUnits: async () =>
-      await getIngredientUnits(contractRequest('getIngredientUnits', getAccessToken)),
+    postRecipe: (recipe: UpsertRecipe) => api.createRecipe(recipe),
+    putRecipe: api.updateRecipe,
+    deleteRecipe: api.deleteRecipe,
+    restoreRecipe: api.restoreRecipe,
+    getRecipe: api.getRecipe,
+    getIngredientUnits: api.getIngredientUnits,
+    getRecipes: (scope: RecipeListScope = 'mine', query?: string) =>
+      api.getRecipes({ scope, ...(query === undefined ? {} : { query }) }),
   };
 };

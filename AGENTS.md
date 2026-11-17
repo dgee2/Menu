@@ -124,7 +124,7 @@ Vue 3 SPA using **Quasar** component library, **Vite** bundler, and **pnpm** pac
 - **Vue 3** (Composition API) + **TypeScript** + **Pinia** (stores) + **Vue Router**
 - **Quasar v2** – UI components, SCSS variables in `src/css/quasar.variables.scss`
 - **TanStack Vue Query** – server-state management with query invalidation (`src/services/recipe-service.ts`)
-- **Orval** + **Zod Mini** – generated Vue Query clients, runtime validators, and MSW handlers
+- **Orval** + **Zod Mini** – generated request functions, runtime validators, and MSW handlers
 - **Auth0** (`@auth0/auth0-vue`) – authentication; configured in `src/boot/auth0.ts`
 - **Storybook 10** – component stories co-located with components (e.g. `*.stories.ts`)
 - **Vitest** (unit, jsdom) + **Playwright** (e2e in `e2e/`)
@@ -138,7 +138,7 @@ Build the backend before generating the API client from `open-api/menu-api.json`
 pnpm generate-openapi
 ```
 
-The command writes gitignored clients, models, validators, and mock handlers to `src/generated/open-api/`. Follow the [`openapi-sync` skill](.agents/skills/openapi-sync/SKILL.md) after any endpoint change. The recipe API layer calls the generated operations through a fetch mutator that validates the contract and obtains an Auth0 bearer token per request.
+The command writes gitignored clients, models, validators, and mock handlers to `src/generated/open-api/`. Follow the [`openapi-sync` skill](.agents/skills/openapi-sync/SKILL.md) after any endpoint change. The recipe API layer calls the generated operations through an authenticated factory. A shared request function validates the contract, builds each request once, and obtains an Auth0 bearer token per request.
 
 ### Service Layer Convention
 
