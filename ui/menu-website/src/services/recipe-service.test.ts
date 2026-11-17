@@ -220,6 +220,7 @@ describe('recipe API contract', () => {
   it.each([
     ['status', HttpResponse.json(detail, { status: 202 }), 202],
     ['media type', HttpResponse.text(JSON.stringify(detail)), 200],
+    ['media type', problemJson(detail, 200, 'constructor'), 200],
     [
       'response body',
       HttpResponse.text('{', { headers: { 'Content-Type': 'application/json' } }),

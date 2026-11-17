@@ -66,7 +66,9 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions): Promi
   }
 
   const mediaType = response.headers.get('Content-Type')?.split(';', 1)[0]?.trim().toLowerCase();
-  const schema = mediaType ? expected.content?.[mediaType] : undefined;
+  const content = expected.content;
+  const schema =
+    content && mediaType && Object.hasOwn(content, mediaType) ? content[mediaType] : undefined;
   if (!schema && (mediaType || !expected.bodyless)) {
     throw new ApiContractError(operation, 'media type', status);
   }
