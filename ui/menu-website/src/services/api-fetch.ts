@@ -8,7 +8,7 @@ const contractContext = Symbol('API contract context');
 interface ApiFetchOptions extends RequestInit {
   [contractContext]?: {
     operation: Operation;
-    getAccessToken: () => Promise<string>;
+    getAccessToken: () => Promise<string | undefined>;
   };
 }
 
@@ -16,7 +16,7 @@ const contracts: Record<Operation, OperationContract> = operationContracts;
 
 export const contractRequest = (
   operation: Operation,
-  getAccessToken: () => Promise<string>,
+  getAccessToken: () => Promise<string | undefined>,
   input: RequestInput = {},
 ): ApiFetchOptions => {
   const { request } = contracts[operation];

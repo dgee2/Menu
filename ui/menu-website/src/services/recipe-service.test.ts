@@ -42,7 +42,7 @@ const problemJson = (body: unknown, status: number, mediaType = 'application/pro
 const server = setupServer();
 
 enableAutoUnmount(afterEach);
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 afterAll(() => server.close());
 
 beforeEach(() => {
