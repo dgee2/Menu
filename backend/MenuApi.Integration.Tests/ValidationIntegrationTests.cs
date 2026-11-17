@@ -1,3 +1,4 @@
+using Aspire.Hosting.Testing;
 using AwesomeAssertions;
 using MenuApi.Integration.Tests.Factory;
 using System.Net;
@@ -23,6 +24,17 @@ public class ValidationIntegrationTests
     }
 
     [Fact]
+    public async Task GetRecipes_WithoutBearerToken_ReturnsBodyless401()
+    {
+        using var client = fixture.app.CreateHttpClient("apiservice");
+        using var response = await client.GetAsync($"{ApiRecipeRoute}?scope=mine");
+
+        await response.ShouldHaveStatusCode(HttpStatusCode.Unauthorized);
+        response.Content.Headers.ContentType.Should().BeNull();
+        (await response.Content.ReadAsStringAsync()).Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task CreateRecipe_MissingProperties_Returns400()
     {
         using var client = await fixture.GetHttpClient();
@@ -40,6 +52,7 @@ public class ValidationIntegrationTests
         using var response = await client.PostAsync(ApiRecipeRoute, content);
 
         await response.ShouldHaveStatusCode(HttpStatusCode.BadRequest);
+        (response.Content.Headers.ContentType?.MediaType).Should().Be("application/problem+json");
 
         var responseBody = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(responseBody);
@@ -87,6 +100,7 @@ public class ValidationIntegrationTests
         using var response = await client.GetAsync($"/api/recipe/{Guid.NewGuid()}");
 
         await response.ShouldHaveStatusCode(HttpStatusCode.NotFound);
+        (response.Content.Headers.ContentType?.MediaType).Should().Be("application/problem+json");
 
         var responseBody = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(responseBody);

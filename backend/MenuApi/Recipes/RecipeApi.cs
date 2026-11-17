@@ -3,12 +3,13 @@ using MenuApi.Services;
 using MenuApi.Validation;
 using MenuApi.ValueObjects;
 using MenuApi.ViewModel;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MenuApi.Recipes;
 
 public static class RecipeApi
 {
-    private const int DefaultTake = 50;
+    internal const int DefaultTake = 50;
     private const int MaxTake = 200;
 
     public static RouteGroupBuilder MapRecipes(this IEndpointRouteBuilder routes)
@@ -22,47 +23,47 @@ public static class RecipeApi
         group.AddEndpointFilter<RequireCallerFilter>();
 
         group.MapGet("/", GetRecipesAsync)
+            .WithName("getRecipes")
             .Produces<IEnumerable<RecipeListItem>>(StatusCodes.Status200OK)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .ProducesValidationProblem();
 
         group.MapGet("/{recipeId}", GetRecipeAsync)
+            .WithName("getRecipe")
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapGet("/{recipeId}/ingredient", GetRecipeIngredientsAsync)
-            .Produces<IEnumerable<RecipeIngredientItem>>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithName("getRecipeIngredients")
+            .Produces<IEnumerable<RecipeIngredientItem>>(StatusCodes.Status200OK);
 
         group.MapPost("/", CreateRecipeAsync)
+            .WithName("createRecipe")
             .AddEndpointFilter<ValidationFilter<UpsertRecipe>>()
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict, "application/json");
 
         group.MapPut("{recipeId}", UpdateRecipeAsync)
+            .WithName("updateRecipe")
             .AddEndpointFilter<ValidationFilter<UpsertRecipe>>()
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden, "application/json")
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict, "application/json");
 
         group.MapDelete("{recipeId}", DeleteRecipeAsync)
+            .WithName("deleteRecipe")
             .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden, "application/json")
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("{recipeId}/restore", RestoreRecipeAsync)
+            .WithName("restoreRecipe")
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden, "application/json")
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict, "application/json");
 
         return group;
     }

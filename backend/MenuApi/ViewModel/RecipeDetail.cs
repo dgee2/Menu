@@ -56,7 +56,9 @@ public class RecipeDetail
     [Required]
     public bool CanDelete { get; set; }
 
+    [Required]
     public DateTime CreatedAtUtc { get; init; }
 
+    [Required]
     public DateTime UpdatedAtUtc { get; init; }
 }

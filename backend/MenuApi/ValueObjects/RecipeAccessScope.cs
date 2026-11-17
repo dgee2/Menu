@@ -5,13 +5,13 @@ namespace MenuApi.ValueObjects;
 /// <summary>
 /// Who can read a recipe. A closed set, so this is a plain C# enum rather than a Vogen value
 /// object: Vogen would emit a bare <c>string</c> schema, forcing the frontend to keep a
-/// hand-written mirror of the allowed values. As an enum, <c>openapi-typescript</c> generates
-/// the union directly.
+/// hand-written mirror of the allowed values. The string enum lets the generated frontend
+/// client derive the allowed values directly from the API contract.
 /// </summary>
 /// <remarks>
 /// Numeric values are persisted as the <c>RecipeAccessScope</c> lookup table's primary key, so
-/// they are part of the database contract - never renumber a member. The name, not the number,
-/// crosses the API boundary; <see cref="JsonStringEnumConverter{TEnum}"/> enforces that.
+/// they are part of the database contract. The API emits the string name through
+/// <see cref="JsonStringEnumConverter{TEnum}"/>.
 /// </remarks>
 [JsonConverter(typeof(JsonStringEnumConverter<RecipeAccessScope>))]
 public enum RecipeAccessScope : byte

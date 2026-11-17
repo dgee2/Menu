@@ -21,7 +21,6 @@ public abstract class ProblemDetailsExceptionHandler<TException> : IExceptionHan
             return false;
 
         httpContext.Response.StatusCode = StatusCode;
-        httpContext.Response.ContentType = "application/problem+json";
 
         await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
         {

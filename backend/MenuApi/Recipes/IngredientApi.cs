@@ -14,12 +14,15 @@ public static class IngredientApi
         group.WithTags("Ingredients");
 
         group.MapGet("/", GetIngredientsAsync)
+            .WithName("getIngredients")
             .Produces<IEnumerable<ViewModel.Ingredient>>(StatusCodes.Status200OK);
 
         group.MapGet("/unit", GetIngredientUnitsAsync)
+            .WithName("getIngredientUnits")
             .Produces<IEnumerable<ViewModel.IngredientUnit>>(StatusCodes.Status200OK);
 
         group.MapPost("/", CreateIngredientAsync)
+            .WithName("createIngredient")
             .AddEndpointFilter<ValidationFilter<NewIngredient>>()
             .Produces<ViewModel.Ingredient>(StatusCodes.Status200OK)
             .ProducesValidationProblem();

@@ -4,6 +4,7 @@ using MenuDB;
 using MenuApi;
 using MenuApi.Exceptions;
 using MenuApi.Middleware;
+using MenuApi.OpenApi;
 using MenuApi.Recipes;
 using MenuApi.Repositories;
 using MenuApi.Services;
@@ -15,7 +16,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddApiServiceDefaults();
 
 // Recipe specific stuff (needs putting in extension methods)
-builder.Services.ConfigureSwaggerGen(o => o.MapVogenTypesInMenuApi());
+builder.Services.ConfigureSwaggerGen(o =>
+{
+    o.MapVogenTypesInMenuApi();
+    o.OperationFilter<MenuApiOperationFilter>();
+    o.SchemaFilter<MenuApiSchemaFilter>();
+});
 
 builder.Services.AddTransient<IUnitRepository, UnitRepository>();
 builder.Services.AddTransient<IIngredientRepository, IngredientRepository>();
