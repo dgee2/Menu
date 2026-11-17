@@ -102,5 +102,10 @@ export default defineConfigWithVueTs(
     },
   },
 
+  {
+    files: ['orval.config.mjs', 'scripts/generate-openapi.mjs'],
+    extends: [vueTsConfigs.disableTypeChecked],
+  },
+
   prettierSkipFormatting,
 );
