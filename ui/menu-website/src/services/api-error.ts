@@ -96,7 +96,14 @@ export class ApiError extends Error {
 export class ApiContractError extends Error {
   constructor(
     operation: string,
-    readonly reason: 'request' | 'status' | 'media type' | 'response body',
+    readonly reason:
+      | 'request'
+      | 'request body'
+      | 'request path'
+      | 'request query'
+      | 'status'
+      | 'media type'
+      | 'response body',
     readonly status?: number,
   ) {
     const httpStatus = status === undefined ? '' : ` (HTTP ${status})`;
@@ -104,6 +111,11 @@ export class ApiContractError extends Error {
     this.name = 'ApiContractError';
   }
 }
+
+export const shouldRetryQuery = (failureCount: number, error: unknown): boolean =>
+  !(error instanceof ApiContractError) &&
+  !(error instanceof ApiError && error.status >= 400 && error.status < 500) &&
+  failureCount < 3;
 
 /**
  * Keep unexpected failures useful while developing without exposing implementation details in
