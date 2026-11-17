@@ -96,5 +96,5 @@ internal sealed class MenuApiOperationFilter : IOperationFilter
 
     // OpenAPI cannot express a response whose content is optional without an extension.
     private static Dictionary<string, IOpenApiExtension> AllowEmptyBody() =>
-        new() { ["x-allow-empty-body"] = new JsonNodeExtension(JsonValue.Create(true)!) };
+        new() { ["x-allow-empty-body"] = new JsonNodeExtension(JsonValue.Create(true)) };
 }

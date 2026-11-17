@@ -77,9 +77,9 @@ function describeOperation(operationId, { method, path, operation, parameters })
   const responses = [];
   const parameterLocations = new Set(parameters.map((parameter) => resolveReference(parameter).in));
 
-  if (parameterLocations.has('path')) request.push(`path: ${useValidator(`${prefix}Params`)}`);
+  if (parameterLocations.has('path')) request.push(`path: ${useValidator(prefix + 'Params')}`);
   if (parameterLocations.has('query')) {
-    request.push(`query: ${useValidator(`${prefix}QueryParams`)}`);
+    request.push(`query: ${useValidator(prefix + 'QueryParams')}`);
   }
   if (operation.requestBody) {
     const body = resolveReference(operation.requestBody);
@@ -87,7 +87,7 @@ function describeOperation(operationId, { method, path, operation, parameters })
     if (mediaTypes.length !== 1 || mediaTypes[0] !== 'application/json') {
       throw new Error(`Expected an application/json request body for ${operationId}`);
     }
-    request.push(`body: ${useValidator(`${prefix}Body`)}`);
+    request.push(`body: ${useValidator(prefix + 'Body')}`);
   }
 
   for (const [status, entry] of Object.entries(operation.responses)) {

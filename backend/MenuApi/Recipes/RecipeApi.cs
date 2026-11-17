@@ -12,6 +12,7 @@ public static class RecipeApi
     internal const int DefaultTake = 50;
     internal const string GetRecipesOperationId = "getRecipes";
     private const int MaxTake = 200;
+    private const string JsonContentType = "application/json";
 
     public static RouteGroupBuilder MapRecipes(this IEndpointRouteBuilder routes)
     {
@@ -42,29 +43,29 @@ public static class RecipeApi
             .AddEndpointFilter<ValidationFilter<UpsertRecipe>>()
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
-            .Produces<ProblemDetails>(StatusCodes.Status409Conflict, "application/json");
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict, JsonContentType);
 
         group.MapPut("{recipeId}", UpdateRecipeAsync)
             .WithName("updateRecipe")
             .AddEndpointFilter<ValidationFilter<UpsertRecipe>>()
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
-            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden, "application/json")
+            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden, JsonContentType)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status409Conflict, "application/json");
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict, JsonContentType);
 
         group.MapDelete("{recipeId}", DeleteRecipeAsync)
             .WithName("deleteRecipe")
             .Produces(StatusCodes.Status204NoContent)
-            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden, "application/json")
+            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden, JsonContentType)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("{recipeId}/restore", RestoreRecipeAsync)
             .WithName("restoreRecipe")
             .Produces<RecipeDetail>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden, "application/json")
+            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden, JsonContentType)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status409Conflict, "application/json");
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict, JsonContentType);
 
         return group;
     }

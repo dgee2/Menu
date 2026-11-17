@@ -28,10 +28,10 @@ export const useRecipeApi = () => {
 
   return {
     postRecipe: async (recipe: UpsertRecipe) =>
-      createRecipe(recipe, contractRequest('createRecipe', getAccessToken, { body: recipe })),
+      await createRecipe(recipe, contractRequest('createRecipe', getAccessToken, { body: recipe })),
 
     putRecipe: async (recipeId: string, recipe: UpsertRecipe) =>
-      updateRecipe(
+      await updateRecipe(
         recipeId,
         recipe,
         contractRequest('updateRecipe', getAccessToken, {
@@ -48,7 +48,7 @@ export const useRecipeApi = () => {
     },
 
     restoreRecipe: async (recipeId: string) =>
-      restoreRecipe(
+      await restoreRecipe(
         recipeId,
         contractRequest('restoreRecipe', getAccessToken, { path: { recipeId } }),
       ),
@@ -56,13 +56,16 @@ export const useRecipeApi = () => {
     getRecipes: async (scope: RecipeListScope = 'mine', query?: string) => {
       const params = { scope, ...(query === undefined ? {} : { query }) };
       const options = contractRequest('getRecipes', getAccessToken, { query: params });
-      return getRecipes(params, options);
+      return await getRecipes(params, options);
     },
 
     getRecipe: async (recipeId: string) =>
-      getRecipe(recipeId, contractRequest('getRecipe', getAccessToken, { path: { recipeId } })),
+      await getRecipe(
+        recipeId,
+        contractRequest('getRecipe', getAccessToken, { path: { recipeId } }),
+      ),
 
     getIngredientUnits: async () =>
-      getIngredientUnits(contractRequest('getIngredientUnits', getAccessToken)),
+      await getIngredientUnits(contractRequest('getIngredientUnits', getAccessToken)),
   };
 };

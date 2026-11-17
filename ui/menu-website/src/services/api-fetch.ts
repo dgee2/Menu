@@ -34,7 +34,7 @@ export const contractRequest = (
     }
   }
   const path = contract.path.replace(
-    /\{([^}]+)\}/g,
+    /\{([^{}]+)\}/g,
     (_match, name: string) => input.path?.[name] ?? '',
   );
   const search = new URLSearchParams();
@@ -60,30 +60,8 @@ export const contractRequest = (
   return { [contractContext]: { operation, getAccessToken, url, body } };
 };
 
-export const apiFetch = async <T>(path: string, options: ApiFetchOptions): Promise<T> => {
-  const { [contractContext]: context, ...init } = options;
-  if (!context) {
-    throw new ApiContractError('Fetch API', 'request');
-  }
-
-  const { operation, getAccessToken } = context;
+const validateResponse = async (operation: Operation, response: Response): Promise<unknown> => {
   const contract = contracts[operation];
-  if (init.method !== contract.method || path !== context.url) {
-    throw new ApiContractError(operation, 'request');
-  }
-  if (init.body !== context.body) {
-    throw new ApiContractError(operation, 'request body');
-  }
-
-  const accessToken = await getAccessToken();
-  if (!accessToken) {
-    throw new Error('API authentication did not return an access token.');
-  }
-
-  const headers = new Headers(init.headers);
-  headers.set('Authorization', `Bearer ${accessToken}`);
-  const baseUrl = (import.meta.env.VITE_MENU_API_URL ?? '').replace(/\/$/, '');
-  const response = await fetch(`${baseUrl}${path}`, { ...init, headers, redirect: 'manual' });
   const { status } = response;
   const expected = contract.responses[status];
   if (!expected) {
@@ -118,6 +96,32 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions): Promi
     throw ApiError.from(operation, data, response);
   }
 
-  // The operation's generated response schema has already checked the parsed value.
-  return data as T;
+  return data;
+};
+
+export const apiFetch = async <T>(path: string, options: ApiFetchOptions): Promise<T> => {
+  const { [contractContext]: context, ...init } = options;
+  if (!context) {
+    throw new ApiContractError('Fetch API', 'request');
+  }
+
+  const { operation, getAccessToken } = context;
+  const contract = contracts[operation];
+  if (init.method !== contract.method || path !== context.url) {
+    throw new ApiContractError(operation, 'request');
+  }
+  if (init.body !== context.body) {
+    throw new ApiContractError(operation, 'request body');
+  }
+
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    throw new Error('API authentication did not return an access token.');
+  }
+
+  const headers = new Headers(init.headers);
+  headers.set('Authorization', `Bearer ${accessToken}`);
+  const baseUrl = (import.meta.env.VITE_MENU_API_URL ?? '').replace(/\/$/, '');
+  const response = await fetch(`${baseUrl}${path}`, { ...init, headers, redirect: 'manual' });
+  return (await validateResponse(operation, response)) as T;
 };
