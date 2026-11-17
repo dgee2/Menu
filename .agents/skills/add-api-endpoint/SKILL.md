@@ -55,10 +55,11 @@ Open `backend/MenuApi/MappingProfiles/ViewModelMapper.cs` and add or update `[Ma
 
 ### 6. Register the endpoint
 
-Add the endpoint in the relevant `backend/MenuApi/Recipes/*Api.cs` file using the `MapGroup` pattern. Use `.Produces<T>(statusCode)` and `.ProducesProblem(statusCode)` to document response types — the existing endpoints do not use `.WithName()` or `.WithOpenApi()`. Example:
+Add the endpoint in the relevant `backend/MenuApi/Recipes/*Api.cs` file using the `MapGroup` pattern. Assign a stable, unique operation ID with `.WithName()` and document verified response statuses and media types. Use `.Produces<T>(statusCode)` for typed JSON responses, `.ProducesProblem(statusCode)` for problem details, and `.Produces(statusCode)` for bodyless responses.
 
 ```csharp
 group.MapGet("/{id}", GetByIdAsync)
+    .WithName("getRecipeById")
     .Produces<FullRecipe>(StatusCodes.Status200OK)
     .ProducesProblem(StatusCodes.Status404NotFound);
 ```

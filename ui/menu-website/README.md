@@ -24,6 +24,19 @@ Volta is the supported Node.js and pnpm toolchain. The project versions are pinn
 in `package.json`. Because Volta's pnpm support is experimental, set
 `VOLTA_FEATURE_PNPM=1` in your environment before running pnpm commands.
 
+### Generate the API client
+
+In a fresh checkout or after a backend contract change, build `backend/MenuApi.sln`
+to produce `open-api/menu-api.json`. From `ui/menu-website`, run:
+
+```sh
+pnpm generate-openapi
+```
+
+Orval writes the Vue Query clients, Zod Mini validators, and MSW mocks to
+`src/generated/open-api/`. CI builds the same backend document and regenerates
+these files before frontend validation and the Playwright shards.
+
 ### Compile and Hot-Reload for Development
 
 ```sh

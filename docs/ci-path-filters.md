@@ -32,7 +32,7 @@ The frontend job (`frontend`) runs when any of these files change, or when the C
 
 - `backend/**` - Backend changes regenerate the OpenAPI document and require frontend validation against the new artifact
 - `ui/**` - Any file in the frontend directory
-- `open-api/**` - OpenAPI specification files (triggers type regeneration)
+- `open-api/**` - OpenAPI specification files (triggers Orval generation)
 - `.github/workflows/main.yml` - The workflow file itself
 
 #### Frontend E2E Job
@@ -91,7 +91,7 @@ protection check yet; promote it only after several days of reliable green runs.
 
 - ✅ Create OpenAPI spec runs
 - ❌ Backend test jobs are skipped
-- ✅ Frontend job runs to regenerate types
+- ✅ Frontend job regenerates API clients, validators, and mocks
 - ✅ Frontend E2E shards run
 - The frontend and E2E jobs download the freshly generated OpenAPI spec artifact
 - The backend-build job still does not run backend tests; it only creates the artifact needed by frontend validation
@@ -135,23 +135,16 @@ if: |
       needs.changes.outputs.openapi == 'true' ||
       needs.changes.outputs.frontend == 'true'
    ) &&
-  (needs.backend-build.result == 'success' || needs.backend-build.result == 'skipped')
+  needs.backend-build.result == 'success'
 ```
 
 This allows the frontend to run after Create OpenAPI spec for backend-only, frontend-only, and `open-api/**`-only changes. OpenAPI-only changes now always receive a freshly generated artifact because the generated JSON is not tracked in the repository.
 
 ### OpenAPI Artifact Handling
 
-The "Download OpenAPI document" step in the frontend job is conditional:
-
-```yaml
-- name: Download OpenAPI document
-  if: needs.backend-build.result == 'success'
-  uses: actions/download-artifact@v4
-```
-
-- If backend-build runs and succeeds, the new OpenAPI spec is downloaded
-- For pull requests matching backend, frontend, or `open-api/**`, backend-build generates and uploads the artifact before the frontend jobs run
+Both frontend validation and the E2E shards require a successful `backend-build`.
+Each job downloads the OpenAPI document, installs the pinned dependencies with
+the frozen lockfile, and runs `pnpm generate-openapi` before frontend checks.
 
 ## Performance Benefits
 
