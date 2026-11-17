@@ -1,11 +1,11 @@
 import { expect, userEvent, waitFor, within } from 'storybook/test';
-import { http, HttpResponse } from 'msw';
 import preview, { withPageLayout } from '@storybook-config/preview';
 import RecipeList from './RecipeList.vue';
 import {
   recipesEmptyHandler,
   recipesErrorHandler,
   recipesLoadingHandler,
+  recipesSearchHandler,
   recipesSuccessHandler,
 } from '@storybook-config/msw-handlers';
 
@@ -47,24 +47,7 @@ export const ScopeToggle = meta.story({
 
 export const Search = meta.story({
   beforeEach({ msw }) {
-    msw.use(
-      http.get('*/api/recipe', ({ request }) => {
-        const recipes = [
-          {
-            id: '00000000-0000-0000-0000-000000000001',
-            title: 'Chocolate Cake',
-            accessScope: 'AuthenticatedUsers',
-          },
-          {
-            id: '00000000-0000-0000-0000-000000000002',
-            title: 'Tomato Soup',
-            accessScope: 'Private',
-          },
-        ];
-        const query = new URL(request.url).searchParams.get('query');
-        return HttpResponse.json(query ? recipes.slice(0, 1) : recipes);
-      }),
-    );
+    msw.use(recipesSearchHandler);
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

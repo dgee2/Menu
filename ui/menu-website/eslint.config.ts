@@ -25,6 +25,7 @@ export default defineConfigWithVueTs(
     '**/coverage/**',
     '**/storybook-static/**',
     '**/public/mockServiceWorker.js',
+    '**/src/generated/**',
   ]),
 
   pluginQuasar.configs.recommended(),

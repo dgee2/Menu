@@ -10,6 +10,7 @@ import {
   recipeDeleteSuccessHandler,
   recipeRestoreSuccessHandler,
   recipeDeleteErrorHandler,
+  sampleRecipeId,
 } from '@storybook-config/msw-handlers';
 
 const meta = preview.meta({
@@ -18,7 +19,7 @@ const meta = preview.meta({
   tags: ['autodocs'],
   decorators: [withPageLayout],
   args: {
-    recipeId: '1',
+    recipeId: sampleRecipeId,
   },
 });
 
@@ -61,7 +62,9 @@ export const EditableActions = meta.story({
     await expect(await canvas.findByRole('button', { name: 'Delete' })).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole('link', { name: 'Edit' }));
-    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/1/edit'));
+    await waitFor(() =>
+      expect(router.currentRoute.value.path).toBe(`/recipe/${sampleRecipeId}/edit`),
+    );
   },
 });
 
