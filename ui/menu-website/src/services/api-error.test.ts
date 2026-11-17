@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, userFacingMessage } from './api-error';
+import { ApiContractError, ApiError, userFacingMessage } from './api-error';
 
 const response = (status: number) => new Response(null, { status });
 
@@ -59,6 +59,14 @@ describe('ApiError', () => {
     vi.stubEnv('DEV', false);
 
     expect(userFacingMessage(new Error('consent_required'), 'Try again.')).toBe('Try again.');
+  });
+
+  it('uses the generic message for contract failures while retaining the HTTP status', () => {
+    vi.stubEnv('DEV', true);
+    const error = new ApiContractError('Create recipe', 'response body', 409);
+
+    expect(error.status).toBe(409);
+    expect(userFacingMessage(error, 'Try again.')).toBe('Try again.');
   });
 
   it('keeps the fallback for non-Error failures', () => {

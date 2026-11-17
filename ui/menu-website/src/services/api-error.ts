@@ -93,6 +93,18 @@ export class ApiError extends Error {
   }
 }
 
+export class ApiContractError extends Error {
+  constructor(
+    operation: string,
+    readonly reason: 'request' | 'status' | 'media type' | 'response body',
+    readonly status?: number,
+  ) {
+    const httpStatus = status === undefined ? '' : ` (HTTP ${status})`;
+    super(`${operation}: API contract validation failed for ${reason}${httpStatus}.`);
+    this.name = 'ApiContractError';
+  }
+}
+
 /**
  * Keep unexpected failures useful while developing without exposing implementation details in
  * production. This is especially valuable for authentication failures, which happen before the
@@ -100,6 +112,7 @@ export class ApiError extends Error {
  */
 export const userFacingMessage = (error: unknown, fallback: string): string => {
   if (error instanceof ApiError) return error.userFacingMessage(fallback);
+  if (error instanceof ApiContractError) return fallback;
 
   return import.meta.env.DEV && error instanceof Error && error.message ? error.message : fallback;
 };
