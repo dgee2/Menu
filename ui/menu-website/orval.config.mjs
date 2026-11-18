@@ -28,9 +28,9 @@ export default defineConfig({
       schemas: `${outputDirectory}/model`,
       client: (clients) => ({
         ...clients.fetch,
-        client: async (operation, options) => {
-          const native = await clients.fetch.client(operation, options);
-          const { operationName, operationId, props, response } = operation;
+        client: (operation) => {
+          const { operationName, operationId, props, response, body, queryParams, params } =
+            operation;
           const inputs = [];
           for (const prop of props) {
             if (prop.type === 'body') inputs.push('body: ' + prop.name);
@@ -46,10 +46,14 @@ export default defineConfig({
           const result = response.definition.success;
           const implementation = `const ${operationName} = (${args}): Promise<${result}> =>
             request<${result}>(operationContracts.${operationId}, { ${inputs.join(', ')} }, options);`;
-          const identifiers = new Set(implementation.match(/\b\w+\b/g));
           return {
             implementation,
-            imports: native.imports.filter((entry) => identifiers.has(entry.name)),
+            imports: [
+              ...response.types.success.flatMap((type) => type.imports),
+              ...body.imports,
+              ...(queryParams ? [{ name: queryParams.schema.name }] : []),
+              ...params.flatMap((param) => param.imports),
+            ],
           };
         },
         header:
