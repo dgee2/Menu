@@ -86,7 +86,7 @@ Pages and components must **never** call the API layer (`recipe-api.ts`) directl
 
 | Layer | File | What it does |
 |---|---|---|
-| API layer | `src/services/recipe-api.ts` | Low-level `openapi-fetch` calls with typed functions |
+| API layer | `src/services/recipe-api.ts` | Typed wrappers for generated Orval operations |
 | Service layer | `src/services/recipe-service.ts` | TanStack Query composables (`useRecipes`, `useCreateRecipe`); handles cache invalidation |
 
 In a component, import and use a composable from the service layer:

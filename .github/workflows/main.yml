@@ -251,7 +251,7 @@ jobs:
         needs.changes.outputs.openapi == 'true' ||
         needs.changes.outputs.frontend == 'true'
       ) &&
-      (needs.backend-build.result == 'success' || needs.backend-build.result == 'skipped')
+      needs.backend-build.result == 'success'
     permissions:
       contents: read
       actions: read
@@ -268,7 +268,6 @@ jobs:
           package-json-path: ui/menu-website/package.json
 
       - name: Download OpenAPI document
-        if: needs.backend-build.result == 'success'
         uses: actions/download-artifact@v8
         with:
           name: openapi-spec
@@ -292,7 +291,7 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: ./ui/menu-website
 
-      - name: Generate OpenAPI types
+      - name: Generate Orval clients, validators, and mocks
         run: pnpm run generate-openapi
         working-directory: ./ui/menu-website
 
@@ -383,7 +382,6 @@ jobs:
         with:
           package-json-path: ui/menu-website/package.json
       - name: Download OpenAPI document
-        if: needs.backend-build.result == 'success'
         uses: actions/download-artifact@v8
         with:
           name: openapi-spec
@@ -416,7 +414,7 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
         working-directory: ./ui/menu-website
-      - name: Generate OpenAPI types
+      - name: Generate Orval clients, validators, and mocks
         run: pnpm run generate-openapi
         working-directory: ./ui/menu-website
       - name: Get installed Playwright version

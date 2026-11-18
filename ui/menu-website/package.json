@@ -20,7 +20,7 @@
     "test:e2e": "playwright test",
     "test:storybook": "vitest --project=storybook --run",
     "type-check": "vue-tsc --build --noEmit",
-    "generate-openapi": "openapi-typescript ../../open-api/menu-api.json --output ./src/generated/open-api/menu-api.ts",
+    "generate-openapi": "node ./scripts/generate-openapi.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -30,14 +30,15 @@
     "@tanstack/vue-query": "^5.105.3",
     "@tanstack/vue-query-devtools": "^6.3.9",
     "autoprefixer": "^10.6.2",
-    "openapi-fetch": "^0.17.0",
     "pinia": "^4.1.0",
     "quasar": "^2.35.2",
     "vue": "^3.5.44",
-    "vue-router": "^5.4.0"
+    "vue-router": "^5.4.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@faker-js/faker": "^10.6.0",
     "@playwright/test": "^1.64.1",
     "@quasar/app-vite": "^3.10.3",
     "@quasar/vite-plugin": "^2.0.2",
@@ -68,7 +69,7 @@
     "msw": "^3.0.3",
     "msw-storybook-addon": "^3.0.3",
     "npm-run-all2": "^9.0.4",
-    "openapi-typescript": "^7.13.0",
+    "orval": "8.48.0",
     "playwright": "^1.64.1",
     "prettier": "3.9.10",
     "sass-embedded": "^1.107.1",

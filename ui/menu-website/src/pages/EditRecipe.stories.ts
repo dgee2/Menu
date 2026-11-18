@@ -7,6 +7,7 @@ import {
   recipeDetailLoadingHandler,
   recipeDetailNotFoundHandler,
   recipeDetailSuccessHandler,
+  sampleRecipeId,
 } from '@storybook-config/msw-handlers';
 
 const meta = preview.meta({
@@ -15,7 +16,7 @@ const meta = preview.meta({
   tags: ['autodocs'],
   decorators: [withPageLayout],
   args: {
-    recipeId: '1',
+    recipeId: sampleRecipeId,
   },
 });
 

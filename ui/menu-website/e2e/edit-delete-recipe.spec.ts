@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
+import type { APIRequestContext } from '@playwright/test';
 import {
   apiBaseUrl,
   assertE2eCleanupAvailable,
@@ -28,7 +29,7 @@ const bestEffortDelete = async (
 
 // Protection for #1251: this spec owns its fixture and cleans it up so parallel workers and
 // shards cannot depend on, or mutate, the recipe created by another smoke test.
-test('edits and deletes an owned recipe', async ({ page, request }, testInfo) => {
+test('edits, deletes, and restores an owned recipe', async ({ page, request }, testInfo) => {
   const uniqueTitle = `E2E edit-delete ${testInfo.workerIndex}-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const updatedTitle = `${uniqueTitle} updated`;
   const ingredient = 'edit-delete smoke ingredient';
@@ -111,7 +112,28 @@ test('edits and deletes an owned recipe', async ({ page, request }, testInfo) =>
 
     await page.waitForURL((url) => url.hash === '#/recipes');
     await listResponsePromise;
-    await expect(page.getByRole('link').filter({ hasText: updatedTitle })).toBeHidden();
+    const updatedRecipeLink = page.getByRole('link').filter({ hasText: updatedTitle });
+    await expect(updatedRecipeLink).toBeHidden();
+
+    const restoreResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url() === `${apiBaseUrl}/${recipeId}/restore` &&
+        response.request().method() === 'POST',
+    );
+    const restoredListResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url() === `${apiBaseUrl}?scope=mine` && response.request().method() === 'GET',
+    );
+    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    const restoreResponse = await restoreResponsePromise;
+    expect(restoreResponse.status()).toBe(200);
+    expect(/^Bearer\s+\S+$/i.test(restoreResponse.request().headers().authorization ?? '')).toBe(
+      true,
+    );
+    const restoredListResponse = await restoredListResponsePromise;
+    expect(restoredListResponse.status()).toBe(200);
+    await expect(page.getByText('Recipe restored.', { exact: true })).toBeVisible();
+    await expect(updatedRecipeLink).toBeVisible();
   } finally {
     await bestEffortDelete(request, recipeId, authorization);
   }

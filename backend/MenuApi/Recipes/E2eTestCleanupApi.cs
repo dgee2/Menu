@@ -19,12 +19,13 @@ public static class E2eTestCleanupApi
             .AddEndpointFilter<RequireCallerFilter>();
 
         group.MapGet("/status", () => Results.NoContent())
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status401Unauthorized);
+            .WithName("getE2eCleanupStatus")
+            .Produces(StatusCodes.Status204NoContent);
 
         group.MapDelete("/{recipeId}", HardDeleteRecipeAsync)
+            .WithName("hardDeleteE2eRecipe")
             .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     public static async Task<IResult> HardDeleteRecipeAsync(

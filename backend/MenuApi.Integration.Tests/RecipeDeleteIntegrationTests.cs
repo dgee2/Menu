@@ -47,6 +47,8 @@ public class RecipeDeleteIntegrationTests
 
         using var deleteResponse = await client.DeleteAsync($"/api/recipe/{recipeId}");
         await deleteResponse.ShouldHaveStatusCode(HttpStatusCode.NoContent);
+        deleteResponse.Content.Headers.ContentType.Should().BeNull();
+        (await deleteResponse.Content.ReadAsStringAsync()).Should().BeEmpty();
 
         using var getResponse = await client.GetAsync($"/api/recipe/{recipeId}");
         await getResponse.ShouldHaveStatusCode(HttpStatusCode.NotFound);
@@ -123,6 +125,7 @@ public class RecipeDeleteIntegrationTests
 
         using var restoreResponse = await client.PostAsync($"/api/recipe/{firstId}/restore", content: null);
         await restoreResponse.ShouldHaveStatusCode(HttpStatusCode.Conflict);
+        (restoreResponse.Content.Headers.ContentType?.MediaType).Should().Be("application/json");
     }
 
     [Fact]
@@ -138,6 +141,7 @@ public class RecipeDeleteIntegrationTests
         using var response = await client.DeleteAsync($"/api/recipe/{recipeId}");
 
         await response.ShouldHaveStatusCode(HttpStatusCode.Forbidden);
+        (response.Content.Headers.ContentType?.MediaType).Should().Be("application/json");
     }
 
     [Fact]

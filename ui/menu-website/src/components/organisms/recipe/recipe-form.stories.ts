@@ -5,12 +5,14 @@ import {
   recipeCreateErrorHandler,
   recipeCreateSuccessHandler,
   recipeUpdateSuccessHandler,
+  editableRecipeId,
+  sampleRecipeId,
 } from '@storybook-config/msw-handlers';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import type { RecipeDetail } from '@/services/recipe-api';
 
-const existingRecipe = {
-  id: 7,
+const existingRecipe: RecipeDetail = {
+  id: editableRecipeId,
   title: 'Existing Lasagne',
   accessScope: 'AuthenticatedUsers',
   summary: 'Layers.',
@@ -22,6 +24,8 @@ const existingRecipe = {
   effectiveTotalTimeMinutes: 60,
   canEdit: true,
   canDelete: true,
+  createdAtUtc: '2025-01-01T12:00:00Z',
+  updatedAtUtc: '2025-01-01T12:00:00Z',
   ingredients: [
     {
       sortOrder: 0,
@@ -33,16 +37,16 @@ const existingRecipe = {
     },
   ],
   steps: [{ sortOrder: 0, instructionText: 'Assemble', title: null, durationMinutes: null }],
-} as unknown as RecipeDetail;
+};
 
-const multiSectionRecipe = {
+const multiSectionRecipe: RecipeDetail = {
   ...existingRecipe,
   ingredients: [
     { sortOrder: 0, ingredientText: 'Pasta', measureText: '250g', sectionTitle: null },
     { sortOrder: 1, ingredientText: 'Tomatoes', measureText: '2 cups', sectionTitle: 'Sauce' },
     { sortOrder: 2, ingredientText: 'Cheese', measureText: '100g', sectionTitle: 'Topping' },
   ],
-} as RecipeDetail;
+};
 
 const meta = preview.meta({
   title: 'Organisms/Recipe/RecipeForm',
@@ -127,7 +131,7 @@ export const SubmitShowsPendingState = meta.story({
     await userEvent.click(submitButton);
 
     await waitFor(() => expect(submitButton.querySelector('.q-spinner')).not.toBeNull());
-    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/1'));
+    await waitFor(() => expect(router.currentRoute.value.path).toBe(`/recipe/${sampleRecipeId}`));
   },
 });
 
@@ -537,7 +541,7 @@ export const CancelEditNavigatesToRecipe = meta.story({
 
     await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
     await router.isReady();
-    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/7'));
+    await waitFor(() => expect(router.currentRoute.value.path).toBe(`/recipe/${editableRecipeId}`));
   },
 });
 
@@ -574,7 +578,7 @@ export const SubmitEditSuccessNavigatesToRecipe = meta.story({
     await userEvent.click(canvas.getByRole('button', { name: 'Save changes' }));
 
     await router.isReady();
-    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/7'));
+    await waitFor(() => expect(router.currentRoute.value.path).toBe(`/recipe/${editableRecipeId}`));
   },
 });
 
@@ -612,7 +616,7 @@ export const SubmitSuccessNavigatesToRecipe = meta.story({
     await userEvent.click(canvas.getByRole('button', { name: 'Save recipe' }));
 
     await router.isReady();
-    await waitFor(() => expect(router.currentRoute.value.path).toBe('/recipe/1'));
+    await waitFor(() => expect(router.currentRoute.value.path).toBe(`/recipe/${sampleRecipeId}`));
   },
 });
 

@@ -25,6 +25,7 @@ export default defineConfigWithVueTs(
     '**/coverage/**',
     '**/storybook-static/**',
     '**/public/mockServiceWorker.js',
+    '**/src/generated/**',
   ]),
 
   pluginQuasar.configs.recommended(),
@@ -99,6 +100,11 @@ export default defineConfigWithVueTs(
       // allow debugger during development only
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     },
+  },
+
+  {
+    files: ['orval.config.mjs', 'scripts/generate-openapi.mjs'],
+    extends: [vueTsConfigs.disableTypeChecked],
   },
 
   prettierSkipFormatting,

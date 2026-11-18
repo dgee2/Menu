@@ -14,8 +14,8 @@ public static class UserApi
         group.WithTags("Users");
 
         group.MapGet("/me", GetCurrentUserAsync)
-            .Produces<UserProfile>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithName("getCurrentUser")
+            .Produces<UserProfile>(StatusCodes.Status200OK);
 
         return group;
     }

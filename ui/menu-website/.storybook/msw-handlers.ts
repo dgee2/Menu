@@ -1,12 +1,25 @@
 import { http, HttpResponse } from 'msw/http';
 import { delay } from 'msw/utils/delay';
+import {
+  getCreateRecipeMockHandler,
+  getDeleteRecipeMockHandler,
+  getGetIngredientUnitsMockHandler,
+  getGetRecipeMockHandler,
+  getGetRecipesMockHandler,
+  getRestoreRecipeMockHandler,
+  getUpdateRecipeMockHandler,
+} from '../src/generated/open-api/menu-api.msw';
+import type { RecipeDetail, RecipeListItem } from '../src/generated/open-api/model';
 
 const recipePath = '*/api/recipe';
 const recipeDetailPath = '*/api/recipe/:recipeId';
-const ingredientUnitsPath = '*/api/ingredient/unit';
+const problemHeaders = { 'Content-Type': 'application/problem+json' };
 
-const sampleRecipeDetail = {
-  id: 1,
+export const sampleRecipeId = '00000000-0000-4000-8000-000000000001';
+export const editableRecipeId = '00000000-0000-4000-8000-000000000007';
+
+const sampleRecipeDetail: RecipeDetail = {
+  id: sampleRecipeId,
   title: 'Chocolate Cake',
   accessScope: 'Private',
   summary: 'A rich, moist chocolate cake.',
@@ -15,6 +28,10 @@ const sampleRecipeDetail = {
   prepTimeMinutes: 20,
   cookTimeMinutes: 35,
   totalTimeMinutes: 55,
+  createdAtUtc: '2025-01-01T12:00:00Z',
+  updatedAtUtc: '2025-01-01T12:00:00Z',
+  canEdit: false,
+  canDelete: false,
   ingredients: [
     {
       sortOrder: 0,
@@ -52,98 +69,101 @@ const sampleRecipeDetail = {
   ],
 };
 
-export const recipeDetailSuccessHandler = http.get(recipeDetailPath, async () => {
+export const recipeDetailSuccessHandler = getGetRecipeMockHandler(async () => {
   await delay(150);
-  return HttpResponse.json(sampleRecipeDetail);
+  return sampleRecipeDetail;
 });
 
 export const recipeDetailNotFoundHandler = http.get(recipeDetailPath, async () => {
   await delay(150);
-  return HttpResponse.json({ title: 'Not Found', status: 404 }, { status: 404 });
+  return HttpResponse.json(
+    { title: 'Not Found', status: 404 },
+    { status: 404, headers: problemHeaders },
+  );
 });
 
 /** The same recipe, with the access flags the API returns to its owner. */
-export const recipeDetailEditableHandler = http.get(recipeDetailPath, async () => {
+export const recipeDetailEditableHandler = getGetRecipeMockHandler(async () => {
   await delay(150);
-  return HttpResponse.json({ ...sampleRecipeDetail, canEdit: true, canDelete: true });
+  return { ...sampleRecipeDetail, canEdit: true, canDelete: true };
 });
 
 export const recipeDetailErrorHandler = http.get(recipeDetailPath, async () => {
   await delay(150);
-  return HttpResponse.json({ title: 'Internal Server Error', status: 500 }, { status: 500 });
+  return serverError();
 });
 
-export const recipeDetailLoadingHandler = http.get(recipeDetailPath, async () => {
+export const recipeDetailLoadingHandler = getGetRecipeMockHandler(async () => {
   await delay(3000);
-  return HttpResponse.json(sampleRecipeDetail);
+  return sampleRecipeDetail;
 });
 
-export const recipeDeleteSuccessHandler = http.delete(recipeDetailPath, async () => {
+export const recipeDeleteSuccessHandler = getDeleteRecipeMockHandler(async () => {
   await delay(150);
-  return new HttpResponse(null, { status: 204 });
 });
 
-export const recipeRestoreSuccessHandler = http.post('*/api/recipe/:recipeId/restore', async () => {
+export const recipeRestoreSuccessHandler = getRestoreRecipeMockHandler(async () => {
   await delay(150);
-  return HttpResponse.json(
-    { ...sampleRecipeDetail, canEdit: true, canDelete: true },
-    { status: 200 },
-  );
+  return { ...sampleRecipeDetail, canEdit: true, canDelete: true };
 });
 
 export const recipeDeleteErrorHandler = http.delete(recipeDetailPath, async () => {
   await delay(150);
-  return HttpResponse.json({ title: 'Internal Server Error', status: 500 }, { status: 500 });
+  return serverError();
 });
 
-export const recipesSuccessHandler = http.get(recipePath, async () => {
+const sampleRecipes: RecipeListItem[] = [
+  {
+    id: sampleRecipeId,
+    title: 'Chocolate Cake',
+    summary: 'A rich chocolate cake for celebrations.',
+    accessScope: 'AuthenticatedUsers',
+    servings: 8,
+    effectiveTotalTimeMinutes: 55,
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000002',
+    title: 'Tomato Soup',
+    summary: 'A smooth tomato soup.',
+    accessScope: 'Private',
+    servings: 4,
+    effectiveTotalTimeMinutes: 35,
+  },
+];
+
+export const recipesSuccessHandler = getGetRecipesMockHandler(async () => {
   await delay(150);
-  return HttpResponse.json([
-    {
-      id: '00000000-0000-0000-0000-000000000001',
-      title: 'Chocolate Cake',
-      summary: 'A rich chocolate cake for celebrations.',
-      accessScope: 'AuthenticatedUsers',
-      servings: 8,
-      effectiveTotalTimeMinutes: 55,
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000002',
-      title: 'Tomato Soup',
-      summary: 'A smooth tomato soup.',
-      accessScope: 'Private',
-      servings: 4,
-      effectiveTotalTimeMinutes: 35,
-    },
-  ]);
+  return sampleRecipes;
 });
 
-export const recipesEmptyHandler = http.get(recipePath, async () => {
+export const recipesSearchHandler = getGetRecipesMockHandler(({ request }) => {
+  const query = new URL(request.url).searchParams.get('query');
+  return query ? sampleRecipes.slice(0, 1) : sampleRecipes;
+});
+
+export const recipesEmptyHandler = getGetRecipesMockHandler(async () => {
   await delay(150);
-  return HttpResponse.json([]);
+  return [];
 });
 
 export const recipesErrorHandler = http.get(recipePath, async () => {
   await delay(150);
-  return HttpResponse.json({ message: 'Server error' }, { status: 500 });
+  return serverError();
 });
 
-export const recipesLoadingHandler = http.get(recipePath, async () => {
+export const recipesLoadingHandler = getGetRecipesMockHandler(async () => {
   await delay(3000);
-  return HttpResponse.json([
-    { id: 1, title: 'Chocolate Cake' },
-    { id: 2, title: 'Tomato Soup' },
-  ]);
+  return sampleRecipes;
 });
 
-export const recipeCreateSuccessHandler = http.post(recipePath, async () => {
+export const recipeCreateSuccessHandler = getCreateRecipeMockHandler(async () => {
   await delay(150);
-  return HttpResponse.json(sampleRecipeDetail, { status: 200 });
+  return sampleRecipeDetail;
 });
 
 export const recipeCreateErrorHandler = http.post(recipePath, async () => {
   await delay(150);
-  return HttpResponse.json({ title: 'Internal Server Error', status: 500 }, { status: 500 });
+  return serverError();
 });
 
 export const recipeCreateConflictHandler = http.post(recipePath, async () => {
@@ -154,14 +174,19 @@ export const recipeCreateConflictHandler = http.post(recipePath, async () => {
   );
 });
 
-export const recipeUpdateSuccessHandler = http.put(recipeDetailPath, async () => {
+export const recipeUpdateSuccessHandler = getUpdateRecipeMockHandler(async () => {
   await delay(150);
-  return HttpResponse.json({ ...sampleRecipeDetail, id: 7 }, { status: 200 });
+  return { ...sampleRecipeDetail, id: editableRecipeId };
 });
 
-export const ingredientUnitsHandler = http.get(ingredientUnitsPath, () => {
-  return HttpResponse.json([
-    { id: 1, name: 'g' },
-    { id: 2, name: 'ml' },
-  ]);
-});
+export const ingredientUnitsHandler = getGetIngredientUnitsMockHandler([
+  { name: 'Gram', abbreviation: 'g', type: 'Mass' },
+  { name: 'Millilitre', abbreviation: 'ml', type: 'Volume' },
+]);
+
+function serverError() {
+  return HttpResponse.json(
+    { title: 'Internal Server Error', status: 500 },
+    { status: 500, headers: problemHeaders },
+  );
+}
