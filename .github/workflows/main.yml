@@ -148,7 +148,7 @@ jobs:
 
       - name: Generate backend unit coverage summary
         if: ${{ always() && hashFiles('coverage/MenuApi.Tests.cobertura.xml') != '' && hashFiles('coverage/MenuDB.Tests.cobertura.xml') != '' }}
-        uses: danielpalme/ReportGenerator-GitHub-Action@861674232075b2c6bd1405a04c4bb9b150653e81 # v5
+        uses: danielpalme/ReportGenerator-GitHub-Action@5f3701a41d14548c9b8e575a5c235230e515cbc0 # v5
         continue-on-error: true
         with:
           reports: coverage/*.cobertura.xml
@@ -219,7 +219,7 @@ jobs:
 
       - name: Generate backend integration coverage summary
         if: ${{ always() && hashFiles('coverage/MenuApi.Integration.Tests.cobertura.xml') != '' }}
-        uses: danielpalme/ReportGenerator-GitHub-Action@861674232075b2c6bd1405a04c4bb9b150653e81 # v5
+        uses: danielpalme/ReportGenerator-GitHub-Action@5f3701a41d14548c9b8e575a5c235230e515cbc0 # v5
         continue-on-error: true
         with:
           reports: coverage/MenuApi.Integration.Tests.cobertura.xml
