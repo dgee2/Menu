@@ -31,16 +31,16 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="coverlet.collector" Version="10.1.0">
+		<PackageReference Include="coverlet.collector" Version="10.1.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="FakeItEasy" Version="9.0.1" />
 		<PackageReference Include="GitHubActionsTestLogger" Version="3.0.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.14" />
-		<PackageReference Include="Microsoft.Testing.Platform" Version="2.5.2" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.15" />
+		<PackageReference Include="Microsoft.Testing.Platform" Version="2.5.3" />
 		<PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
-		<PackageReference Include="xunit.v3.mtp-v2" Version="4.0.2" />
+		<PackageReference Include="xunit.v3.mtp-v2" Version="4.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>
